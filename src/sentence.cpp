@@ -1,1 +1,1 @@
-../sentence/sentence.cpp
+/home/junta-m/work/sentence/sentence.cpp

@@ -1,1 +1,1 @@
-../sentence/sentence.hpp
+/home/junta-m/work/sentence/sentence.hpp
