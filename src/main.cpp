@@ -39,8 +39,9 @@ int main(int argc, char *argv[]) {
 	}
 
 	modality::parser mod_parser;
-	mod_parser.parse(str);
+//	mod_parser.parse(str);
 
+	mod_parser.learnOC("test/OC01_00001m.xml");
 	return 1;
 }
 

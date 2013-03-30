@@ -9,20 +9,32 @@
 #define MODALITY_VERSION 1.0
 
 namespace modality {
-	class parser {
+	class instance {
 		public:
 			typedef boost::unordered_map< std::string, double > t_feat;
-			
+			std::string label;
+			t_feat feat;
+
+		public:
+			instance() {
+			}
+			~instance() {
+			}
+	};
+
+	class parser {
 		public:
 			parser() {
 			}
 			~parser() {
 			}
-			
+
 		public:
 			bool parse(std::string);
-			bool gen_feature(nlp::sentence, int, t_feat &);
-			bool gen_feature_basic(nlp::sentence, int, t_feat &, int);
+			bool learnOC(std::string);
+			bool conv_instance_OC(std::string, instance::t_feat &);
+			bool gen_feature(nlp::sentence, int, instance::t_feat &);
+			bool gen_feature_basic(nlp::sentence, int, instance::t_feat &, int);
 	};
 };
 
