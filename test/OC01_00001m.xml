@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sample xmlns:eme="http://cl.naist.jp/nltools/eme" xmlns:cwj="http://www.tokuteicorpus.jp" xmlns="http://www.tokuteicorpus.jp" xmlns:njd="http://cl.naist.jp/nltools/eme/njd" xmlns:mcb="http://cl.naist.jp/nltools/eme/mcb" xmlns:cab="http://cl.naist.jp/nltools/eme/cab" xmlns:sys="http://cl.naist.jp/nltools/eme/sys" sampleID="OC01_00001" type="chiebukuro" version="20090608">
+  <OCQuestion>
+    <webLine>
+      <sentence>
+        <SUW orthToken="詰め" lForm="ツメル" lemma="詰める" pos="動詞-一般" Form="ツメル" cType="下一段-マ行" cForm="連用形-一般" pronToken="ツメ" wType="和" start="10" end="30" morphID="10" BOS="True"/>
+詰め
+        <SUW orthToken="将棋" lForm="ショウギ" lemma="将棋" pos="名詞-普通名詞-一般" Form="ショウギ" pronToken="ショーギ" wType="漢" start="30" end="50" morphID="20"/>
+将棋
+        <SUW orthToken="の" lForm="ノ" lemma="の" pos="助詞-格助詞" Form="ノ" pronToken="ノ" wType="和" start="50" end="60" morphID="30"/>
+の
+        <SUW orthToken="本" lForm="ホン" lemma="本" pos="名詞-普通名詞-一般" Form="ホン" pronToken="ホン" wType="漢" start="60" end="70" morphID="40"/>
+本
+        <SUW orthToken="を" lForm="ヲ" lemma="を" pos="助詞-格助詞" Form="ヲ" pronToken="オ" wType="和" start="70" end="80" morphID="50"/>
+を
+        <SUW orthToken="買っ" lForm="カウ" lemma="買う" pos="動詞-一般" Form="カウ" cType="五段-ワア行-一般" cForm="連用形-促音便" pronToken="カッ" wType="和" start="80" end="100" morphID="60"/>
+買っ
+        <SUW orthToken="て" lForm="テ" lemma="て" pos="助詞-接続助詞" Form="テ" pronToken="テ" wType="和" start="100" end="110" morphID="70"/>
+て
+        <SUW orthToken="き" lForm="クル" lemma="来る" pos="動詞-非自立可能" Form="クル" cType="カ行変格" cForm="連用形-一般" pronToken="キ" wType="和" start="110" end="120" morphID="80"/>
+き
+        <SUW orthToken="まし" lForm="マス" lemma="ます" pos="助動詞" Form="マス" cType="助動詞-マス" cForm="連用形-一般" pronToken="マシ" wType="和" start="120" end="140" morphID="90"/>
+まし
+        <SUW orthToken="た" lForm="タ" lemma="た" pos="助動詞" Form="タ" cType="助動詞-タ" cForm="終止形-一般" pronToken="タ" wType="和" start="140" end="150" morphID="100"/>
+た
+        <SUW orthToken="。" lForm="" lemma="。" pos="補助記号-句点" Form="" pronToken="" wType="記号" start="150" end="160" morphID="110"/>
+。
+        <eme:event eme:orthTokens="詰め" eme:morphIDs="10" eme:pseudo="名詞-事象可能" eme:source="wr:筆者" eme:time="非未来" eme:conditional="0" eme:pmtype="叙述" eme:actuality="0" eme:evaluation="0" eme:note="c" eme:lastupdate="20110204"/>
+        <eme:event eme:orthTokens="将棋" eme:morphIDs="20" eme:pseudo="名詞" eme:note="c" eme:lastupdate="20110204"/>
+        <eme:event eme:orthTokens="買っ" eme:morphIDs="60" eme:source="wr:筆者" eme:time="非未来" eme:conditional="0" eme:pmtype="叙述" eme:actuality="成立" eme:evaluation="0" eme:note="c" eme:lastupdate="20091221"/>
+        <eme:event eme:orthTokens="き" eme:morphIDs="80" eme:pseudo="機能語-事象可能" eme:source="wr:筆者" eme:time="非未来" eme:conditional="0" eme:pmtype="叙述" eme:actuality="成立" eme:evaluation="0" eme:note="c" eme:lastupdate="20110204"/>
+      </sentence>
+    </webLine>
+    <br type="logicalLine_original"/>
+    <webLine>
+      <sentence>
+        <SUW orthToken="駒" lForm="コマ" lemma="駒" pos="名詞-普通名詞-一般" Form="コマ" pronToken="ゴマ" wType="和" start="160" end="170" morphID="120" BOS="True"/>
+駒
+        <SUW orthToken="と" lForm="ト" lemma="と" pos="助詞-格助詞" Form="ト" pronToken="ト" wType="和" start="170" end="180" morphID="130"/>
+と
+        <SUW orthToken="盤" lForm="バン" lemma="盤" pos="名詞-普通名詞-一般" Form="バン" pronToken="バン" wType="漢" start="180" end="190" morphID="140"/>
+盤
+        <SUW orthToken="は" lForm="ハ" lemma="は" pos="助詞-係助詞" Form="ハ" pronToken="ワ" wType="和" start="190" end="200" morphID="150"/>
+は
+        <SUW orthToken="持っ" lForm="モツ" lemma="持つ" pos="動詞-一般" Form="モツ" cType="五段-タ行" cForm="連用形-促音便" pronToken="モッ" wType="和" start="200" end="220" morphID="160"/>
+持っ
+        <SUW orthToken="て" lForm="テ" lemma="て" pos="助詞-接続助詞" Form="テ" pronToken="テ" wType="和" start="220" end="230" morphID="170"/>
+て
+        <SUW orthToken="い" lForm="イル" lemma="居る" pos="動詞-非自立可能" Form="イル" cType="上一段-ア行" cForm="連用形-一般" pronToken="イ" wType="和" start="230" end="240" morphID="180"/>
+い
+        <SUW orthToken="ませ" lForm="マス" lemma="ます" pos="助動詞" Form="マス" cType="助動詞-マス" cForm="未然形-一般" pronToken="マセ" wType="和" start="240" end="260" morphID="190"/>
+ませ
+        <SUW orthToken="ん" lForm="ズ" lemma="ず" pos="助動詞" Form="ヌ" cType="助動詞-ヌ" cForm="終止形-撥音便" pronToken="ン" wType="和" start="260" end="270" morphID="200"/>
+ん
+        <SUW orthToken="。" lForm="" lemma="。" pos="補助記号-句点" Form="" pronToken="" wType="記号" start="270" end="280" morphID="210"/>
+。
+        <eme:event eme:orthTokens="持っ" eme:morphIDs="160" eme:source="wr:筆者" eme:time="非未来" eme:conditional="0" eme:pmtype="叙述" eme:actuality="不成立" eme:evaluation="0" eme:note="c" eme:lastupdate="20091111"/>
+        <eme:event eme:orthTokens="い" eme:morphIDs="180" eme:pseudo="機能語" eme:note="c" eme:lastupdate="20110204"/>
+      </sentence>
+    </webLine>
+    <br type="logicalLine_original"/>
+    <br type="logicalLine_original"/>
+    <webLine>
+      <sentence>
+        <SUW orthToken="駒" lForm="コマ" lemma="駒" pos="名詞-普通名詞-一般" Form="コマ" pronToken="ゴマ" wType="和" start="280" end="290" morphID="220" BOS="True"/>
+駒
+        <SUW orthToken="と" lForm="ト" lemma="と" pos="助詞-格助詞" Form="ト" pronToken="ト" wType="和" start="290" end="300" morphID="230"/>
+と
+        <SUW orthToken="盤" lForm="バン" lemma="盤" pos="名詞-普通名詞-一般" Form="バン" pronToken="バン" wType="漢" start="300" end="310" morphID="240"/>
+盤
+        <SUW orthToken="の" lForm="ノ" lemma="の" pos="助詞-格助詞" Form="ノ" pronToken="ノ" wType="和" start="310" end="320" morphID="250"/>
+の
+        <SUW orthToken="代わり" lForm="カワリ" lemma="代わり" pos="名詞-普通名詞-一般" Form="カワリ" pronToken="カワリ" wType="和" start="320" end="350" morphID="260"/>
+代わり
+        <SUW orthToken="に" lForm="ニ" lemma="に" pos="助詞-格助詞" Form="ニ" pronToken="ニ" wType="和" start="350" end="360" morphID="270"/>
+に
+        <SUW orthToken="使える" lForm="ツカウ" lemma="使う" pos="動詞-一般" Form="ツカエル" cType="下一段-ア行" cForm="連体形-一般" pronToken="ツカエル" wType="和" start="360" end="390" morphID="280"/>
+使える
+        <SUW orthToken="フリー" lForm="フリー" lemma="フリー" subLemma="free" pos="名詞-普通名詞-形状詞可能" Form="フリー" pronToken="フリー" wType="外" start="390" end="420" morphID="290"/>
+フリー
+        <SUW orthToken="の" lForm="ノ" lemma="の" pos="助詞-格助詞" Form="ノ" pronToken="ノ" wType="和" start="420" end="430" morphID="300"/>
+の
+        <SUW orthToken="ソフト" lForm="ソフト" lemma="ソフト" subLemma="soft" pos="名詞-普通名詞-形状詞可能" Form="ソフト" pronToken="ソフト" wType="外" start="430" end="460" morphID="310"/>
+ソフト
+        <SUW orthToken="って" lForm="ッテ" lemma="って" pos="助詞-副助詞" Form="ッテ" pronToken="ッテ" wType="和" start="460" end="480" morphID="320"/>
+って
+        <SUW orthToken="あり" lForm="アル" lemma="有る" pos="動詞-非自立可能" Form="アル" cType="五段-ラ行-一般" cForm="連用形-一般" pronToken="アリ" wType="和" start="480" end="500" morphID="330"/>
+あり
+        <SUW orthToken="ませ" lForm="マス" lemma="ます" pos="助動詞" Form="マス" cType="助動詞-マス" cForm="未然形-一般" pronToken="マセ" wType="和" start="500" end="520" morphID="340"/>
+ませ
+        <SUW orthToken="ん" lForm="ズ" lemma="ず" pos="助動詞" Form="ヌ" cType="助動詞-ヌ" cForm="終止形-撥音便" pronToken="ン" wType="和" start="520" end="530" morphID="350"/>
+ん
+        <SUW orthToken="か" lForm="カ" lemma="か" pos="助詞-終助詞" Form="カ" pronToken="カ" wType="和" start="530" end="540" morphID="360"/>
+か
+        <SUW orthToken="？" lForm="" lemma="？" pos="補助記号-句点" Form="" pronToken="" wType="記号" start="540" end="550" morphID="370"/>
+？
+        <eme:event eme:orthTokens="盤" eme:morphIDs="240" eme:pseudo="名詞" eme:note="c" eme:lastupdate="20110204"/>
+        <eme:event eme:orthTokens="使える" eme:morphIDs="280" eme:pseudo="限定修飾" eme:source="wr:筆者" eme:time="非未来" eme:conditional="0" eme:pmtype="叙述" eme:actuality="成立" eme:evaluation="0" eme:note="c" eme:lastupdate="20100531"/>
+        <eme:event eme:orthTokens="フリー" eme:morphIDs="290" eme:pseudo="限定修飾" eme:source="wr:筆者" eme:time="非未来" eme:conditional="0" eme:pmtype="叙述" eme:actuality="成立" eme:evaluation="0" eme:note="c" eme:lastupdate="20100531"/>
+        <eme:event eme:orthTokens="ソフト" eme:morphIDs="310" eme:pseudo="名詞" eme:note="c" eme:lastupdate="20110204"/>
+        <eme:event eme:orthTokens="あり" eme:morphIDs="330" eme:source="wr:筆者" eme:time="非未来" eme:conditional="0" eme:pmtype="問いかけ" eme:actuality="0" eme:evaluation="0" eme:note="c" eme:lastupdate="20091102"/>
+      </sentence>
+    </webLine>
+    <br type="logicalLine_original"/>
+    <br type="logicalLine_original"/>
+    <webLine>
+      <sentence type="quasi">
+        <SUW orthToken="やっぱり" lForm="ヤハリ" lemma="矢張り" pos="副詞" Form="ヤッパリ" pronToken="ヤッパリ" wType="和" start="550" end="590" morphID="380" BOS="True"/>
+やっぱり
+        <SUW orthToken="ない" lForm="ナイ" lemma="無い" pos="形容詞-非自立可能" Form="ナイ" cType="形容詞" cForm="連体形-一般" pronToken="ナイ" wType="和" start="590" end="610" morphID="390"/>
+ない
+        <SUW orthToken="の" lForm="ノ" lemma="の" pos="助詞-準体助詞" Form="ノ" pronToken="ノ" wType="和" start="610" end="620" morphID="400"/>
+の
+        <SUW orthToken="でしょう" lForm="デス" lemma="です" pos="助動詞" Form="デス" cType="助動詞-デス" cForm="意志推量形" pronToken="デショー" wType="和" start="620" end="660" morphID="410"/>
+でしょう
+        <SUW orthToken="か" lForm="カ" lemma="か" pos="助詞-終助詞" Form="カ" pronToken="カ" wType="和" start="660" end="670" morphID="420"/>
+か
+        <SUW orthToken="ねえ" lForm="ネ" lemma="ね" pos="助詞-終助詞" Form="ネエ" pronToken="ネー" wType="和" start="670" end="690" morphID="430"/>
+ねえ
+        <SUW orthToken="・" lForm="" lemma="・" pos="補助記号-一般" Form="" pronToken="" wType="記号" start="690" end="700" morphID="440"/>
+・
+        <SUW orthToken="・" lForm="" lemma="・" pos="補助記号-一般" Form="" pronToken="" wType="記号" start="700" end="710" morphID="450"/>
+・
+        <SUW orthToken="・" lForm="" lemma="・" pos="補助記号-一般" Form="" pronToken="" wType="記号" start="710" end="720" morphID="460"/>
+・
+        <SUW orthToken="・" lForm="" lemma="・" pos="補助記号-一般" Form="" pronToken="" wType="記号" start="720" end="730" morphID="470"/>
+・
+        <eme:event eme:orthTokens="ない" eme:morphIDs="390" eme:source="wr:筆者" eme:time="非未来" eme:conditional="0" eme:pmtype="叙述" eme:actuality="高確率" eme:evaluation="0" eme:note="c推量形式" eme:lastupdate="20101220"/>
+        <eme:event eme:orthTokens="の" eme:morphIDs="400" eme:pseudo="機能語" eme:note="c" eme:lastupdate="20110204"/>
+      </sentence>
+    </webLine>
+  </OCQuestion>
+  <OCAnswer>
+    <webLine>
+      <sentence>
+        <SUW orthToken="↓" lForm="" lemma="↓" pos="補助記号-一般" Form="" pronToken="" wType="記号" start="730" end="740" morphID="480" BOS="True"/>
+↓
+        <SUW orthToken="これ" lForm="コレ" lemma="此れ" pos="代名詞" Form="コレ" pronToken="コレ" wType="和" start="740" end="760" morphID="490"/>
+これ
+        <SUW orthToken="なんか" lForm="ナンカ" lemma="なんか" pos="助詞-副助詞" Form="ナンカ" pronToken="ナンカ" wType="和" start="760" end="790" morphID="500"/>
+なんか
+        <SUW orthToken="どう" lForm="ドウ" lemma="どう" pos="副詞" Form="ドウ" pronToken="ドー" wType="和" start="790" end="810" morphID="510"/>
+どう
+        <SUW orthToken="です" lForm="デス" lemma="です" pos="助動詞" Form="デス" cType="助動詞-デス" cForm="終止形-一般" pronToken="デス" wType="和" start="810" end="830" morphID="520"/>
+です
+        <SUW orthToken="か" lForm="カ" lemma="か" pos="助詞-終助詞" Form="カ" pronToken="カ" wType="和" start="830" end="840" morphID="530"/>
+か
+        <SUW orthToken="？" lForm="" lemma="？" pos="補助記号-句点" Form="" pronToken="" wType="記号" start="840" end="850" morphID="540"/>
+？
+        <eme:event eme:orthTokens="これ" eme:morphIDs="490" eme:pseudo="名詞" eme:note="c" eme:lastupdate="20110204"/>
+        <eme:event eme:orthTokens="どう" eme:morphIDs="510" eme:source="wr:筆者" eme:time="非未来" eme:conditional="0" eme:pmtype="問いかけ" eme:actuality="0" eme:evaluation="0" eme:focus="問いかけ-510:どう" eme:note="c" eme:lastupdate="20100531"/>
+      </sentence>
+    </webLine>
+    <br type="logicalLine_original"/>
+    <br type="logicalLine_original"/>
+    <rejectedBlock type="figure">
+＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
+    </rejectedBlock>
+  </OCAnswer>
+</sample>
