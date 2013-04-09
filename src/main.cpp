@@ -8,6 +8,7 @@ using boost::program_options::store;
 using boost::program_options::parse_command_line;
 using boost::program_options::notify;
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 #include "sentence.hpp"
 #include "modality.hpp"
 
@@ -41,7 +42,13 @@ int main(int argc, char *argv[]) {
 	modality::parser mod_parser;
 //	mod_parser.parse(str);
 
-	mod_parser.learnOC("test/OC01_00001m.xml");
+	boost::filesystem::directory_iterator pos("/home/junta-m/work/20110324/TeaM/XML/OC");
+	boost::filesystem::directory_iterator last;
+	for (; pos!=last ; ++pos) {
+		boost::filesystem::path p(*pos);
+		std::cout << p.string() << std::endl;
+		mod_parser.learnOC(p.string());
+	}
 	return 1;
 }
 
