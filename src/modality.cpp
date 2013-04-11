@@ -55,14 +55,15 @@ namespace modality {
 		t_feat *feat;
 		feat = new t_feat;
 		
-		conv_instance_OC(xml_path, *feat);
+		std::vector< std::vector< t_token > > sents;
+		sents = parse_OC(xml_path);
 		
 		return true;
 	}
 
 	
 
-	std::vector<t_token> parser::parseOCXML_sent(tinyxml2::XMLElement *elemSent, int *sp) {
+	std::vector<t_token> parser::parse_OC_sent(tinyxml2::XMLElement *elemSent, int *sp) {
 		std::vector<t_token> toks;
 		
 		if (std::string(elemSent->Name()) == "sentence") {
@@ -78,7 +79,7 @@ namespace modality {
 					*sp = tok.ep + 1;
 				}
 				else if (std::string(elem->Name()) == "sentence") {
-					BOOST_FOREACH(t_token tok, parseOCXML_sent(elem, sp)) {
+					BOOST_FOREACH(t_token tok, parse_OC_sent(elem, sp)) {
 						toks.push_back(tok);
 					}
 				}
@@ -94,11 +95,9 @@ namespace modality {
 	/*
 	 * Convert modality-tagged OC xml into feature structure for ML
 	 */
-	bool parser::conv_instance_OC(std::string xml_path, t_feat &feat) {
+	std::vector< std::vector< t_token > > parser::parse_OC(std::string xml_path) {
 		tinyxml2::XMLDocument doc;
 		doc.LoadFile(xml_path.c_str());
-		
-//		std::vector<t_mod_tag> mod_tags;
 		
 		tinyxml2::XMLElement *elemQ = doc.FirstChildElement("sample")->FirstChildElement("OCQuestion");
 		tinyxml2::XMLElement *elemA = doc.FirstChildElement("sample")->FirstChildElement("OCAnswer");
@@ -111,7 +110,7 @@ namespace modality {
 				while (elem) {
 					if (std::string(elem->Name()) == "sentence") {
 						int sp = 0;
-						std::vector<t_token> toks = parseOCXML_sent(elem, &sp);
+						std::vector<t_token> toks = parse_OC_sent(elem, &sp);
 						sents.push_back(toks);
 					}
 					elem = elem->NextSiblingElement();
@@ -121,12 +120,15 @@ namespace modality {
 		}
 		
 		elemWL = elemQ->FirstChildElement("webLine");
+		boost::regex reg_or("OR");
+		boost::smatch m;
+
 		while (elemWL) {
 			if (std::string(elemWL->Name()) == "webLine") {
 				tinyxml2::XMLElement *elemEME = elemWL->FirstChildElement("sentence")->FirstChildElement("eme:event");
 				while (elemEME) {
 					if (std::string(elemEME->Name()) == "eme:event") {
-						if (elemEME->Attribute("eme:orthTokens") != NULL && elemEME->Attribute("eme:morphIDs") != NULL) {
+						if (elemEME->Attribute("eme:orthTokens") != NULL && elemEME->Attribute("eme:morphIDs") != NULL && boost::regex_search(std::string(elemEME->Attribute("eme:morphIDs")), m, reg_or) == false ) {
 							std::string orthToken = elemEME->Attribute("eme:orthTokens");
 							std::vector<std::string> buf;
 							boost::algorithm::split(buf, orthToken, boost::algorithm::is_any_of(","));
@@ -134,19 +136,24 @@ namespace modality {
 
 							std::string morphID = elemEME->Attribute("eme:morphIDs");
 							boost::algorithm::split(buf, morphID, boost::algorithm::is_any_of(","));
-							morphID = buf[0];
+							morphID = buf[buf.size()-1];
 
-							bool found = false;
-							BOOST_FOREACH(std::vector<t_token> toks, sents) {
-								BOOST_FOREACH(t_token tok, toks) {
-									if (tok.morphID == morphID) {
-										std::cout << elemEME->Attribute("eme:morphIDs") << " " << elemEME->Attribute("eme:orthTokens") << " found at " << tok.sp << "-" << tok.ep << std::endl;
-										found = true;
+							std::vector< std::vector< t_token > >::iterator it_sent;
+							std::vector< t_token >::iterator it_tok;
+							for (it_sent=sents.begin() ; it_sent!=sents.end() ; ++it_sent) {
+								for (it_tok=it_sent->begin() ; it_tok!=it_sent->end() ; ++it_tok) {
+									if (it_tok->morphID == morphID) {
+										const tinyxml2::XMLAttribute *attr = elemEME->FirstAttribute();
+										while (attr) {
+											std::string attr_name = attr->Name();
+											boost::algorithm::split(buf, attr_name, boost::algorithm::is_any_of(":"));
+											attr_name = buf[buf.size()-1];
+
+											it_tok->eme[attr_name] = std::string(attr->Value());
+											attr = attr->Next();
+										}
 									}
 								}
-							}
-							if (found == false) {
-								std::cout << elemEME->Attribute("eme:morphIDs") << " " << elemEME->Attribute("eme:orthTokens") << " not found" << std::endl;
 							}
 						}
 					}
@@ -155,98 +162,31 @@ namespace modality {
 			}
 			elemWL = elemWL->NextSiblingElement();
 		}
-
 		
-		BOOST_FOREACH (std::vector<t_token> toks, sents) {
-			BOOST_FOREACH(t_token tok, toks) {
-				std::cout << tok.sp << " - " << tok.ep << " " << tok.morphID << " " << tok.orthToken << std::endl;
-			}
-			std::cout << std::endl;
-		}
-		
-		return true;
-	}
-
-
-#if 0
-
-		tinyxml2::XMLElement *next_elem = doc.FirstChildElement("sample")->FirstChildElement("OCQuestion")->FirstChildElement("webLine");
-		while (next_elem) {
-			int sp = 0;
-			int ep = 0;
-			if (std::string(next_elem->Name()) == "webLine") {
-//				std::cout << next_elem->FirstChildElement("sentence")->Name() << std::endl;
+		/*
+		BOOST_FOREACH( std::vector< t_token > toks, sents ) {
+			BOOST_FOREACH( t_token tok, toks ) {
+				std::cout << tok.orthToken;
+				boost::unordered_map< std::string, std::string >::iterator it;
 				
-				std::stringstream split_tokens;
-				tinyxml2::XMLElement *elem = next_elem->FirstChildElement("sentence")->FirstChildElement();
-//				std::cout << elem->Name() << std::endl;
-				while (elem) {
-					if (std::string(elem->Name()) == "SUW") {
-						std::string orthToken = elem->Attribute("orthToken");
-						
-//						split_tokens << orthToken << "\t*\n";
-						t_mod_tag mod_tag;
-						int token_len = orthToken.size();
-						mod_tag.sp = sp;
-						ep = sp + token_len;
-						mod_tag.ep = ep;
-						mod_tag.orthToken = orthToken;
-						mod_tag.morphID = elem->Attribute("morphID");
-						mod_tags.push_back(mod_tag);
-//						std::cout << mod_tag.sp << "\t" << mod_tag.ep << "\t" << mod_tag.orthToken << std::endl;
-
-						sp = ep + 1;
-					}
-					else if (std::string(elem->Name()) == "eme:event") {
-						//std::cout << elem->Attribute("eme:morphIDs") << std::endl;
-						std::string orthToken = elem->Attribute("eme:orthTokens");
-						std::vector<std::string> buf;
-						boost::algorithm::split(buf, orthToken, boost::algorithm::is_any_of(","));
-						orthToken = buf[0];
-						
-						bool found = false;
-						BOOST_FOREACH(t_mod_tag mod_tag, mod_tags) {
-							if (mod_tag.morphID == elem->Attribute("eme:morphIDs") && mod_tag.orthToken == orthToken) {
-								std::cout << elem->Attribute("eme:morphIDs") << " " << elem->Attribute("eme:orthTokens") << " found at " << mod_tag.sp << "-" << mod_tag.ep << std::endl;
-								found = true;
-							}
-						}
-						if (found == false) {
-							std::cout << elem->Attribute("eme:morphIDs") << " " << elem->Attribute("eme:orthTokens") << " not found" << std::endl;
-						}
-					}
-					elem = elem->NextSiblingElement();
-					if (elem == NULL) {
-						break;
-					}
+				if (tok.eme.find("morphIDs") != tok.eme.end()) {
+					std::cout << " " << tok.eme["morphIDs"];
 				}
-				/*
-				std::string tagged = mecab->parse(split_tokens.str().c_str());
-				std::cout << tagged << std::endl;
-				std::string parsed = cabocha->parseToString(tagged.c_str());
-				std::cout << parsed << std::endl;
-
-				nlp::sentence sent;
-				sent.ma_tool = sent.MeCab;
-				std::vector<std::string> lines;
-				boost::algorithm::split(lines, parsed, boost::algorithm::is_any_of("\n"));
-				sent.parse_cabocha(lines);
-				sent.pp();
-				*/
-
+				std::cout << std::endl;
 			}
-			next_elem = next_elem->NextSiblingElement();
 		}
-		
-		return true;
+		*/
+	
+		return sents;
 	}
-#endif
+
 
 	bool parser::gen_feature(nlp::sentence sent, int tok_id, t_feat &feat) {
 		gen_feature_basic(sent, tok_id, feat, 3);
 
 		return true;
 	}
+
 
 	bool parser::gen_feature_basic(nlp::sentence sent, int tok_id, t_feat &feat, int n) {
 		BOOST_FOREACH(nlp::chunk chk, sent.chunks) {

@@ -18,6 +18,7 @@ namespace modality {
 		int ep;
 		std::string orthToken;
 		std::string morphID;
+		boost::unordered_map< std::string, std::string > eme;
 	} t_token;
 
 	class instance {
@@ -32,6 +33,7 @@ namespace modality {
 			}
 	};
 
+		
 	class parser {
 		public:
 			MeCab::Tagger *mecab;
@@ -46,8 +48,8 @@ namespace modality {
 		public:
 			bool parse(std::string);
 			bool learnOC(std::string);
-			std::vector<t_token> parseOCXML_sent(tinyxml2::XMLElement *, int *);
-			bool conv_instance_OC(std::string, t_feat &);
+			std::vector<t_token> parse_OC_sent(tinyxml2::XMLElement *, int *);
+			std::vector< std::vector< t_token > > parse_OC(std::string);
 			bool gen_feature(nlp::sentence, int, t_feat &);
 			bool gen_feature_basic(nlp::sentence, int, t_feat &, int);
 	};
