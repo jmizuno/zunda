@@ -17,6 +17,7 @@
 
 
 namespace modality {
+	/*
 	bool parser::parse(std::string str) {
 		std::vector<std::string> lines;
 		boost::algorithm::split(lines, str, boost::algorithm::is_any_of("\n"));
@@ -50,22 +51,45 @@ namespace modality {
 
 		return true;
 	}
+	*/
 
-	bool parser::learnOC(std::string xml_path) {
-		t_feat *feat;
-		feat = new t_feat;
-		
-		std::vector< std::vector< t_token > > sents;
-		sents = parse_OC(xml_path);
-		BOOST_FOREACH ( std::vector< t_token > sent_orig, sents ) {
-			add_modtag(sent_orig);
+
+	bool parser::learnOC(std::vector< std::string > xmls) {
+		BOOST_FOREACH ( std::string xml_path, xmls ) {
+#ifdef DEBUG
+			std::cout << xml_path << std::endl;
+#endif
+			
+			std::vector< std::vector< t_token > > oc_sents = parse_OC(xml_path);
+			std::vector< nlp::sentence > parsed_sents;
+			BOOST_FOREACH ( std::vector< t_token > oc_sent, oc_sents ) {
+				nlp::sentence mod_ipa_sent = make_tagged_ipasents( oc_sent );
+			
+				std::vector< nlp::chunk >::iterator it_chk;
+				std::vector< nlp::token >::iterator it_tok;
+				for (it_chk=mod_ipa_sent.chunks.begin() ; it_chk!=mod_ipa_sent.chunks.end() ; ++it_chk) {
+					for (it_tok=it_chk->tokens.begin() ; it_tok!=it_chk->tokens.end() ; ++it_tok) {
+						if (it_tok->has_mod && it_tok->mod.tag.find("actuality") != it_tok->mod.tag.end()) {
+							std::cout << it_tok->mod.tag["actuality"];
+							t_feat *feat;
+							feat = new t_feat;
+							gen_feature( mod_ipa_sent, it_tok->id, *feat );
+							t_feat::iterator it_feat;
+							for ( it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat ) {
+								std::cout << " " << it_feat->first << ":" << it_feat->second;
+							}
+							std::cout << std::endl;
+						}
+					}
+				}
+			}
 		}
-
+		
 		return true;
 	}
 
-	
-	nlp::sentence parser::add_modtag( std::vector< t_token > sent_orig ) {
+
+	nlp::sentence parser::make_tagged_ipasents( std::vector< t_token > sent_orig ) {
 		nlp::sentence sent;
 		sent.ma_tool = nlp::sentence::MeCab;
 		
@@ -110,6 +134,7 @@ namespace modality {
 							nlp::t_eme::iterator it_eme;
 							for (it_eme=tok.eme.begin() ; it_eme!=tok.eme.end() ; ++it_eme) {
 								it_tok->mod.tag[it_eme->first] = it_eme->second;
+								it_tok->has_mod = true;
 							}
 #ifdef DEBUG
 							std::cout << "found\t" << tok.orthToken << "(" << tok.morphID << ") - " << it_tok->surf << "(" << it_tok->id << ")" << std::endl;
@@ -162,19 +187,10 @@ namespace modality {
 	}
 
 
-
-	/*
-	 * Convert modality-tagged OC xml into feature structure for ML
-	 */
-	std::vector< std::vector< t_token > > parser::parse_OC(std::string xml_path) {
-		tinyxml2::XMLDocument doc;
-		doc.LoadFile(xml_path.c_str());
-		
-		tinyxml2::XMLElement *elemQ = doc.FirstChildElement("sample")->FirstChildElement("OCQuestion");
-		tinyxml2::XMLElement *elemA = doc.FirstChildElement("sample")->FirstChildElement("OCAnswer");
+	std::vector< std::vector< t_token > > parser::parse_OC_sents (tinyxml2::XMLElement *elem) {
 		std::vector< std::vector<t_token> > sents;
 		
-		tinyxml2::XMLElement *elemWL = elemQ->FirstChildElement("webLine");
+		tinyxml2::XMLElement *elemWL = elem->FirstChildElement("webLine");
 		while (elemWL) {
 			if (std::string(elemWL->Name()) == "webLine") {
 				tinyxml2::XMLElement *elem = elemWL->FirstChildElement("sentence");
@@ -190,7 +206,12 @@ namespace modality {
 			elemWL = elemWL->NextSiblingElement();
 		}
 		
-		elemWL = elemQ->FirstChildElement("webLine");
+		return sents;
+	}
+
+
+	bool parser::parse_OC_modtag(tinyxml2::XMLElement *elem, std::vector< std::vector< t_token > > *sents) {
+		tinyxml2::XMLElement *elemWL = elem->FirstChildElement("webLine");
 		boost::regex reg_or("OR");
 		boost::smatch m;
 
@@ -229,7 +250,7 @@ namespace modality {
 
 									std::vector< std::vector< t_token > >::iterator it_sent;
 									std::vector< t_token >::iterator it_tok;
-									for (it_sent=sents.begin() ; it_sent!=sents.end() ; ++it_sent) {
+									for (it_sent=sents->begin() ; it_sent!=sents->end() ; ++it_sent) {
 										for (it_tok=it_sent->begin() ; it_tok!=it_sent->end() ; ++it_tok) {
 											if (it_tok->morphID == morphID) {
 												const tinyxml2::XMLAttribute *attr = elemEME->FirstAttribute();
@@ -263,7 +284,7 @@ namespace modality {
 		attrs.push_back("pmtype");
 		attrs.push_back("actuality");
 		attrs.push_back("evaluation");
-		BOOST_FOREACH( std::vector< t_token > toks, sents ) {
+		BOOST_FOREACH( std::vector< t_token > toks, *sents ) {
 			BOOST_FOREACH( t_token tok, toks ) {
 				std::cout << tok.orthToken << " " << tok.morphID << " (" << tok.sp << "," << tok.ep << ")";
 				boost::unordered_map< std::string, std::string >::iterator it;
@@ -280,14 +301,56 @@ namespace modality {
 			}
 		}
 #endif
+		
+		return true;
+	}
+
+
+	/*
+	 * Convert modality-tagged OC xml into feature structure for ML
+	 */
+	std::vector< std::vector< t_token > > parser::parse_OC(std::string xml_path) {
+		tinyxml2::XMLDocument doc;
+		doc.LoadFile(xml_path.c_str());
+		
+		tinyxml2::XMLElement *elemQ = doc.FirstChildElement("sample")->FirstChildElement("OCQuestion");
+		tinyxml2::XMLElement *elemA = doc.FirstChildElement("sample")->FirstChildElement("OCAnswer");
+		std::vector< std::vector<t_token> > sentsQ;
+		std::vector< std::vector<t_token> > sentsA;
+		
+		sentsQ = parse_OC_sents( elemQ );
+		parse_OC_modtag( elemQ, &sentsQ);
+		sentsA = parse_OC_sents( elemA );
+		parse_OC_modtag( elemA, &sentsA);
+		
+		sentsQ.insert(sentsQ.end(), sentsA.begin(), sentsA.end());
 	
-		return sents;
+		return sentsQ;
 	}
 
 
 	bool parser::gen_feature(nlp::sentence sent, int tok_id, t_feat &feat) {
 		gen_feature_basic(sent, tok_id, feat, 3);
+		gen_feature_function(sent, tok_id, feat);
 
+		return true;
+	}
+
+
+	bool parser::gen_feature_function(nlp::sentence sent, int tok_id, t_feat &feat) {
+		std::string func_ex = "";
+		std::vector< int > func_ids;
+
+		nlp::chunk chk = sent.get_chunk_by_tokenID(tok_id);
+		
+		BOOST_FOREACH ( nlp::token tok, chk.tokens ) {
+			if (tok_id < tok.id) {
+				func_ex += tok.orig;
+			}
+		}
+
+		feat["func_expression_" + func_ex] = 1.0;
+		
 		return true;
 	}
 

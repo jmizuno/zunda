@@ -46,12 +46,18 @@ namespace modality {
 			}
 
 		public:
-			bool parse(std::string);
-			bool learnOC(std::string);
-			nlp::sentence add_modtag( std::vector< t_token > );
-			std::vector<t_token> parse_OC_sent(tinyxml2::XMLElement *, int *);
+//			bool parse(std::string);
+			bool learnOC(std::vector< std::string >);
+
+			nlp::sentence make_tagged_ipasents( std::vector< t_token > );
+
 			std::vector< std::vector< t_token > > parse_OC(std::string);
+			std::vector< std::vector< t_token > > parse_OC_sents (tinyxml2::XMLElement *);
+			std::vector<t_token> parse_OC_sent(tinyxml2::XMLElement *, int *);
+			bool parse_OC_modtag(tinyxml2::XMLElement *, std::vector< std::vector< t_token > > *);
+
 			bool gen_feature(nlp::sentence, int, t_feat &);
+			bool gen_feature_function(nlp::sentence, int, t_feat &);
 			bool gen_feature_basic(nlp::sentence, int, t_feat &, int);
 	};
 };

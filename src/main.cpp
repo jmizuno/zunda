@@ -44,11 +44,13 @@ int main(int argc, char *argv[]) {
 
 	boost::filesystem::directory_iterator pos("/home/junta-m/work/20110324/TeaM/XML/OC");
 	boost::filesystem::directory_iterator last;
+	std::vector< std::string > xmls;
 	for (; pos!=last ; ++pos) {
 		boost::filesystem::path p(*pos);
-		std::cout << p.string() << std::endl;
-		mod_parser.learnOC(p.string());
+		xmls.push_back(p.string());
 	}
+	mod_parser.learnOC(xmls);
+
 	return 1;
 }
 
