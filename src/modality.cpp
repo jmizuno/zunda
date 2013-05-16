@@ -114,6 +114,7 @@ namespace modality {
 		std::vector< nlp::chunk >::iterator it_chk;
 		std::vector< nlp::token >::iterator it_tok;
 		for (it_chk=sent.chunks.begin() ; it_chk!=sent.chunks.end() ; ++it_chk) {
+			bool chk_has_mod = false;
 			for (it_tok=it_chk->tokens.begin() ; it_tok!=it_chk->tokens.end() ; ++it_tok) {
 				sp = ep;
 				ep = sp + it_tok->surf.size() - 1;
@@ -135,6 +136,7 @@ namespace modality {
 							for (it_eme=tok.eme.begin() ; it_eme!=tok.eme.end() ; ++it_eme) {
 								it_tok->mod.tag[it_eme->first] = it_eme->second;
 								it_tok->has_mod = true;
+								chk_has_mod = true;
 							}
 #ifdef DEBUG
 							std::cout << "found\t" << tok.orthToken << "(" << tok.morphID << ") - " << it_tok->surf << "(" << it_tok->id << ")" << std::endl;
@@ -145,6 +147,7 @@ namespace modality {
 				}
 				ep++;
 			}
+			it_chk->has_mod = chk_has_mod;
 		}
 		
 #ifdef DEBUG
@@ -332,6 +335,34 @@ namespace modality {
 	bool parser::gen_feature(nlp::sentence sent, int tok_id, t_feat &feat) {
 		gen_feature_basic(sent, tok_id, feat, 3);
 		gen_feature_function(sent, tok_id, feat);
+		gen_feature_follow_mod(sent, tok_id, feat);
+
+		return true;
+	}
+
+
+	bool parser::gen_feature_follow_mod(nlp::sentence sent, int tok_id, t_feat &feat) {
+		nlp::chunk chk;
+		chk = sent.get_chunk_by_tokenID(tok_id);
+		
+		if (chk.dst == -1) {
+			feat["last_chunk"] = 1.0;
+			return true;
+		}
+
+		chk = sent.get_chunk(chk.dst);
+		while (chk.has_mod == false) {
+			if (chk.dst == -1) {
+				feat["no_following_mod"] = 1.0;
+				return true;
+			}
+			chk = sent.get_chunk(chk.dst);
+		}
+		
+		nlp::token tok = chk.get_token_has_mod();
+		if (tok.mod.tag.find("actuality") != tok.mod.tag.end()) {
+			feat["next_actuality_" + tok.mod.tag["actuality"]] = 1.0;
+		}
 
 		return true;
 	}

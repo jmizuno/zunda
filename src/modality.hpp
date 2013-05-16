@@ -57,6 +57,7 @@ namespace modality {
 			bool parse_OC_modtag(tinyxml2::XMLElement *, std::vector< std::vector< t_token > > *);
 
 			bool gen_feature(nlp::sentence, int, t_feat &);
+			bool gen_feature_follow_mod(nlp::sentence, int, t_feat &);
 			bool gen_feature_function(nlp::sentence, int, t_feat &);
 			bool gen_feature_basic(nlp::sentence, int, t_feat &, int);
 	};
