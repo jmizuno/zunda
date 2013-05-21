@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <boost/unordered_map.hpp>
 #include <boost/algorithm/string.hpp>
@@ -53,8 +54,11 @@ namespace modality {
 	}
 	*/
 
-
-	bool parser::learnOC(std::vector< std::string > xmls) {
+	bool parser::learnOC(std::vector< std::string > xmls, std::string model_path, std::string feature_path) {
+		classias::msdata data;
+		
+		std::ofstream os_feat(feature_path.c_str());
+		
 		BOOST_FOREACH ( std::string xml_path, xmls ) {
 #ifdef DEBUG
 			std::cout << xml_path << std::endl;
@@ -70,21 +74,64 @@ namespace modality {
 				for (it_chk=mod_ipa_sent.chunks.begin() ; it_chk!=mod_ipa_sent.chunks.end() ; ++it_chk) {
 					for (it_tok=it_chk->tokens.begin() ; it_tok!=it_chk->tokens.end() ; ++it_tok) {
 						if (it_tok->has_mod && it_tok->mod.tag.find("actuality") != it_tok->mod.tag.end()) {
-							std::cout << it_tok->mod.tag["actuality"];
+							classias::minstance& inst = data.new_element();
+
+							std::string label = it_tok->mod.tag["actuality"];
+							inst.set_group(0);
+							inst.set_label(data.labels(label));
+
 							t_feat *feat;
 							feat = new t_feat;
 							gen_feature( mod_ipa_sent, it_tok->id, *feat );
 							t_feat::iterator it_feat;
-							for ( it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat ) {
-								std::cout << " " << it_feat->first << ":" << it_feat->second;
+							os_feat << label;
+							for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
+								os_feat << " " << it_feat->first << ":" << it_feat->second;
+								inst.append(data.attributes(it_feat->first), it_feat->second);
 							}
-							std::cout << std::endl;
+							os_feat << std::endl;
 						}
 					}
 				}
 			}
 		}
+		os_feat.close();
 		
+		if (data.empty()) {
+			std::cerr << "The data set is empty" << std::endl;
+			exit(-1);
+		}
+
+		data.generate_features();
+		std::cerr << "Number of instances: " << data.size() << std::endl;
+		std::cerr << "Number of attributes: " << data.num_attributes() << std::endl;
+		std::cerr << "Number of labels: " << data.num_labels() << std::endl;
+		std::cerr << "Number of features: " << data.num_features() << std::endl;
+
+		trainer_type tr;
+		//tr.params().set("max_iterations", 100);
+		tr.train(data, std::cerr);
+
+		std::ofstream os_model(model_path.c_str());
+		os_model << "@classias\tlinear\tmulti\t";
+		os_model << data.feature_generator.name() << std::endl;
+
+		for (int l = 0;l < data.num_labels();++l) {
+			os_model << "@label\t" << data.labels.to_item(l) << std::endl;
+		}
+
+		for (int i = 0;i < data.num_features();++i) {
+			double w = tr.model()[i];
+			if (w != 0.) {
+				int a, l;
+				data.feature_generator.backward(i, a, l);
+				const std::string& attr = data.attributes.to_item(a);
+				const std::string& label = data.labels.to_item(l);
+				os_model << w << '\t' << attr << '\t' << label << std::endl;
+			}
+		}
+		os_model.close();
+
 		return true;
 	}
 
@@ -329,79 +376,6 @@ namespace modality {
 		sentsQ.insert(sentsQ.end(), sentsA.begin(), sentsA.end());
 	
 		return sentsQ;
-	}
-
-
-	bool parser::gen_feature(nlp::sentence sent, int tok_id, t_feat &feat) {
-		gen_feature_basic(sent, tok_id, feat, 3);
-		gen_feature_function(sent, tok_id, feat);
-		gen_feature_follow_mod(sent, tok_id, feat);
-
-		return true;
-	}
-
-
-	bool parser::gen_feature_follow_mod(nlp::sentence sent, int tok_id, t_feat &feat) {
-		nlp::chunk chk;
-		chk = sent.get_chunk_by_tokenID(tok_id);
-		
-		if (chk.dst == -1) {
-			feat["last_chunk"] = 1.0;
-			return true;
-		}
-
-		chk = sent.get_chunk(chk.dst);
-		while (chk.has_mod == false) {
-			if (chk.dst == -1) {
-				feat["no_following_mod"] = 1.0;
-				return true;
-			}
-			chk = sent.get_chunk(chk.dst);
-		}
-		
-		nlp::token tok = chk.get_token_has_mod();
-		if (tok.mod.tag.find("actuality") != tok.mod.tag.end()) {
-			feat["next_actuality_" + tok.mod.tag["actuality"]] = 1.0;
-		}
-
-		return true;
-	}
-
-
-	bool parser::gen_feature_function(nlp::sentence sent, int tok_id, t_feat &feat) {
-		std::string func_ex = "";
-		std::vector< int > func_ids;
-
-		nlp::chunk chk = sent.get_chunk_by_tokenID(tok_id);
-		
-		BOOST_FOREACH ( nlp::token tok, chk.tokens ) {
-			if (tok_id < tok.id) {
-				func_ex += tok.orig;
-			}
-		}
-
-		feat["func_expression_" + func_ex] = 1.0;
-		
-		return true;
-	}
-
-
-	bool parser::gen_feature_basic(nlp::sentence sent, int tok_id, t_feat &feat, int n) {
-		BOOST_FOREACH(nlp::chunk chk, sent.chunks) {
-			BOOST_FOREACH(nlp::token tok, chk.tokens) {
-				if (tok_id <= tok.id + n && tok.id - n <= tok_id && tok_id != tok.id) {
-					std::stringstream ss;
-					ss << tok.id - tok_id;
-					feat["tok_surf_" + ss.str() + "_" + tok.surf] = 1.0;
-					feat["tok_orig_" + ss.str() + "_" + tok.orig] = 1.0;
-				}
-				if (tok.id == tok_id) {
-					feat["tok_surf_" + tok.surf] = 1.0;
-					feat["tok_orig_" + tok.orig] = 1.0;
-				}
-			}
-		}
-		return true;
 	}
 };
 
