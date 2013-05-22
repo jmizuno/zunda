@@ -14,8 +14,10 @@
 #include <classias/train/lbfgs.h>
 #include <classias/train/online_scheduler.h>
 #include <classias/feature_generator.h>
+#include <classias/quark.h>
 
 #include "sentence.hpp"
+#include "defaultmap.h"
 
 #define MODALITY_VERSION 1.0
 
@@ -23,6 +25,38 @@ namespace modality {
 	typedef boost::unordered_map< std::string, double > t_feat;
 
 	typedef classias::train::lbfgs_logistic_multi<classias::msdata> trainer_type;
+	typedef defaultmap<std::string, double> model_type;
+	typedef classias::classify::linear_multi_logistic<model_type> classifier_type;
+
+class feature_generator
+{
+public:
+    typedef std::string attribute_type;
+    typedef std::string label_type;
+    typedef std::string feature_type;
+
+public:
+    feature_generator()
+    {
+    }
+
+    virtual ~feature_generator()
+    {
+    }
+
+    inline bool forward(
+        const std::string& a,
+        const std::string& l,
+        std::string& f
+        ) const
+    {
+        f  = a;
+        f += '\t';
+        f += l;
+        return true;
+    }
+};
+
 
 /*	typedef classias::train::online_scheduler_multi<
 		classias::msdata,
@@ -56,6 +90,11 @@ namespace modality {
 		
 	class parser {
 		public:
+			enum {
+				raw_text = 0,
+				cabocha_text = 1,
+				chapas_text = 2,
+			};
 //			MeCab::Tagger *mecab;
 			CaboCha::Parser *cabocha;
 			parser() {
@@ -66,6 +105,8 @@ namespace modality {
 			}
 
 		public:
+			void read_model(model_type&, classias::quark&, std::istream&);
+			void classify(model_type, classias::quark, std::string, int);
 //			bool parse(std::string);
 			bool learnOC(std::vector< std::string >, std::string, std::string);
 

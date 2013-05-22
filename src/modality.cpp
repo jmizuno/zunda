@@ -54,6 +54,107 @@ namespace modality {
 	}
 	*/
 
+
+	void parser::read_model(model_type& model, classias::quark& labels, std::istream& is) {
+		while(true) {
+			std::string line;
+			std::getline(is, line);
+			if (is.eof()) {
+				break;
+			}
+			
+			if (line.compare(0, 7, "@label\t") == 0) {
+				labels(line.substr(7));
+				continue;
+			}
+
+			if (line.compare(0, 1, "@") == 0) {
+				continue;
+			}
+
+			unsigned int pos = line.find('\t');
+			if (pos == line.npos) {
+				std::cerr << "feature weight is missing" << std::endl;
+				exit(-1);
+			}
+
+			double w = std::atof(line.c_str());
+			if (++pos == line.size()) {
+				std::cerr << "feature name is missing" << std::endl;
+				exit(-1);
+			}
+
+			model.insert(model_type::pair_type(line.substr(pos), w));
+		}
+		
+		std::cout << "label size " << labels.size() << std::endl;
+	}
+
+
+	void parser::classify(model_type model, classias::quark labels, std::string text, int input_layer) {
+		
+		nlp::sentence sent;
+		sent.ma_tool = nlp::sentence::MeCab;
+		std::string parsed_text;
+		switch (input_layer) {
+			case raw_text:
+				parsed_text = cabocha->parseToString( text.c_str() );
+				break;
+			case cabocha_text:
+				parsed_text = text;
+				break;
+			case chapas_text:
+				parsed_text = text;
+				break;
+			default:
+				std::cerr << "invalid input format" << std::endl;
+				break;
+		}
+		sent.parse_cabocha(parsed_text);
+		
+		std::vector<nlp::chunk>::reverse_iterator rit_chk;
+		std::vector<nlp::token>::reverse_iterator rit_tok;
+		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sent.chunks.rend() ; ++rit_chk) {
+			for (rit_tok=(rit_chk->tokens).rbegin() ; rit_tok!=(rit_chk->tokens).rend() ; ++rit_tok) {
+				if (rit_tok->pos == "動詞") {
+				//if ((rit_tok->pas).is_pred()) {
+					classifier_type inst(model);
+					inst.clear();
+					inst.resize(labels.size());
+					feature_generator fgen;
+
+					t_feat *feat;
+					feat = new t_feat;
+					gen_feature( sent, rit_tok->id, *feat );
+
+					std::string feat_str = "";
+					t_feat::iterator it_feat;
+					for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
+						std::stringstream ss;
+						ss << it_feat->first;
+						ss << ":";
+						ss << it_feat->second;
+						ss << " ";
+						feat_str += ss.str();
+
+						for (int i=0 ; i<(int)labels.size() ; ++i) {
+							inst.set(i, fgen, it_feat->first, labels.to_item(i), it_feat->second);
+						}
+					}
+					inst.finalize();
+
+					std::cout << feat_str << std::endl;
+					std::cout << labels.to_item(inst.argmax()) << std::endl;
+
+					rit_tok->mod.tag["actuality"] = labels.to_item(inst.argmax());
+					rit_tok->has_mod = true;
+					rit_chk->has_mod = true;
+				}
+			}
+		}
+	}
+
+
 	bool parser::learnOC(std::vector< std::string > xmls, std::string model_path, std::string feature_path) {
 		classias::msdata data;
 		
@@ -131,7 +232,7 @@ namespace modality {
 			}
 		}
 		os_model.close();
-
+		
 		return true;
 	}
 
