@@ -67,7 +67,6 @@ int main(int argc, char *argv[]) {
 	modality::parser mod_parser;
 //	mod_parser.parse(str);
 
-
 	if (mode_learn) {
 		std::cerr << "learn model" << std::endl;
 		boost::filesystem::directory_iterator pos("/home/junta-m/work/20110324/TeaM/XML/OC");
@@ -109,7 +108,7 @@ int main(int argc, char *argv[]) {
 		
 		BOOST_FOREACH ( std::string sent, sents ) {
 			nlp::sentence parsed_sent = mod_parser.classify(model, labels, sent, input_layer);
-			parsed_sent.pp();
+			std::cout << parsed_sent.cabocha() << std::endl;
 		}
 	}
 

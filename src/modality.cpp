@@ -86,8 +86,6 @@ namespace modality {
 
 			model.insert(model_type::pair_type(line.substr(pos), w));
 		}
-		
-		std::cout << "label size " << labels.size() << std::endl;
 	}
 
 
@@ -127,15 +125,19 @@ namespace modality {
 					feat = new t_feat;
 					gen_feature( sent, rit_tok->id, *feat );
 
+#ifdef DEBUG
 					std::string feat_str = "";
+#endif
 					t_feat::iterator it_feat;
 					for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
+#ifdef DEBUG
 						std::stringstream ss;
 						ss << it_feat->first;
 						ss << ":";
 						ss << it_feat->second;
 						ss << " ";
 						feat_str += ss.str();
+#endif
 
 						for (int i=0 ; i<(int)labels.size() ; ++i) {
 							inst.set(i, fgen, it_feat->first, labels.to_item(i), it_feat->second);
@@ -143,8 +145,10 @@ namespace modality {
 					}
 					inst.finalize();
 
+#ifdef DEBUG
 					std::cout << feat_str << std::endl;
-					std::cout << labels.to_item(inst.argmax()) << std::endl;
+					std::cout << " -> " << labels.to_item(inst.argmax()) << std::endl;
+#endif
 
 					rit_tok->mod.tag["actuality"] = labels.to_item(inst.argmax());
 					rit_tok->has_mod = true;
