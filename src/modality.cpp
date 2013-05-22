@@ -91,8 +91,8 @@ namespace modality {
 	}
 
 
-	void parser::classify(model_type model, classias::quark labels, std::string text, int input_layer) {
-		
+	nlp::sentence parser::classify(model_type model, classias::quark labels, std::string text, int input_layer) {
+
 		nlp::sentence sent;
 		sent.ma_tool = nlp::sentence::MeCab;
 		std::string parsed_text;
@@ -111,13 +111,13 @@ namespace modality {
 				break;
 		}
 		sent.parse_cabocha(parsed_text);
-		
+
 		std::vector<nlp::chunk>::reverse_iterator rit_chk;
 		std::vector<nlp::token>::reverse_iterator rit_tok;
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sent.chunks.rend() ; ++rit_chk) {
 			for (rit_tok=(rit_chk->tokens).rbegin() ; rit_tok!=(rit_chk->tokens).rend() ; ++rit_tok) {
 				if (rit_tok->pos == "動詞") {
-				//if ((rit_tok->pas).is_pred()) {
+					//if ((rit_tok->pas).is_pred()) {
 					classifier_type inst(model);
 					inst.clear();
 					inst.resize(labels.size());
@@ -152,6 +152,7 @@ namespace modality {
 				}
 			}
 		}
+		return sent;
 	}
 
 

@@ -106,7 +106,7 @@ public:
 
 		public:
 			void read_model(model_type&, classias::quark&, std::istream&);
-			void classify(model_type, classias::quark, std::string, int);
+			nlp::sentence classify(model_type, classias::quark, std::string, int);
 //			bool parse(std::string);
 			bool learnOC(std::vector< std::string >, std::string, std::string);
 

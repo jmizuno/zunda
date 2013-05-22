@@ -108,7 +108,8 @@ int main(int argc, char *argv[]) {
 		}
 		
 		BOOST_FOREACH ( std::string sent, sents ) {
-			mod_parser.classify(model, labels, sent, input_layer);
+			nlp::sentence parsed_sent = mod_parser.classify(model, labels, sent, input_layer);
+			parsed_sent.pp();
 		}
 	}
 
