@@ -15,9 +15,11 @@
 #include <classias/train/online_scheduler.h>
 #include <classias/feature_generator.h>
 #include <classias/quark.h>
+#include <kcpolydb.h>
 
 #include "sentence.hpp"
 #include "defaultmap.h"
+#include "cdbpp.h"
 
 #define MODALITY_VERSION 1.0
 
@@ -27,6 +29,12 @@ namespace modality {
 	typedef classias::train::lbfgs_logistic_multi<classias::msdata> trainer_type;
 	typedef defaultmap<std::string, double> model_type;
 	typedef classias::classify::linear_multi_logistic<model_type> classifier_type;
+
+	enum {
+		raw_text = 0,
+		cabocha_text = 1,
+		chapas_text = 2,
+	};
 
 class feature_generator
 {
@@ -90,15 +98,16 @@ public:
 		
 	class parser {
 		public:
-			enum {
-				raw_text = 0,
-				cabocha_text = 1,
-				chapas_text = 2,
-			};
+			std::ifstream ifs;
+			kyotocabinet::TreeDB ttjDB;
+			
 //			MeCab::Tagger *mecab;
 			CaboCha::Parser *cabocha;
 			parser() {
 //				mecab = MeCab::createTagger("-p");
+				if (!ttjDB.open("ttjcore2seq.kch", kyotocabinet::TreeDB::OREADER)) {
+					std::cerr << "open error: " << ttjDB.error().name() << std::endl;
+				}
 				cabocha = CaboCha::createParser("-f1");
 			}
 			~parser() {
@@ -117,11 +126,13 @@ public:
 			std::vector<t_token> parse_OC_sent(tinyxml2::XMLElement *, int *);
 			bool parse_OC_modtag(tinyxml2::XMLElement *, std::vector< std::vector< t_token > > *);
 
-			bool gen_feature(nlp::sentence, int, t_feat &);
+			void gen_feature(nlp::sentence, int, t_feat &);
 			bool gen_feature_follow_mod(nlp::sentence, int, t_feat &);
-			bool gen_feature_function(nlp::sentence, int, t_feat &);
-			bool gen_feature_basic(nlp::sentence, int, t_feat &, int);
+			void gen_feature_function(nlp::sentence, int, t_feat &);
+			void gen_feature_basic(nlp::sentence, int, t_feat &, int);
+			void gen_feature_ttj(nlp::sentence, int, t_feat &);
 	};
 };
 
 #endif
+
