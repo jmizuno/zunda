@@ -313,6 +313,24 @@ namespace nlp {
 	}
 
 
+	bool sentence::get_chunk_has_mod(chunk &chk, int cid) {
+		chunk chk_core = get_chunk(cid);
+		if (chk_core.dst == -1) {
+			return false;
+		}
+		
+		chk = get_chunk(chk_core.dst);
+		while (chk.has_mod == false) {
+			if (chk.dst == -1) {
+				return false;
+			}
+			chk = get_chunk(chk.dst);
+		}
+		
+		return true;
+	}
+
+
 	std::string sentence::cabocha() {
 		std::stringstream cabocha_ss;
 		int eve_id = 0;

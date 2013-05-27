@@ -143,6 +143,7 @@ namespace nlp {
 			chunk get_chunk(int);
 			chunk get_chunk_by_tokenID(int);
 			token get_token(int);
+			bool get_chunk_has_mod(chunk&, int);
 			std::string str(std::string);
 			std::string str();
 			std::string cabocha();
