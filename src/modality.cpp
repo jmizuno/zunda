@@ -125,12 +125,12 @@ namespace modality {
 					feat = new t_feat;
 					gen_feature( sent, rit_tok->id, *feat );
 
-#ifdef DEBUG
+#ifdef _MODEBUG
 					std::string feat_str = "";
 #endif
 					t_feat::iterator it_feat;
 					for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
-#ifdef DEBUG
+#ifdef _MODEBUG
 						std::stringstream ss;
 						ss << it_feat->first;
 						ss << ":";
@@ -145,7 +145,7 @@ namespace modality {
 					}
 					inst.finalize();
 
-#ifdef DEBUG
+#ifdef _MODEBUG
 					std::cout << feat_str << std::endl;
 					std::cout << " -> " << labels.to_item(inst.argmax()) << std::endl;
 #endif
@@ -166,9 +166,7 @@ namespace modality {
 		std::ofstream os_feat(feature_path.c_str());
 		
 		BOOST_FOREACH ( std::string xml_path, xmls ) {
-#ifdef DEBUG
 			std::cout << xml_path << std::endl;
-#endif
 			
 			std::vector< std::vector< t_token > > oc_sents = parse_OC(xml_path);
 			std::vector< nlp::sentence > parsed_sents;
@@ -256,11 +254,11 @@ namespace modality {
 
 		sent.parse_cabocha(parsed_text);
 		
-#ifdef DEBUG
+#ifdef _MODEBUG
 		std::cout << std::endl;
 #endif
 		
-#ifdef DEBUG
+#ifdef _MODEBUG
 		std::vector<std::string> matchedIDs;
 #endif
 		int sp = 0, ep = 0;
@@ -271,7 +269,7 @@ namespace modality {
 			for (it_tok=it_chk->tokens.begin() ; it_tok!=it_chk->tokens.end() ; ++it_tok) {
 				sp = ep;
 				ep = sp + it_tok->surf.size() - 1;
-#ifdef DEBUG
+#ifdef _MODEBUG
 				std::cout << it_tok->surf << "(" << sp << "," << ep << ")" << std::endl;
 #endif
 				
@@ -291,7 +289,7 @@ namespace modality {
 								it_tok->has_mod = true;
 								chk_has_mod = true;
 							}
-#ifdef DEBUG
+#ifdef _MODEBUG
 							std::cout << "found\t" << tok.orthToken << "(" << tok.morphID << ") - " << it_tok->surf << "(" << it_tok->id << ")" << std::endl;
 							matchedIDs.push_back(tok.morphID);
 #endif
@@ -303,7 +301,7 @@ namespace modality {
 			it_chk->has_mod = chk_has_mod;
 		}
 		
-#ifdef DEBUG
+#ifdef _MODEBUG
 		BOOST_FOREACH( t_token tok, sent_orig ) {
 			if ( tok.eme.find("morphIDs") != tok.eme.end() && std::find(matchedIDs.begin(), matchedIDs.end(), tok.morphID) == matchedIDs.end() ) {
 				std::cout << "not found\t" << tok.morphID << std::endl;
@@ -432,7 +430,7 @@ namespace modality {
 			elemWL = elemWL->NextSiblingElement();
 		}
 		
-#ifdef DEBUG
+#ifdef _MODEBUG
 		std::vector<std::string> attrs;
 		attrs.push_back("source");
 		attrs.push_back("time");
