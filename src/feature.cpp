@@ -23,6 +23,7 @@ namespace modality {
 		gen_feature_function(sent, tok_id, feat);
 		gen_feature_follow_mod(sent, tok_id, feat);
 		gen_feature_ttj(sent, tok_id, feat);
+		gen_feature_fadic(sent, tok_id, feat);
 	}
 
 
@@ -143,5 +144,30 @@ namespace modality {
 		}
 //		std::cout << chk_core.str() << "->" << join(sems, ",") << std::endl;
 	}
+
+
+	void parser::gen_feature_fadic(nlp::sentence sent, int tok_id, t_feat &feat) {
+		nlp::chunk chk_core = sent.get_chunk_by_tokenID(tok_id);
+		nlp::chunk chk_mod;
+		if (sent.get_chunk_has_mod(chk_mod, chk_core.id) == true) {
+			nlp::token tok = chk_mod.get_token_has_mod();
+			std::string key = tok.orig + ":";
+			if (tok.mod.tag.find("actuality") != tok.mod.tag.end()) {
+				key += "pos_present_actuality";
+			}
+			else {
+				key += "neg_present_actuality";
+			}
+			
+			std::string val;
+			if (fadicDB.get(key, &val)) {
+				feat["fadic_actuality_" + val] = 1.0;
+			}
+			else {
+				feat["fadic_noent"] = 1.0;
+			}
+		}
+	}
+
 };
 

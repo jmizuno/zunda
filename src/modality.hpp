@@ -99,13 +99,17 @@ public:
 		public:
 			std::ifstream ifs;
 			kyotocabinet::HashDB ttjDB;
+			kyotocabinet::HashDB fadicDB;
 			
 //			MeCab::Tagger *mecab;
 			CaboCha::Parser *cabocha;
 			parser() {
 //				mecab = MeCab::createTagger("-p");
-				if (!ttjDB.open("dic/ttjcore2seq.kch", kyotocabinet::TreeDB::OREADER)) {
-					std::cerr << "open error: " << ttjDB.error().name() << std::endl;
+				if (!ttjDB.open("dic/ttjcore2seq.kch", kyotocabinet::HashDB::OREADER)) {
+					std::cerr << "open error: ttjcore2seq: " << ttjDB.error().name() << std::endl;
+				}
+				if (!fadicDB.open("dic/FAdic.kch", kyotocabinet::HashDB::OREADER)) {
+					std::cerr << "open error: fadic: " << fadicDB.error().name() << std::endl;
 				}
 				cabocha = CaboCha::createParser("-f1");
 			}
@@ -130,6 +134,7 @@ public:
 			void gen_feature_function(nlp::sentence, int, t_feat &);
 			void gen_feature_basic(nlp::sentence, int, t_feat &, int);
 			void gen_feature_ttj(nlp::sentence, int, t_feat &);
+			void gen_feature_fadic(nlp::sentence, int, t_feat &);
 	};
 };
 
