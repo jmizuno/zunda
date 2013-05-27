@@ -98,13 +98,13 @@ public:
 	class parser {
 		public:
 			std::ifstream ifs;
-			kyotocabinet::TreeDB ttjDB;
+			kyotocabinet::HashDB ttjDB;
 			
 //			MeCab::Tagger *mecab;
 			CaboCha::Parser *cabocha;
 			parser() {
 //				mecab = MeCab::createTagger("-p");
-				if (!ttjDB.open("ttjcore2seq.kch", kyotocabinet::TreeDB::OREADER)) {
+				if (!ttjDB.open("dic/ttjcore2seq.kch", kyotocabinet::TreeDB::OREADER)) {
 					std::cerr << "open error: " << ttjDB.error().name() << std::endl;
 				}
 				cabocha = CaboCha::createParser("-f1");
