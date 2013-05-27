@@ -75,9 +75,6 @@ int main(int argc, char *argv[]) {
 		for (; pos!=last ; ++pos) {
 			boost::filesystem::path p(*pos);
 			xmls.push_back(p.string());
-#ifdef DEBUG
-			break;
-#endif
 		}
 		mod_parser.learnOC(xmls, model_path, feature_path);
 	}
@@ -102,8 +99,27 @@ int main(int argc, char *argv[]) {
 		
 		std::vector< std::string > sents;
 		std::string buf;
+		std::string ct;
 		while( getline(std::cin, buf) ) {
-			sents.push_back(buf);
+			switch (input_layer) {
+				case modality::raw_text:
+					sents.push_back(buf);
+					break;
+				case modality::cabocha_text:
+					ct += buf + "\n";
+					if (buf.compare(0, 3, "EOS") == 0) {
+						sents.push_back(ct);
+						ct.clear();
+					}
+					break;
+				case modality::chapas_text:
+					ct += buf + "\n";
+					if (buf.compare(0, 3, "EOS") == 0) {
+						sents.push_back(ct);
+						ct.clear();
+					}
+					break;
+			}
 		}
 		
 		BOOST_FOREACH ( std::string sent, sents ) {
