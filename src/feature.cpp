@@ -26,7 +26,7 @@ namespace modality {
 	}
 
 
-	bool parser::gen_feature_follow_mod(nlp::sentence sent, int tok_id, t_feat &feat) {
+	void parser::gen_feature_follow_mod(nlp::sentence sent, int tok_id, t_feat &feat) {
 		nlp::chunk chk;
 		chk = sent.get_chunk_by_tokenID(tok_id);
 		
@@ -34,18 +34,15 @@ namespace modality {
 			feat["last_chunk"] = 1.0;
 		}
 		else {
-			chk = sent.get_chunk(chk.dst);
-			while (chk.has_mod == false) {
-				if (chk.dst == -1) {
-					feat["no_following_mod"] = 1.0;
-					return true;
+			nlp::chunk chk_mod;
+			if (sent.get_chunk_has_mod(chk_mod, chk.id) == true) {
+				nlp::token tok = chk_mod.get_token_has_mod();
+				if (tok.mod.tag.find("actuality") != tok.mod.tag.end()) {
+					feat["next_actuality_" + tok.mod.tag["actuality"]] = 1.0;
 				}
-				chk = sent.get_chunk(chk.dst);
 			}
-
-			nlp::token tok = chk.get_token_has_mod();
-			if (tok.mod.tag.find("actuality") != tok.mod.tag.end()) {
-				feat["next_actuality_" + tok.mod.tag["actuality"]] = 1.0;
+			else {
+				feat["no_following_mod"] = 1.0;
 			}
 		}
 	}

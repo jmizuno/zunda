@@ -4,7 +4,7 @@
 #include <iostream>
 #include <boost/unordered_map.hpp>
 #include <boost/algorithm/string.hpp>
-#include <mecab.h>
+//#include <mecab.h>
 #include <cabocha.h>
 #include <tinyxml2.h>
 #include <linear.h>
@@ -19,7 +19,6 @@
 
 #include "sentence.hpp"
 #include "defaultmap.h"
-#include "cdbpp.h"
 
 #define MODALITY_VERSION 1.0
 
@@ -127,7 +126,7 @@ public:
 			bool parse_OC_modtag(tinyxml2::XMLElement *, std::vector< std::vector< t_token > > *);
 
 			void gen_feature(nlp::sentence, int, t_feat &);
-			bool gen_feature_follow_mod(nlp::sentence, int, t_feat &);
+			void gen_feature_follow_mod(nlp::sentence, int, t_feat &);
 			void gen_feature_function(nlp::sentence, int, t_feat &);
 			void gen_feature_basic(nlp::sentence, int, t_feat &, int);
 			void gen_feature_ttj(nlp::sentence, int, t_feat &);
