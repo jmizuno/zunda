@@ -110,7 +110,7 @@ namespace modality {
 //						std::cout << rit_tok->orig << "->" << ent << std::endl;
 					}
 					else {
-						for (int i=1 ; i<seq.size() ; ++i) {
+						for (unsigned int i=1 ; i<seq.size() ; ++i) {
 							std::vector< std::string > word;
 							boost::algorithm::split(word, seq[i], boost::algorithm::is_any_of(":"));
 							int pos = boost::lexical_cast<int>(word[0]);
@@ -118,7 +118,7 @@ namespace modality {
 
 							int around_tid = tok_id + pos;
 							if (around_tid < sent.tid_min || sent.tid_max < around_tid) {
-								match == false;
+								match = false;
 								break;
 							}
 							nlp::token tok = sent.get_token(around_tid);
