@@ -7,7 +7,7 @@
 #include <boost/foreach.hpp>
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
-
+#include <iomanip>
 
 #include "sentence.hpp"
 
@@ -343,7 +343,7 @@ namespace nlp {
 		}
 
 		BOOST_FOREACH( chunk chk, chunks ) {
-			cabocha_ss << "* " << chk.id << " " << chk.dst << chk.type << " " << chk.subj << "/" << chk.func << " " << chk.score << "\n";
+			cabocha_ss << "* " << chk.id << " " << chk.dst << chk.type << " " << chk.subj << "/" << chk.func << " " << std::showpoint << std::setprecision(7) << chk.score << "\n";
 			BOOST_FOREACH ( token tok, chk.tokens ) {
 				cabocha_ss << tok.surf << "\t" << tok.pos << "," << tok.pos1 << "," << tok.pos2 << "," << tok.pos3 << "," << tok.type << "," << tok.form << "," << tok.orig << "," << tok.read << "," << tok.pron << "\t" << tok.ne << "\n";
 			}
