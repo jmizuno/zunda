@@ -97,7 +97,6 @@ public:
 		
 	class parser {
 		public:
-			std::ifstream ifs;
 			kyotocabinet::HashDB ttjDB;
 			kyotocabinet::HashDB fadicDB;
 			
