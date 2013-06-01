@@ -33,7 +33,31 @@ namespace nlp {
 	
 	class modality {
 		public:
-			t_eme tag;
+			std::vector<int> tids;
+			std::string source;
+			std::string tense;
+			std::string assumptional;
+			std::string type;
+			std::string authenticity;
+			std::string sentiment;
+			std::string focus;
+		public:
+			modality() {
+				source = "wr:筆者";
+				tense = "0";
+				assumptional = "0";
+				type = "0";
+				authenticity = "0";
+				sentiment = "0";
+				focus = "0";
+			}
+			~modality() {
+			}
+		public:
+			void parse(std::string);
+			std::string str();
+			bool negation();
+			bool negation_strict();
 	};
 
 	class token {

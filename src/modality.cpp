@@ -150,7 +150,8 @@ namespace modality {
 					std::cout << " -> " << labels.to_item(inst.argmax()) << std::endl;
 #endif
 
-					rit_tok->mod.tag["actuality"] = labels.to_item(inst.argmax());
+					rit_tok->mod.tids.push_back(rit_tok->id);
+					rit_tok->mod.authenticity = labels.to_item(inst.argmax());
 					rit_tok->has_mod = true;
 					rit_chk->has_mod = true;
 				}
@@ -177,10 +178,10 @@ namespace modality {
 				std::vector< nlp::token >::iterator it_tok;
 				for (it_chk=mod_ipa_sent.chunks.begin() ; it_chk!=mod_ipa_sent.chunks.end() ; ++it_chk) {
 					for (it_tok=it_chk->tokens.begin() ; it_tok!=it_chk->tokens.end() ; ++it_tok) {
-						if (it_tok->has_mod && it_tok->mod.tag.find("actuality") != it_tok->mod.tag.end()) {
+						if (it_tok->has_mod && it_tok->mod.authenticity != "") {
 							classias::minstance& inst = data.new_element();
 
-							std::string label = it_tok->mod.tag["actuality"];
+							std::string label = it_tok->mod.authenticity;
 							inst.set_group(0);
 							inst.set_label(data.labels(label));
 
@@ -285,7 +286,27 @@ namespace modality {
 						if ( tok.eme.find("morphIDs") != tok.eme.end() ) {
 							nlp::t_eme::iterator it_eme;
 							for (it_eme=tok.eme.begin() ; it_eme!=tok.eme.end() ; ++it_eme) {
-								it_tok->mod.tag[it_eme->first] = it_eme->second;
+								if (it_eme->first == "source") {
+									it_tok->mod.source = it_eme->second;
+								}
+								else if (it_eme->first == "time") {
+									it_tok->mod.tense = it_eme->second;
+								}
+								else if (it_eme->first == "conditional") {
+									it_tok->mod.assumptional = it_eme->second;
+								}
+								else if (it_eme->first == "pmtype") {
+									it_tok->mod.type = it_eme->second;
+								}
+								else if (it_eme->first == "actuality") {
+									it_tok->mod.authenticity = it_eme->second;
+								}
+								else if (it_eme->first == "evaluation") {
+									it_tok->mod.sentiment = it_eme->second;
+								}
+								else if (it_eme->first == "focus") {
+									it_tok->mod.focus = it_eme->second;
+								}
 								it_tok->has_mod = true;
 								chk_has_mod = true;
 							}

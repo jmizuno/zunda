@@ -10,17 +10,8 @@
 #include <iomanip>
 
 #include "sentence.hpp"
+#include "util.hpp"
 
-std::string join(std::vector<std::string> vec, std::string splitter) {
-	std::string str;
-	BOOST_FOREACH ( std::string v, vec ) {
-		str.append(v);
-		if (v != vec[vec.size()-1]) {
-			str.append(splitter);
-		}
-	}
-	return str;
-}
 
 std::string rm_quote(std::string str) {
 	str.replace(0, 1, "");
@@ -28,6 +19,44 @@ std::string rm_quote(std::string str) {
 
 	return str;
 }
+
+namespace nlp {
+	void modality::parse(std::string mod_line) {
+		std::vector< std::string > l;
+		boost::algorithm::split(l, mod_line, boost::algorithm::is_any_of("\t"));
+
+		if (l.size() != 9) {
+			std::cerr << "error: invalid modality tag format: " << mod_line << std::endl;
+		}
+		else {
+			std::vector< std::string > tid_strs;
+			boost::algorithm::split(tid_strs, l[1], boost::algorithm::is_any_of(","));
+			std::vector< int > tids;
+			BOOST_FOREACH(std::string tid_str, tid_strs) {
+				tids.push_back(boost::lexical_cast<int>(tid_str));
+			}
+
+			source = l[2];
+			tense = l[3];
+			assumptional = l[4];
+			type = l[5];
+			authenticity = l[6];
+			sentiment = l[7];
+			focus = l[8];
+		}
+	}
+
+	std::string modality::str() {
+		std::string str;
+		std::string tid_str;
+		join(tid_str, tids, ",");
+		
+		str = tid_str + "\t" + source + "\t" + tense + "\t" + assumptional + "\t" + type + "\t" + authenticity + "\t" + sentiment + "\t" + focus;
+
+		return str;
+	}
+}
+
 
 namespace nlp {
 	bool pas::is_pred() {
@@ -164,7 +193,11 @@ namespace nlp {
 		BOOST_FOREACH(chunk chk, chunks) {
 			chks.push_back(chk.str());
 		}
-		return join(chks, delimiter);
+		
+		std::string chk_str;
+		join(chk_str, chks, delimiter);
+		
+		return chk_str;
 	}
 
 	std::string sentence::str() {
@@ -193,9 +226,16 @@ namespace nlp {
 	bool sentence::parse_cabocha(std::vector< std::string > lines) {
 		boost::smatch m;
 		int tok_cnt = 0;
-		
+
+		std::vector< modality > mods;
+
 		BOOST_FOREACH( std::string l, lines ) {
-			if (l.compare(0, 1, "#") == 0) {
+			if (l.compare(0, 6, "#EVENT") == 0 ) {
+				modality mod;
+				mod.parse(l);
+				mods.push_back(mod);
+			}
+			else if (l.compare(0, 1, "#") == 0) {
 			}
 			else if (boost::regex_search(l, m, chk_line)) {
 				chunk chk;
@@ -255,12 +295,20 @@ namespace nlp {
 		tid_max = tok_cnt-1;
 		cid_min = 0;
 		cid_max = chunks.size()-1;
-		
+
 		std::vector<chunk>::iterator it_chk;
 		std::vector<token>::iterator it_tok;
 		for (it_chk = chunks.begin() ; it_chk != chunks.end() ; ++it_chk) {
 			for (it_tok = it_chk->tokens.begin() ; it_tok != it_chk->tokens.end() ; ++it_tok) {
 				if ( it_tok->pas.pred_type != "null") {
+					BOOST_FOREACH (modality mod, mods) {
+						if ( find(mod.tids.begin(), mod.tids.end(), it_tok->id) != mod.tids.end() ) {
+							it_tok->mod = mod;
+							it_tok->has_mod = true;
+							it_chk->has_mod = true;
+						}
+					}
+
 					boost::unordered_map<std::string, int>::iterator it;
 					for (it = it_tok->pas.arg_type.begin() ; it != it_tok->pas.arg_type.end() ; ++it) {
 						BOOST_FOREACH(chunk chk, chunks) {
@@ -337,7 +385,7 @@ namespace nlp {
 		BOOST_FOREACH ( chunk chk, chunks ) {
 			BOOST_FOREACH ( token tok, chk.tokens) {
 				if (tok.has_mod) {
-					cabocha_ss << "#EVENT" << eve_id << " " << tok.id << "\t" << "wr\t非未来\t0\t叙述\t" << tok.mod.tag["actuality"] << "\t0\t0\n";
+					cabocha_ss << "#EVENT" << eve_id << "\t" << tok.mod.str() << "\n";
 				}
 			}
 		}

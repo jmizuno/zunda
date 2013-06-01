@@ -38,8 +38,8 @@ namespace modality {
 			nlp::chunk chk_mod;
 			if (sent.get_chunk_has_mod(chk_mod, chk.id) == true) {
 				nlp::token tok = chk_mod.get_token_has_mod();
-				if (tok.mod.tag.find("actuality") != tok.mod.tag.end()) {
-					feat["next_actuality_" + tok.mod.tag["actuality"]] = 1.0;
+				if (tok.has_mod && tok.mod.authenticity != "") {
+					feat["next_authenticity_" + tok.mod.authenticity] = 1.0;
 				}
 			}
 			else {
@@ -152,7 +152,8 @@ namespace modality {
 		if (sent.get_chunk_has_mod(chk_mod, chk_core.id) == true) {
 			nlp::token tok = chk_mod.get_token_has_mod();
 			std::string key = tok.orig + ":";
-			if (tok.mod.tag.find("actuality") != tok.mod.tag.end()) {
+
+			if (tok.mod.authenticity == "成立" || tok.mod.authenticity == "高確率" || tok.mod.authenticity == "不成立から成立" || tok.mod.authenticity == "低確率から高確率") {
 				key += "pos_present_actuality";
 			}
 			else {
@@ -161,7 +162,7 @@ namespace modality {
 			
 			std::string val;
 			if (fadicDB.get(key, &val)) {
-				feat["fadic_actuality_" + val] = 1.0;
+				feat["fadic_authenticity_" + val] = 1.0;
 			}
 			else {
 				feat["fadic_noent"] = 1.0;
