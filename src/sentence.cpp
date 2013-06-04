@@ -31,7 +31,6 @@ namespace nlp {
 		else {
 			std::vector< std::string > tid_strs;
 			boost::algorithm::split(tid_strs, l[1], boost::algorithm::is_any_of(","));
-			std::vector< int > tids;
 			BOOST_FOREACH(std::string tid_str, tid_strs) {
 				tids.push_back(boost::lexical_cast<int>(tid_str));
 			}
@@ -300,13 +299,11 @@ namespace nlp {
 		std::vector<token>::iterator it_tok;
 		for (it_chk = chunks.begin() ; it_chk != chunks.end() ; ++it_chk) {
 			for (it_tok = it_chk->tokens.begin() ; it_tok != it_chk->tokens.end() ; ++it_tok) {
-				if ( it_tok->pas.pred_type != "null") {
-					BOOST_FOREACH (modality mod, mods) {
-						if ( find(mod.tids.begin(), mod.tids.end(), it_tok->id) != mod.tids.end() ) {
-							it_tok->mod = mod;
-							it_tok->has_mod = true;
-							it_chk->has_mod = true;
-						}
+				BOOST_FOREACH (modality mod, mods) {
+					if ( find(mod.tids.begin(), mod.tids.end(), it_tok->id) != mod.tids.end() ) {
+						it_tok->mod = mod;
+						it_tok->has_mod = true;
+						it_chk->has_mod = true;
 					}
 
 					boost::unordered_map<std::string, int>::iterator it;
