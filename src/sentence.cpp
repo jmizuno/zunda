@@ -69,7 +69,7 @@ namespace nlp {
 
 	bool pas::parse(std::string pas_line, pas *pas) {
 		std::vector<std::string> pas_infos;
-		boost::algorithm::split(pas_infos, pas_line, boost::algorithm::is_space() );
+		boost::algorithm::split(pas_infos, pas_line, boost::algorithm::is_any_of(" ") );
 
 		BOOST_FOREACH(std::string pas_info, pas_infos) {
 			std::vector<std::string> v;
@@ -79,11 +79,11 @@ namespace nlp {
 				if (v[0] == "type") {
 					pas->pred_type = rm_quote(v[1]);
 				}
-				else if (v[0] == "GA" || v[0] == "WO" || v[0] == "NI") {
-					pas->arg_type[v[0]] = boost::lexical_cast<int>(rm_quote(v[1]));
-				}
 				else if (v[0] == "ID") {
 					pas->arg_id = boost::lexical_cast<int>(rm_quote(v[1]));
+				}
+				else {
+					pas->arg_type[v[0]] = boost::lexical_cast<int>(rm_quote(v[1]));
 				}
 			}
 				
@@ -123,7 +123,7 @@ namespace nlp {
 
 	bool token::parse_mecab(std::string line, int tok_id) {
 		std::vector<std::string> tok_infos;
-		boost::algorithm::split(tok_infos, line, boost::algorithm::is_space() );
+		boost::algorithm::split(tok_infos, line, boost::algorithm::is_any_of("\t") );
 
 		std::vector<std::string> v;
 		boost::algorithm::split(v, tok_infos[1], boost::is_any_of(","));
@@ -390,7 +390,30 @@ namespace nlp {
 		BOOST_FOREACH( chunk chk, chunks ) {
 			cabocha_ss << "* " << chk.id << " " << chk.dst << chk.type << " " << chk.subj << "/" << chk.func << " " << std::showpoint << std::setprecision(7) << chk.score << "\n";
 			BOOST_FOREACH ( token tok, chk.tokens ) {
-				cabocha_ss << tok.surf << "\t" << tok.pos << "," << tok.pos1 << "," << tok.pos2 << "," << tok.pos3 << "," << tok.type << "," << tok.form << "," << tok.orig << "," << tok.read << "," << tok.pron << "\t" << tok.ne << "\n";
+				cabocha_ss << tok.surf << "\t" << tok.pos << "," << tok.pos1 << "," << tok.pos2 << "," << tok.pos3 << "," << tok.type << "," << tok.form << "," << tok.orig << "," << tok.read << "," << tok.pron << "\t" << tok.ne;
+				
+				if (tok.pas.is_pred() || tok.pas.arg_id != -1) {
+					std::vector< std::string > pas_info;
+					if (tok.pas.is_pred()) {
+						pas_info.push_back("type=\"" + tok.pas.pred_type + "\"");
+					}
+					if (tok.pas.arg_id != -1) {
+						std::stringstream ss;
+						ss << "ID=\"" << tok.pas.arg_id << "\"";
+						pas_info.push_back(ss.str());
+					}
+					boost::unordered_map< std::string, int >::iterator it_arg_type;
+					for (it_arg_type=tok.pas.arg_type.begin() ; it_arg_type!=tok.pas.arg_type.end() ; ++it_arg_type) {
+						std::stringstream ss;
+						ss << it_arg_type->first << "=\"" << it_arg_type->second << "\"";
+						pas_info.push_back(ss.str());
+					}
+					
+					std::string pas_info_str;
+					join(pas_info_str, pas_info, " ");
+					cabocha_ss << "\t" << pas_info_str;
+				}
+				cabocha_ss << "\n";
 			}
 		}
 		cabocha_ss << "EOS";
