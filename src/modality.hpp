@@ -102,6 +102,8 @@ public:
 			
 //			MeCab::Tagger *mecab;
 			CaboCha::Parser *cabocha;
+			
+			std::vector< nlp::sentence > learning_data;
 			parser() {
 //				mecab = MeCab::createTagger("-p");
 				if (!ttjDB.open("dic/ttjcore2seq.kch", kyotocabinet::HashDB::OREADER)) {
@@ -119,7 +121,9 @@ public:
 			void read_model(model_type&, classias::quark&, std::istream&);
 			nlp::sentence classify(model_type, classias::quark, std::string, int);
 //			bool parse(std::string);
-			bool learnOC(std::vector< std::string >, std::string, std::string);
+			void load_xmls(std::vector< std::string >);
+			void load_deppasmods(std::vector< std::string >);
+			bool learnOC(std::string, std::string);
 
 			nlp::sentence make_tagged_ipasents( std::vector< t_token > );
 

@@ -160,12 +160,29 @@ namespace modality {
 		return sent;
 	}
 
+	
+	void parser::load_deppasmods(std::vector< std::string > deppasmods) {
+		learning_data.clear();
+		
+		BOOST_FOREACH ( std::string deppasmod, deppasmods ) {
+			std::cout << deppasmod << std::endl;
+			nlp::sentence sent;
+			sent.ma_tool = sent.MeCab;
+			std::ifstream ifs(deppasmod.c_str());
+			std::string buf, str;
+			std::vector< std::string > lines;
+			while ( getline(ifs, buf) ) {
+				lines.push_back(buf);
+			}
+			sent.parse_cabocha(lines);
+			learning_data.push_back(sent);
+		}
+	}
+	
 
-	bool parser::learnOC(std::vector< std::string > xmls, std::string model_path, std::string feature_path) {
-		classias::msdata data;
-		
-		std::ofstream os_feat(feature_path.c_str());
-		
+	void parser::load_xmls(std::vector< std::string > xmls) {
+		learning_data.clear();
+
 		BOOST_FOREACH ( std::string xml_path, xmls ) {
 			std::cout << xml_path << std::endl;
 			
@@ -173,35 +190,45 @@ namespace modality {
 			std::vector< nlp::sentence > parsed_sents;
 			BOOST_FOREACH ( std::vector< t_token > oc_sent, oc_sents ) {
 				nlp::sentence mod_ipa_sent = make_tagged_ipasents( oc_sent );
-			
-				std::vector< nlp::chunk >::iterator it_chk;
-				std::vector< nlp::token >::iterator it_tok;
-				for (it_chk=mod_ipa_sent.chunks.begin() ; it_chk!=mod_ipa_sent.chunks.end() ; ++it_chk) {
-					for (it_tok=it_chk->tokens.begin() ; it_tok!=it_chk->tokens.end() ; ++it_tok) {
-						if (it_tok->has_mod && it_tok->mod.authenticity != "") {
-							classias::minstance& inst = data.new_element();
+				learning_data.push_back(mod_ipa_sent);
+			}
+		}
+	}
 
-							std::string label = it_tok->mod.authenticity;
-							inst.set_group(0);
-							inst.set_label(data.labels(label));
 
-							t_feat *feat;
-							feat = new t_feat;
-							gen_feature( mod_ipa_sent, it_tok->id, *feat );
-							t_feat::iterator it_feat;
-							os_feat << label;
-							for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
-								os_feat << " " << it_feat->first << ":" << it_feat->second;
-								inst.append(data.attributes(it_feat->first), it_feat->second);
-							}
-							os_feat << std::endl;
+	bool parser::learnOC(std::string model_path, std::string feature_path) {
+		classias::msdata data;
+		
+		std::ofstream os_feat(feature_path.c_str());
+		
+		BOOST_FOREACH ( nlp::sentence sent, learning_data ) {
+			std::vector< nlp::chunk >::iterator it_chk;
+			std::vector< nlp::token >::iterator it_tok;
+			for (it_chk=sent.chunks.begin() ; it_chk!=sent.chunks.end() ; ++it_chk) {
+				for (it_tok=it_chk->tokens.begin() ; it_tok!=it_chk->tokens.end() ; ++it_tok) {
+					if (it_tok->has_mod && it_tok->mod.authenticity != "") {
+						classias::minstance& inst = data.new_element();
+
+						std::string label = it_tok->mod.authenticity;
+						inst.set_group(0);
+						inst.set_label(data.labels(label));
+
+						t_feat *feat;
+						feat = new t_feat;
+						gen_feature( sent, it_tok->id, *feat );
+						t_feat::iterator it_feat;
+						os_feat << label;
+						for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
+							os_feat << " " << it_feat->first << ":" << it_feat->second;
+							inst.append(data.attributes(it_feat->first), it_feat->second);
 						}
+						os_feat << std::endl;
 					}
 				}
 			}
 		}
 		os_feat.close();
-		
+
 		if (data.empty()) {
 			std::cerr << "The data set is empty" << std::endl;
 			exit(-1);
