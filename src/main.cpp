@@ -13,10 +13,8 @@ int main(int argc, char *argv[]) {
 
 	boost::program_options::options_description opt("Usage");
 	opt.add_options()
-		("learn,l", "learn model")
-		("input,i", boost::program_options::value<int>(), "input layer;\n -0: raw text [default]\n -1: cabocha parsed text\n -2: chapas parsed text")
-		("model,m", boost::program_options::value<std::string>(), "model file path to store (optional): default [")
-		("feature,f", boost::program_options::value<std::string>(), "feature file path to store (optional): default [")
+		("input,i", boost::program_options::value<int>(), "input layer;\n 0 - raw text [default]\n 1 - cabocha parsed text\n 2 - chapas parsed text")
+		("model,m", boost::program_options::value<std::string>(), "model file path (optional): default model.out")
 		("help,h", "Show help messages")
 		("version,v", "Show version informaion");
 
@@ -38,11 +36,6 @@ int main(int argc, char *argv[]) {
 		model_path = argmap["model"].as<std::string>();
 	}
 
-	std::string feature_path = feature_path_def;
-	if (argmap.count("feature")) {
-		feature_path = argmap["feature"].as<std::string>();
-	}
-
 	if (argmap.count("help")) {
 		std::cout << opt << std::endl;
 		return 1;
@@ -53,79 +46,50 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	bool mode_learn = false;
-	if (argmap.count("learn")) {
-		mode_learn = true;
-	}
-
-//	std::string str;
-//	std::string buf;
-//	while( getline(std::cin, buf) ) {
-//		str += buf + "\n";
-//	}
-
 	modality::parser mod_parser;
-//	mod_parser.parse(str);
 
-	if (mode_learn) {
-		std::cerr << "learn model" << std::endl;
-		boost::filesystem::directory_iterator pos("/home/junta-m/work/20110324/TeaM/XML/OC");
-		boost::filesystem::directory_iterator last;
-		std::vector< std::string > xmls;
-		for (; pos!=last ; ++pos) {
-			boost::filesystem::path p(*pos);
-			xmls.push_back(p.string());
-		}
-		mod_parser.learnOC(xmls, model_path, feature_path);
+	const boost::filesystem::path path(model_path.c_str());
+	boost::system::error_code error;
+	const bool result = boost::filesystem::exists(path, error);
+	if (!result || error) {
+		std::cerr << "ERROR: model file is not found: " << model_path << std::endl;
+		exit(-1);
 	}
-	else {
-		if (!argmap.count("model")) {
-			std::cerr << "model is needed" << std::endl;
-			exit(-1);
-		}
-		const boost::filesystem::path path(model_path.c_str());
-		boost::system::error_code error;
-		const bool result = boost::filesystem::exists(path, error);
-		if (!result || error) {
-			std::cerr << "no such file: " << model_path << std::endl;
-			exit(-1);
-		}
 
-		std::ifstream ifs(model_path.c_str());
+	std::ifstream ifs(model_path.c_str());
 
-		modality::model_type model;
-    classias::quark labels;
-    mod_parser.read_model(model, labels, ifs);
-		
-		std::vector< std::string > sents;
-		std::string buf;
-		std::string ct;
-		while( getline(std::cin, buf) ) {
-			switch (input_layer) {
-				case modality::raw_text:
-					sents.push_back(buf);
-					break;
-				case modality::cabocha_text:
-					ct += buf + "\n";
-					if (buf.compare(0, 3, "EOS") == 0) {
-						sents.push_back(ct);
-						ct.clear();
-					}
-					break;
-				case modality::chapas_text:
-					ct += buf + "\n";
-					if (buf.compare(0, 3, "EOS") == 0) {
-						sents.push_back(ct);
-						ct.clear();
-					}
-					break;
-			}
+	modality::model_type model;
+	classias::quark labels;
+	mod_parser.read_model(model, labels, ifs);
+
+	std::vector< std::string > sents;
+	std::string buf;
+	std::string ct;
+	while( getline(std::cin, buf) ) {
+		switch (input_layer) {
+			case modality::raw_text:
+				sents.push_back(buf);
+				break;
+			case modality::cabocha_text:
+				ct += buf + "\n";
+				if (buf.compare(0, 3, "EOS") == 0) {
+					sents.push_back(ct);
+					ct.clear();
+				}
+				break;
+			case modality::chapas_text:
+				ct += buf + "\n";
+				if (buf.compare(0, 3, "EOS") == 0) {
+					sents.push_back(ct);
+					ct.clear();
+				}
+				break;
 		}
-		
-		BOOST_FOREACH ( std::string sent, sents ) {
-			nlp::sentence parsed_sent = mod_parser.classify(model, labels, sent, input_layer);
-			std::cout << parsed_sent.cabocha() << std::endl;
-		}
+	}
+
+	BOOST_FOREACH ( std::string sent, sents ) {
+		nlp::sentence parsed_sent = mod_parser.classify(model, labels, sent, input_layer);
+		std::cout << parsed_sent.cabocha() << std::endl;
 	}
 
 	return 1;
