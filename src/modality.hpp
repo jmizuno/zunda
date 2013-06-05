@@ -104,6 +104,8 @@ public:
 			CaboCha::Parser *cabocha;
 			
 			std::vector< nlp::sentence > learning_data;
+			bool pred_detect_rule;
+			
 			parser() {
 //				mecab = MeCab::createTagger("-p");
 				if (!ttjDB.open("dic/ttjcore2seq.kch", kyotocabinet::HashDB::OREADER)) {
@@ -113,6 +115,8 @@ public:
 					std::cerr << "open error: fadic: " << fadicDB.error().name() << std::endl;
 				}
 				cabocha = CaboCha::createParser("-f1");
+				
+				pred_detect_rule = false;
 			}
 			~parser() {
 			}

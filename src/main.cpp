@@ -7,7 +7,6 @@
 #include "modality.hpp"
 
 int main(int argc, char *argv[]) {
-
 	std::string model_path_def = "model.out";
 	std::string feature_path_def = "feature.out";
 
@@ -15,6 +14,7 @@ int main(int argc, char *argv[]) {
 	opt.add_options()
 		("input,i", boost::program_options::value<int>(), "input layer;\n 0 - raw text [default]\n 1 - cabocha parsed text\n 2 - chapas parsed text")
 		("model,m", boost::program_options::value<std::string>(), "model file path (optional): default model.out")
+		("pred-rule", "use rule-based event detection")
 		("help,h", "Show help messages")
 		("version,v", "Show version informaion");
 
@@ -47,6 +47,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	modality::parser mod_parser;
+
+	if (argmap.count("pred-rule")) {
+		mod_parser.pred_detect_rule = true;
+	}
 
 	const boost::filesystem::path path(model_path.c_str());
 	boost::system::error_code error;

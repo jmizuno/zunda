@@ -114,8 +114,11 @@ namespace modality {
 		std::vector<nlp::token>::reverse_iterator rit_tok;
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sent.chunks.rend() ; ++rit_chk) {
 			for (rit_tok=(rit_chk->tokens).rbegin() ; rit_tok!=(rit_chk->tokens).rend() ; ++rit_tok) {
-				//if (rit_tok->pos == "動詞") {
-				if ((rit_tok->pas).is_pred()) {
+				if (
+						(pred_detect_rule && (rit_tok->pos == "動詞" || rit_tok->pos == "形容詞" || (rit_tok->pos == "名詞" && rit_tok->pos1 == "サ変接続") ))
+						||
+						(!pred_detect_rule && rit_tok->pas.is_pred())
+					 ) {
 					classifier_type inst(model);
 					inst.clear();
 					inst.resize(labels.size());
