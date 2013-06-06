@@ -15,6 +15,7 @@ int main(int argc, char *argv[]) {
 	opt.add_options()
 		("data,d", boost::program_options::value< std::vector<std::string> >()->multitoken(), "directory path containing learning data (required)")
 		("input,i", boost::program_options::value<int>(), "format of learning data (optional)\n 0 - cabocha(default)\n 1 - XML")
+		("ext,e", boost::program_options::value<std::string>(), "extension of learning files (optional): default: 0 - .deppasmod, 1 - .xml")
 		("model,m", boost::program_options::value<std::string>(), "model file path (optional): default model.out")
 		("feature,f", boost::program_options::value<std::string>(), "feature file path (optional): default feature.out")
 		("help,h", "Show help messages")
@@ -61,6 +62,12 @@ int main(int argc, char *argv[]) {
 		default:
 			std::cerr << "ERROR: invalid data format type" << std::endl;
 			exit(-1);
+	}
+	if (argmap.count("ext")) {
+		ext = argmap["ext"].as<std::string>();
+		if (ext.compare(0, 1, ".") != 0) {
+			ext = "." + ext;
+		}
 	}
 
 	if (!argmap.count("data")) {
