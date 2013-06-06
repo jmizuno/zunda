@@ -337,9 +337,11 @@ namespace modality {
 								else if (it_eme->first == "focus") {
 									it_tok->mod.focus = it_eme->second;
 								}
-								it_tok->has_mod = true;
-								chk_has_mod = true;
 							}
+
+							it_tok->mod.tids.push_back(it_tok->id);
+							it_tok->has_mod = true;
+							chk_has_mod = true;
 #ifdef _MODEBUG
 							std::cout << "found\t" << tok.orthToken << "(" << tok.morphID << ") - " << it_tok->surf << "(" << it_tok->id << ")" << std::endl;
 							matchedIDs.push_back(tok.morphID);
@@ -348,6 +350,8 @@ namespace modality {
 					}
 				}
 				ep++;
+				sort(it_tok->mod.tids.begin(), it_tok->mod.tids.end());
+				it_tok->mod.tids.erase(unique(it_tok->mod.tids.begin(), it_tok->mod.tids.end()), it_tok->mod.tids.end());
 			}
 			it_chk->has_mod = chk_has_mod;
 		}
