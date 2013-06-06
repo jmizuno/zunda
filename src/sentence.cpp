@@ -383,6 +383,7 @@ namespace nlp {
 			BOOST_FOREACH ( token tok, chk.tokens) {
 				if (tok.has_mod) {
 					cabocha_ss << "#EVENT" << eve_id << "\t" << tok.mod.str() << "\n";
+					eve_id++;
 				}
 			}
 		}
