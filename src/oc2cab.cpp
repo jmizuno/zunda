@@ -14,6 +14,7 @@ int main(int argc, char *argv[]) {
 	opt.add_options()
 		("file,f", boost::program_options::value<std::string>(), "input xml file (required)")
 		("outdir,o", boost::program_options::value<std::string>(), "output directory (optional): default same as input xml file")
+		("enable-wl", "enabled parsing webLine tag")
 		("help,h", "Show help messages")
 		("version,v", "Show version informaion");
 
@@ -44,11 +45,17 @@ int main(int argc, char *argv[]) {
 
 	modality::parser mod_parser;
 
-	std::vector< std::vector< modality::t_token > > oc_sents = mod_parser.parse_OC(xml_path.string());
-	std::vector< nlp::sentence > parsed_sents;
+	std::vector< std::vector< modality::t_token > > sents;
+	if (argmap.count("enable-wl")) {
+		sents = mod_parser.parse_OC(xml_path.string());
+	}
+	else {
+		sents = mod_parser.parse_OW_PB_PN(xml_path.string());
+	}
+
 	int cnt = 0;
-	BOOST_FOREACH ( std::vector< modality::t_token > oc_sent, oc_sents ) {
-		nlp::sentence mod_ipa_sent = mod_parser.make_tagged_ipasents( oc_sent );
+	BOOST_FOREACH ( std::vector< modality::t_token > sent, sents ) {
+		nlp::sentence mod_ipa_sent = mod_parser.make_tagged_ipasents( sent );
 
 		std::stringstream ss;
 		ss << (outdir_path / xml_path.stem()).string() << "_" << std::setw(3) << std::setfill('0') << cnt << ".depmod";

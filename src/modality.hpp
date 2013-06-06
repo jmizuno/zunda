@@ -132,9 +132,10 @@ public:
 			nlp::sentence make_tagged_ipasents( std::vector< t_token > );
 
 			std::vector< std::vector< t_token > > parse_OC(std::string);
+			std::vector< std::vector< t_token > > parse_OW_PB_PN(std::string);
 			std::vector< std::vector< t_token > > parse_OC_sents (tinyxml2::XMLElement *);
-			std::vector<t_token> parse_OC_sent(tinyxml2::XMLElement *, int *);
-			bool parse_OC_modtag(tinyxml2::XMLElement *, std::vector< std::vector< t_token > > *);
+			std::vector<t_token> parse_bccwj_sent(tinyxml2::XMLElement *, int *);
+			void parse_modtag_for_sent(tinyxml2::XMLElement *, std::vector< t_token > *);
 
 			void gen_feature(nlp::sentence, int, t_feat &);
 			void gen_feature_follow_mod(nlp::sentence, int, t_feat &);

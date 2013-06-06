@@ -364,10 +364,10 @@ namespace modality {
 	}
 
 
-	std::vector<t_token> parser::parse_OC_sent(tinyxml2::XMLElement *elemSent, int *sp) {
+	std::vector<t_token> parser::parse_bccwj_sent(tinyxml2::XMLElement *elemSent, int *sp) {
 		std::vector<t_token> toks;
 		
-		if (std::string(elemSent->Name()) == "sentence") {
+		if ( std::string(elemSent->Name()) == "sentence" || std::string(elemSent->Name()) == "quote" ) {
 			tinyxml2::XMLElement *elem = elemSent->FirstChildElement("SUW");
 			while (elem) {
 				if (std::string(elem->Name()) == "SUW") {
@@ -379,8 +379,8 @@ namespace modality {
 					toks.push_back(tok);
 					*sp = tok.ep + 1;
 				}
-				else if (std::string(elem->Name()) == "sentence") {
-					BOOST_FOREACH(t_token tok, parse_OC_sent(elem, sp)) {
+				else if ( std::string(elem->Name()) == "sentence" || std::string(elem->Name()) == "quote" ) {
+					BOOST_FOREACH(t_token tok, parse_bccwj_sent(elem, sp)) {
 						toks.push_back(tok);
 					}
 				}
@@ -402,8 +402,9 @@ namespace modality {
 				while (elem) {
 					if (std::string(elem->Name()) == "sentence") {
 						int sp = 0;
-						std::vector<t_token> toks = parse_OC_sent(elem, &sp);
-						sents.push_back(toks);
+						std::vector<t_token> sent = parse_bccwj_sent(elem, &sp);
+						parse_modtag_for_sent(elem, &sent);
+						sents.push_back(sent);
 					}
 					elem = elem->NextSiblingElement();
 				}
@@ -415,72 +416,62 @@ namespace modality {
 	}
 
 
-	bool parser::parse_OC_modtag(tinyxml2::XMLElement *elem, std::vector< std::vector< t_token > > *sents) {
-		tinyxml2::XMLElement *elemWL = elem->FirstChildElement("webLine");
+	void parser::parse_modtag_for_sent(tinyxml2::XMLElement *elemSent, std::vector< t_token > *sent) {
 		boost::regex reg_or("OR");
 		boost::smatch m;
 
-		while (elemWL) {
-			if (std::string(elemWL->Name()) == "webLine") {
-				tinyxml2::XMLElement *elemSent = elemWL->FirstChildElement("sentence");
-				while (elemSent) {
-					tinyxml2::XMLElement *elemEME = elemSent->FirstChildElement("eme:event");
-					while (elemEME) {
-						if (std::string(elemEME->Name()) == "eme:event") {
-							// event tag which has required tags, does not contain "OR" in morphIDs
-							if (elemEME->Attribute("eme:orthTokens") &&
-									elemEME->Attribute("eme:morphIDs") &&
-									boost::regex_search(std::string(elemEME->Attribute("eme:morphIDs")), m, reg_or) == false )
-							{
-								bool use = true;
-								if (elemEME->Attribute("eme:pseudo")) {
-									std::string pseudo = elemEME->Attribute("eme:pseudo");
-									if (pseudo == "機能語" || pseudo == "副詞" || pseudo == "連体詞" || pseudo == "名詞" || pseudo == "感嘆詞" || pseudo == "比況" || pseudo == "解析誤り") {
-										use = false;
-									}
-									else if (pseudo == "名詞-事象可能") {
-										use = false;
-									}
-								}
+		while (elemSent) {
+			tinyxml2::XMLElement *elemEME = elemSent->FirstChildElement("eme:event");
+			while (elemEME) {
+				if (std::string(elemEME->Name()) == "eme:event") {
+					// event tag which has required tags, does not contain "OR" in morphIDs
+					if (elemEME->Attribute("eme:orthTokens") &&
+							elemEME->Attribute("eme:morphIDs") &&
+							boost::regex_search(std::string(elemEME->Attribute("eme:morphIDs")), m, reg_or) == false )
+					{
+						bool use = true;
+						if (elemEME->Attribute("eme:pseudo")) {
+							std::string pseudo = elemEME->Attribute("eme:pseudo");
+							if (pseudo == "機能語" || pseudo == "副詞" || pseudo == "連体詞" || pseudo == "名詞" || pseudo == "感嘆詞" || pseudo == "比況" || pseudo == "解析誤り") {
+								use = false;
+							}
+							else if (pseudo == "名詞-事象可能") {
+								use = false;
+							}
+						}
 
-								if (use) {
-									std::string orthToken = elemEME->Attribute("eme:orthTokens");
-									std::vector<std::string> buf;
-									boost::algorithm::split(buf, orthToken, boost::algorithm::is_any_of(","));
-									orthToken = buf[0];
+						if (use) {
+							std::string orthToken = elemEME->Attribute("eme:orthTokens");
+							std::vector<std::string> buf;
+							boost::algorithm::split(buf, orthToken, boost::algorithm::is_any_of(","));
+							orthToken = buf[0];
 
-									std::string morphID = elemEME->Attribute("eme:morphIDs");
-									boost::algorithm::split(buf, morphID, boost::algorithm::is_any_of(","));
-									morphID = buf[buf.size()-1];
+							std::string morphID = elemEME->Attribute("eme:morphIDs");
+							boost::algorithm::split(buf, morphID, boost::algorithm::is_any_of(","));
+							morphID = buf[buf.size()-1];
 
-									std::vector< std::vector< t_token > >::iterator it_sent;
-									std::vector< t_token >::iterator it_tok;
-									for (it_sent=sents->begin() ; it_sent!=sents->end() ; ++it_sent) {
-										for (it_tok=it_sent->begin() ; it_tok!=it_sent->end() ; ++it_tok) {
-											if (it_tok->morphID == morphID) {
-												const tinyxml2::XMLAttribute *attr = elemEME->FirstAttribute();
-												while (attr) {
-													std::string attr_name = attr->Name();
-													boost::algorithm::split(buf, attr_name, boost::algorithm::is_any_of(":"));
-													attr_name = buf[buf.size()-1];
+							std::vector< t_token >::iterator it_tok;
+							for (it_tok=sent->begin() ; it_tok!=sent->end() ; ++it_tok) {
+								if (it_tok->morphID == morphID) {
+									const tinyxml2::XMLAttribute *attr = elemEME->FirstAttribute();
+									while (attr) {
+										std::string attr_name = attr->Name();
+										boost::algorithm::split(buf, attr_name, boost::algorithm::is_any_of(":"));
+										attr_name = buf[buf.size()-1];
 
-													it_tok->eme[attr_name] = std::string(attr->Value());
-													attr = attr->Next();
-												}
-											}
-										}
+										it_tok->eme[attr_name] = std::string(attr->Value());
+										attr = attr->Next();
 									}
 								}
 							}
 						}
-						elemEME = elemEME->NextSiblingElement();
 					}
-					elemSent = elemSent->NextSiblingElement();
 				}
+				elemEME = elemEME->NextSiblingElement();
 			}
-			elemWL = elemWL->NextSiblingElement();
+			elemSent = elemSent->NextSiblingElement();
 		}
-		
+
 #ifdef _MODEBUG
 		std::vector<std::string> attrs;
 		attrs.push_back("source");
@@ -489,25 +480,21 @@ namespace modality {
 		attrs.push_back("pmtype");
 		attrs.push_back("actuality");
 		attrs.push_back("evaluation");
-		BOOST_FOREACH( std::vector< t_token > toks, *sents ) {
-			BOOST_FOREACH( t_token tok, toks ) {
-				std::cout << tok.orthToken << " " << tok.morphID << " (" << tok.sp << "," << tok.ep << ")";
-				boost::unordered_map< std::string, std::string >::iterator it;
-				
-				if (tok.eme.find("morphIDs") != tok.eme.end()) {
-					std::cout << " " << tok.eme["morphIDs"];
-					BOOST_FOREACH (std::string attr, attrs) {
-						if (tok.eme.find(attr) != tok.eme.end()) {
-							std::cout << " " << tok.eme[attr];
-						}
+		BOOST_FOREACH( t_token tok, sent ) {
+			std::cout << tok.orthToken << " " << tok.morphID << " (" << tok.sp << "," << tok.ep << ")";
+			boost::unordered_map< std::string, std::string >::iterator it;
+
+			if (tok.eme.find("morphIDs") != tok.eme.end()) {
+				std::cout << " " << tok.eme["morphIDs"];
+				BOOST_FOREACH (std::string attr, attrs) {
+					if (tok.eme.find(attr) != tok.eme.end()) {
+						std::cout << " " << tok.eme[attr];
 					}
 				}
-				std::cout << std::endl;
 			}
+			std::cout << std::endl;
 		}
 #endif
-		
-		return true;
 	}
 
 
@@ -524,13 +511,34 @@ namespace modality {
 		std::vector< std::vector<t_token> > sentsA;
 		
 		sentsQ = parse_OC_sents( elemQ );
-		parse_OC_modtag( elemQ, &sentsQ);
+//		parse_OC_modtag( elemQ, &sentsQ);
 		sentsA = parse_OC_sents( elemA );
-		parse_OC_modtag( elemA, &sentsA);
+//		parse_OC_modtag( elemA, &sentsA);
 		
 		sentsQ.insert(sentsQ.end(), sentsA.begin(), sentsA.end());
 	
 		return sentsQ;
+	}
+
+
+	std::vector< std::vector< t_token > > parser::parse_OW_PB_PN(std::string xml_path) {
+		tinyxml2::XMLDocument doc;
+		doc.LoadFile(xml_path.c_str());
+		
+		tinyxml2::XMLElement *elem = doc.FirstChildElement("mergedSample");
+		tinyxml2::XMLElement *elemSent = elem->FirstChildElement("sentence");
+		std::vector< std::vector<t_token> > sents;
+		while (elemSent) {
+			if (std::string(elemSent->Name()) == "sentence") {
+				int sp = 0;
+				std::vector<t_token> sent = parse_bccwj_sent(elemSent, &sp);
+				parse_modtag_for_sent(elemSent, &sent);
+				sents.push_back(sent);
+			}
+			elemSent = elemSent->NextSiblingElement();
+		}
+		
+		return sents;
 	}
 };
 
