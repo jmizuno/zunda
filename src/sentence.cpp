@@ -444,12 +444,14 @@ namespace nlp {
 
 
 	void sentence::clear_mod() {
-		BOOST_FOREACH (chunk chk, chunks) {
-			BOOST_FOREACH (token tok, chk.tokens) {
-				tok.has_mod = false;
-				tok.mod = modality();
+		std::vector<chunk>::iterator it_chk;
+		std::vector<token>::iterator it_tok;
+		for (it_chk = chunks.begin() ; it_chk != chunks.end() ; ++it_chk) {
+			for (it_tok = it_chk->tokens.begin() ; it_tok != it_chk->tokens.end() ; ++it_tok) {
+				it_tok->has_mod = false;
+				it_tok->mod = modality();
 			}
-			chk.has_mod = false;
+			it_chk->has_mod = false;
 		}
 	}
 
