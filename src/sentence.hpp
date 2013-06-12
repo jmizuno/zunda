@@ -175,6 +175,7 @@ namespace nlp {
 			std::string str(std::string);
 			std::string str();
 			std::string cabocha();
+			void clear_mod();
 	};
 };
 

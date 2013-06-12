@@ -441,6 +441,18 @@ namespace nlp {
 		}
 		return true;
 	}
+
+
+	void sentence::clear_mod() {
+		BOOST_FOREACH (chunk chk, chunks) {
+			BOOST_FOREACH (token tok, chk.tokens) {
+				tok.has_mod = false;
+				tok.mod = modality();
+			}
+			chk.has_mod = false;
+		}
+	}
+
 };
 
 
