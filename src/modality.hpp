@@ -124,6 +124,7 @@ public:
 		public:
 			void read_model(model_type&, classias::quark&, std::istream&);
 			nlp::sentence classify(model_type, classias::quark, std::string, int);
+			nlp::sentence classify(model_type, classias::quark, nlp::sentence);
 //			bool parse(std::string);
 			void load_xmls(std::vector< std::string >);
 			void load_deppasmods(std::vector< std::string >);

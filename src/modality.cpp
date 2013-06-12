@@ -110,7 +110,14 @@ namespace modality {
 				break;
 		}
 		sent.parse_cabocha(parsed_text);
+		
+		sent = classify(model, labels, sent);
+		
+		return sent;
+	}
 
+
+	nlp::sentence parser::classify(model_type model, classias::quark labels, nlp::sentence sent) {
 		std::vector<nlp::chunk>::reverse_iterator rit_chk;
 		std::vector<nlp::token>::reverse_iterator rit_tok;
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sent.chunks.rend() ; ++rit_chk) {
