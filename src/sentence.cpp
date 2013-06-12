@@ -424,6 +424,7 @@ namespace nlp {
 
 
 	bool sentence::pp() {
+		std::cout << sent_id << std::endl;
 		BOOST_FOREACH( chunk chk, chunks ) {
 			std::cout << chk.id << " -> " << chk.dst << " (" << chk.score << ")" << std::endl;
 			BOOST_FOREACH( token tok, chk.tokens ) {

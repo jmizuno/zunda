@@ -8,6 +8,7 @@
 #include <boost/foreach.hpp>
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
 #include <sstream>
 #include <tinyxml2.h>
 #include <mecab.h>
@@ -169,7 +170,11 @@ namespace modality {
 		
 		BOOST_FOREACH ( std::string deppasmod, deppasmods ) {
 			std::cout << deppasmod << std::endl;
+			boost::filesystem::path p(deppasmod);
+			std::string sent_id = p.stem().string();
+
 			nlp::sentence sent;
+			sent.sent_id = sent_id;
 			sent.ma_tool = sent.MeCab;
 			std::ifstream ifs(deppasmod.c_str());
 			std::string buf, str;
@@ -188,16 +193,24 @@ namespace modality {
 
 		BOOST_FOREACH ( std::string xml_path, xmls ) {
 			std::cout << xml_path << std::endl;
+			boost::filesystem::path p(xml_path);
+			std::string doc_id = p.stem().string();
 			
 			std::vector< std::vector< t_token > > oc_sents = parse_OC(xml_path);
 			std::vector< nlp::sentence > parsed_sents;
+			unsigned int sent_cnt = 0;
 			BOOST_FOREACH ( std::vector< t_token > oc_sent, oc_sents ) {
 				nlp::sentence mod_ipa_sent = make_tagged_ipasents( oc_sent );
+				mod_ipa_sent.doc_id = doc_id;
+				std::stringstream sent_id;
+				sent_id << doc_id << "_" << std::setw(3) << std::setfill('0') << sent_cnt;
+				sent_cnt++;
+				mod_ipa_sent.sent_id = sent_id.str();
 				learning_data.push_back(mod_ipa_sent);
 			}
 		}
 	}
-
+	
 
 	bool parser::learnOC(std::string model_path, std::string feature_path) {
 		classias::msdata data;
@@ -288,7 +301,7 @@ namespace modality {
 #ifdef _MODEBUG
 		std::cout << std::endl;
 #endif
-		
+
 #ifdef _MODEBUG
 		std::vector<std::string> matchedIDs;
 #endif

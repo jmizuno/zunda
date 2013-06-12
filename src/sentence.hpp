@@ -121,6 +121,8 @@ namespace nlp {
 
 	class sentence {
 		public:
+			std::string doc_id;
+			std::string sent_id;
 			std::vector< chunk > chunks;
 			int cid_min, cid_max, tid_min, tid_max;
 			boost::unordered_map< int, int > t2c;
@@ -148,6 +150,8 @@ namespace nlp {
 		
 		public:
 			sentence() {
+				doc_id = "";
+				sent_id = "";
 				cid_min = 0;
 				tid_min = 0;
 				
