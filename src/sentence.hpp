@@ -116,6 +116,7 @@ namespace nlp {
 			}
 			bool add_token(token);
 			std::string str();
+			std::string str_orig();
 			token get_token_has_mod();
 	};
 

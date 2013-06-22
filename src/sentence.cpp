@@ -164,13 +164,24 @@ namespace nlp {
 		return true;
 	}
 
+
 	std::string chunk::str() {
+		std::string chk_str = "";
+		BOOST_FOREACH(token tok, tokens) {
+			chk_str += tok.surf;
+		}
+		return chk_str;
+	}
+
+
+	std::string chunk::str_orig() {
 		std::string chk_str = "";
 		BOOST_FOREACH(token tok, tokens) {
 			chk_str += tok.orig;
 		}
 		return chk_str;
 	}
+
 
 	token chunk::get_token_has_mod() {
 		std::vector<nlp::token>::reverse_iterator rit_tok;
