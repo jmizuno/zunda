@@ -22,6 +22,7 @@ namespace modality {
 		gen_feature_basic(sent, tok_id, feat, 3);
 		gen_feature_function(sent, tok_id, feat);
 		gen_feature_follow_mod(sent, tok_id, feat);
+		gen_feature_follow_chunks(sent, tok_id, feat);
 		gen_feature_ttj(sent, tok_id, feat);
 		gen_feature_fadic(sent, tok_id, feat);
 	}
@@ -33,6 +34,7 @@ namespace modality {
 		
 		if (chk.dst == -1) {
 			feat["last_chunk"] = 1.0;
+			feat["no_following_mod"] = 1.0;
 		}
 		else {
 			nlp::chunk chk_mod;
@@ -79,6 +81,21 @@ namespace modality {
 					feat["tok_orig_" + tok.orig] = 1.0;
 				}
 			}
+		}
+	}
+
+
+	void parser::gen_feature_follow_chunks(nlp::sentence sent, int tok_id, t_feat &feat) {
+		nlp::chunk chk_core = sent.get_chunk_by_tokenID(tok_id);
+		nlp::chunk chk_dep1;
+		nlp::chunk chk_dep2;
+		if (sent.get_dep_chunk(&chk_dep1, chk_core)) {
+			feat["chk_dep1_surf" + chk_dep1.str()] = 1.0;
+			feat["chk_dep1_orig" + chk_dep1.str_orig()] = 1.0;
+		}
+		if (sent.get_dep_chunk(&chk_dep2, chk_core, 2)) {
+			feat["chk_dep2_surf" + chk_dep2.str()] = 1.0;
+			feat["chk_dep2_orig" + chk_dep2.str_orig()] = 1.0;
 		}
 	}
 

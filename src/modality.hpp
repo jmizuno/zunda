@@ -142,6 +142,7 @@ public:
 			void gen_feature_follow_mod(nlp::sentence, int, t_feat &);
 			void gen_feature_function(nlp::sentence, int, t_feat &);
 			void gen_feature_basic(nlp::sentence, int, t_feat &, int);
+			void gen_feature_follow_chunks(nlp::sentence, int, t_feat &);
 			void gen_feature_ttj(nlp::sentence, int, t_feat &);
 			void gen_feature_fadic(nlp::sentence, int, t_feat &);
 	};
