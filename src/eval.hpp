@@ -4,6 +4,7 @@
 #include <iostream>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
+#include <boost/unordered_map.hpp>
 #include <iomanip>
 #include <boost/format.hpp>
 #include "util.hpp"
@@ -57,9 +58,19 @@ class evaluator {
 
 			return size;
 		}
+		
 
-	
-	
+		unsigned int max_width(std::vector<std::string> labels) {
+			unsigned int width = 0;
+			BOOST_FOREACH (std::string label, labels) {
+				unsigned int size = count_utf8(label);
+				if (size > width) {
+					width = size;
+				}
+			}
+			return width;
+		}
+
 	public:
 		void add( std::string id, std::string gold, std::string sys ) {
 			s_res res;
@@ -103,13 +114,7 @@ class evaluator {
 
 		
 		void print_prec_rec() {
-			unsigned int width = 0;
-			BOOST_FOREACH (std::string label, labels) {
-				unsigned int size = count_utf8(label);
-				if (size > width) {
-					width = size;
-				}
-			}
+			unsigned int width = max_width(labels);
 			width += 2;
 
 			BOOST_FOREACH (std::string label, labels) {
@@ -146,14 +151,39 @@ class evaluator {
 			}
 		}
 
+
 		void print_confusion_matrix() {
+			unsigned int width = max_width(labels);
+			width += 2;
+			
+			boost::unordered_map<std::string, int> label_w;
+
+			std::string sg = "sys\\gold";
+			for (unsigned int i=0 ; i<(width-count_utf8(sg)) ; i++) {
+				std::cout << " ";
+			}
 			std::cout << "sys\\gold";
 			BOOST_FOREACH (std::string label, labels) {
-				std::cout << "," << label;
+				unsigned int w = count_utf8(label);
+				if (w<7) {
+					label_w[label] = 6;
+				}
+				else {
+					label_w[label] = w;
+				}
+				
+				std::cout << ", ";
+				for (unsigned int i=0 ; i<(label_w[label]-w) ; i++) {
+					std::cout << " ";
+				}
+				std::cout << label;
 			}
 			std::cout << std::endl;
 
 			BOOST_FOREACH (std::string label_sys, labels) {
+				for (unsigned int i=0 ; i<(width-count_utf8(label_sys)) ; i++) {
+					std::cout << " ";
+				}
 				std::cout << label_sys;
 				unsigned int cnt_sys = 0;
 				BOOST_FOREACH (std::string label_gold, labels) {
@@ -164,9 +194,9 @@ class evaluator {
 							cnt_sys++;
 						}
 					}
-					std::cout << "," << cnt;
+					std::cout << "," << std::setw(label_w[label_gold]+1) << cnt;
 				}
-				std::cout << "," << cnt_sys << std::endl;
+				std::cout << ", " << cnt_sys << std::endl;
 			}
 		}
 
