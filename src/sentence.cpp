@@ -376,6 +376,43 @@ namespace nlp {
 	}
 
 
+	bool sentence::get_dep_chunk(chunk *chk_dep, int cid, int depth) {
+		chunk chk_core = get_chunk(cid);
+		return get_dep_chunk(chk_dep, chk_core, depth);
+	}
+
+
+	bool sentence::get_dep_chunk(chunk *chk_dep, chunk chk, int depth) {
+		for (int i=0 ; i<depth ; i++) {
+			if (get_dep_chunk(chk_dep, chk)) {
+				chk = *chk_dep;
+			}
+			else {
+				return false;
+			}
+		}
+		return true;
+	}
+
+
+	bool sentence::get_dep_chunk(chunk *chk_dep, int cid) {
+		chunk chk_core = get_chunk(cid);
+		return get_dep_chunk(chk_dep, chk_core);
+	}
+		
+
+	bool sentence::get_dep_chunk(chunk *chk_dep, chunk chk) {
+		if (chk.dst == -1) {
+			return false;
+		}
+		else {
+			*chk_dep = get_chunk(chk.dst);
+			return true;
+		}
+		return false;
+	}
+
+		
 	std::string sentence::cabocha() {
 		std::stringstream cabocha_ss;
 		int eve_id = 0;

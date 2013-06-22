@@ -170,6 +170,10 @@ namespace nlp {
 			bool pp();
 			chunk get_chunk(int);
 			chunk get_chunk_by_tokenID(int);
+			bool get_dep_chunk(chunk*, chunk);
+			bool get_dep_chunk(chunk*, int);
+			bool get_dep_chunk(chunk*, chunk, int);
+			bool get_dep_chunk(chunk*, int, int);
 			token get_token(int);
 			bool get_chunk_has_mod(chunk&, int);
 			std::string str(std::string);
