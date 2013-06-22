@@ -504,7 +504,7 @@ namespace modality {
 		attrs.push_back("pmtype");
 		attrs.push_back("actuality");
 		attrs.push_back("evaluation");
-		BOOST_FOREACH( t_token tok, sent ) {
+		BOOST_FOREACH( t_token tok, *sent ) {
 			std::cout << tok.orthToken << " " << tok.morphID << " (" << tok.sp << "," << tok.ep << ")";
 			boost::unordered_map< std::string, std::string >::iterator it;
 
