@@ -47,6 +47,9 @@ int main(int argc, char *argv[]) {
 	}
 
 	modality::parser mod_parser;
+#if defined (USE_LIBLINEAR)
+	mod_parser.load_hashDB();
+#endif
 
 	if (argmap.count("pred-rule")) {
 		mod_parser.pred_detect_rule = true;
@@ -60,11 +63,12 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
+#if defined (USE_LIBLINEAR)
+	mod_parser.model = linear::load_model(model_path.c_str());
+#elif defined (USE_CLASSIAS)
 	std::ifstream ifs(model_path.c_str());
-
-	modality::model_type model;
-	classias::quark labels;
-	mod_parser.read_model(model, labels, ifs);
+	mod_parser.read_model(ifs);
+#endif
 
 	std::vector< std::string > sents;
 	std::string buf;
@@ -92,7 +96,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	BOOST_FOREACH ( std::string sent, sents ) {
-		nlp::sentence parsed_sent = mod_parser.classify(model, labels, sent, input_layer);
+		nlp::sentence parsed_sent = mod_parser.analyze(sent, input_layer);
 		std::cout << parsed_sent.cabocha() << std::endl;
 	}
 

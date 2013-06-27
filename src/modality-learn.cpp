@@ -12,9 +12,7 @@ int main(int argc, char *argv[]) {
 
 	std::string model_path_def = "model.out";
 	std::string feature_path_def = "feature.out";
-	bool cross = false;
 	unsigned int split_num = 5;
-	std::string outdir = "output";
 
 	boost::program_options::options_description opt("Usage");
 	opt.add_options()
@@ -23,7 +21,7 @@ int main(int argc, char *argv[]) {
 		("ext,e", boost::program_options::value<std::string>(), "extension of learning files (optional): default: 0 - .deppasmod, 1 - .xml")
 		("cross,x", "enable cross validation (optional): default off")
 		("split,g", boost::program_options::value<unsigned int>(), "number of groups for cross-validation (optional): default 5")
-		("out-dir,o", boost::program_options::value<std::string>(), "directory path to output results of cross validation including feature, model and classified resutls (optional): default: output")
+		("outdir,o", boost::program_options::value<std::string>(), "directory path to output results of cross validation including feature, model and classified resutls (optional): default: output")
 		("model,m", boost::program_options::value<std::string>(), "model file path (optional): default model.out")
 		("feature,f", boost::program_options::value<std::string>(), "feature file path (optional): default feature.out")
 		("help,h", "Show help messages")
@@ -108,6 +106,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	modality::parser mod_parser;
+#if defined (USE_LIBLINEAR)
+	mod_parser.load_hashDB();
+#endif
+
 	switch (input_layer) {
 		case 0:
 			mod_parser.load_deppasmods(files);
@@ -194,20 +196,21 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			std::cout << " learning data size: " << mod_parser.learning_data.size() << std::endl;
-			mod_parser.learnOC(model_path, feature_path);
-
+			mod_parser.learn(model_path, feature_path);
+			
+#if defined (USE_LIBLINEAR)
+			mod_parser.model = linear::load_model(model_path.c_str());
+#elif defined (USE_CLASSIAS)
 			std::ifstream ifs(model_path.c_str());
-
-			modality::model_type model;
-			classias::quark labels;
-			mod_parser.read_model(model, labels, ifs);
+			mod_parser.read_model(ifs);
+#endif
 
 			std::ofstream os(result_path.c_str());
 
 			std::vector< nlp::sentence > test_data = split_data[step];
 			for (unsigned int i=0 ; i<test_data.size() ; ++i) {
 				test_data[i].clear_mod();
-				nlp::sentence tagged_sent = mod_parser.classify(model, labels, test_data[i]);
+				nlp::sentence tagged_sent = mod_parser.analyze(test_data[i]);
 				for (unsigned int chk_cnt=0 ; chk_cnt<tagged_sent.chunks.size() ; ++chk_cnt) {
 					for (unsigned int tok_cnt=0 ; tok_cnt<tagged_sent.chunks[chk_cnt].tokens.size() ; ++tok_cnt) {
 						nlp::token tok_gold = split_data[step][i].chunks[chk_cnt].tokens[tok_cnt];
@@ -236,8 +239,12 @@ int main(int argc, char *argv[]) {
 
 	}
 	else {
-		mod_parser.learnOC(model_path, feature_path);
+		mod_parser.learn(model_path, feature_path);
 	}
+
+#if defined (USE_LIBLINEAR)
+	mod_parser.save_hashDB();
+#endif
 
 	return 1;
 }

@@ -13,6 +13,7 @@
 #include <tinyxml2.h>
 #include <mecab.h>
 #include <cabocha.h>
+#include <iomanip>
 
 #include "sentence.hpp"
 #include "modality.hpp"
@@ -56,7 +57,12 @@ namespace modality {
 	*/
 
 
-	void parser::read_model(model_type& model, classias::quark& labels, std::istream& is) {
+#if defined (USE_CLASSIAS)
+	void parser::read_model(std::istream& is) {
+		// init model data
+		model = model_type();
+		labels = classias::quark();
+
 		while(true) {
 			std::string line;
 			std::getline(is, line);
@@ -88,10 +94,10 @@ namespace modality {
 			model.insert(model_type::pair_type(line.substr(pos), w));
 		}
 	}
+#endif
 
 
-	nlp::sentence parser::classify(model_type model, classias::quark labels, std::string text, int input_layer) {
-
+	nlp::sentence parser::analyze(std::string text, int input_layer) {
 		nlp::sentence sent;
 		sent.ma_tool = nlp::sentence::MeCab;
 		std::string parsed_text;
@@ -110,14 +116,14 @@ namespace modality {
 				break;
 		}
 		sent.parse_cabocha(parsed_text);
-		
-		sent = classify(model, labels, sent);
-		
+
+		analyze(sent);
+
 		return sent;
 	}
 
 
-	nlp::sentence parser::classify(model_type model, classias::quark labels, nlp::sentence sent) {
+	nlp::sentence parser::analyze(nlp::sentence sent) {
 		std::vector<nlp::chunk>::reverse_iterator rit_chk;
 		std::vector<nlp::token>::reverse_iterator rit_tok;
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sent.chunks.rend() ; ++rit_chk) {
@@ -127,42 +133,91 @@ namespace modality {
 						||
 						(!pred_detect_rule && rit_tok->pas.is_pred())
 					 ) {
+					
+					t_feat *feat;
+					feat = new t_feat;
+					gen_feature( sent, rit_tok->id, *feat );
+
+#if defined (USE_LIBLINEAR)
+					linear::feature_node* xx = new linear::feature_node[feat->size()+1];
+					t_feat::iterator it_feat;
+					int feat_cnt = 0;
+					boost::unordered_map<int, double> feat4linear;
+					for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
+						if (feat2id.find(it_feat->first) == feat2id.end()) {
+							feat2id[it_feat->first] = feat2id.size();
+						}
+						feat4linear[feat2id[it_feat->first]] = it_feat->second;
+						feat_cnt++;
+					}
+
+					// sorted by feature ID
+					feat_cnt = 0;
+					for (unsigned int i=0 ; i<feat2id.size() ; i++) {
+						if (feat4linear.find(i) != feat4linear.end()) {
+							xx[feat_cnt].index = i;
+							xx[feat_cnt].value = feat4linear[i];
+							feat_cnt++;
+						}
+					}
+					xx[feat_cnt].index = -1;
+#elif defined (USE_CLASSIAS) 
 					classifier_type inst(model);
 					inst.clear();
 					inst.resize(labels.size());
 					feature_generator fgen;
 
-					t_feat *feat;
-					feat = new t_feat;
-					gen_feature( sent, rit_tok->id, *feat );
+					t_feat::iterator it_feat;
+					for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
+						for (unsigned int i=0 ; i<labels.size() ; ++i) {
+							inst.set(i, fgen, it_feat->first, labels.to_item(i), it_feat->second);
+						}
+					}
+					inst.finalize();
+#endif
 
 #ifdef _MODEBUG
 					std::string feat_str = "";
-#endif
-					t_feat::iterator it_feat;
 					for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
-#ifdef _MODEBUG
 						std::stringstream ss;
 						ss << it_feat->first;
 						ss << ":";
 						ss << it_feat->second;
 						ss << " ";
 						feat_str += ss.str();
+					}
+
+					std::cout << feat_str << std::endl;
 #endif
 
-						for (int i=0 ; i<(int)labels.size() ; ++i) {
-							inst.set(i, fgen, it_feat->first, labels.to_item(i), it_feat->second);
+					std::string label = "";
+					
+#if defined (USE_LIBLINEAR)
+					int predict_val = linear::predict(model, xx);
+					boost::unordered_map< std::string, int >::iterator it;
+					for (it=label2id.begin() ; it!=label2id.end() ; ++it) {
+						if (it->second == predict_val) {
+							label = it->first;
 						}
 					}
-					inst.finalize();
-
+					if (label == "") {
+						std::cerr << "ERORR: unknown predicted label: " << predict_val << std::endl;
+						exit(-1);
+					}
 #ifdef _MODEBUG
-					std::cout << feat_str << std::endl;
-					std::cout << " -> " << labels.to_item(inst.argmax()) << std::endl;
+					std::cout << " -> " << label << "(" << predict_val << ")" << std::endl;
+#endif
+#elif defined (USE_CLASSIAS)
+					label = labels.to_item(inst.argmax());
+#endif
+					
+					
+#ifdef _MODEBUG
+					std::cout << " -> " << label << std::endl;
 #endif
 
 					rit_tok->mod.tids.push_back(rit_tok->id);
-					rit_tok->mod.authenticity = labels.to_item(inst.argmax());
+					rit_tok->mod.authenticity = label;
 					rit_tok->has_mod = true;
 					rit_chk->has_mod = true;
 				}
@@ -171,7 +226,7 @@ namespace modality {
 		return sent;
 	}
 
-	
+
 	void parser::load_deppasmods(std::vector< std::string > deppasmods) {
 		learning_data.clear();
 		
@@ -217,9 +272,100 @@ namespace modality {
 			}
 		}
 	}
-	
 
-	bool parser::learnOC(std::string model_path, std::string feature_path) {
+
+#if defined (USE_LIBLINEAR)
+	void parser::learn(std::string model_path, std::string feature_path) {
+
+		std::ofstream os_feat(feature_path.c_str());
+		
+		int node_cnt = 0;
+		BOOST_FOREACH (nlp::sentence sent, learning_data) {
+			BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
+				BOOST_FOREACH (nlp::token tok, chk.tokens) {
+					if (tok.has_mod && tok.mod.authenticity != "") {
+						node_cnt++;
+					}
+				}
+			}
+		}
+
+		linear::feature_node **x = new linear::feature_node*[node_cnt+1];
+		int y[node_cnt+1];
+
+		node_cnt = 0;
+		BOOST_FOREACH (nlp::sentence sent, learning_data) {
+			BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
+				BOOST_FOREACH (nlp::token tok, chk.tokens) {
+					if (tok.has_mod && tok.mod.authenticity != "") {
+						if (label2id.find(tok.mod.authenticity) == label2id.end()) {
+							label2id[tok.mod.authenticity] = label2id.size();
+						}
+						y[node_cnt] = label2id[tok.mod.authenticity];
+						os_feat << tok.mod.authenticity << "(" << label2id[tok.mod.authenticity] << ")";
+
+						t_feat *feat;
+						feat = new t_feat;
+						gen_feature(sent, tok.id, *feat);
+
+						linear::feature_node* xx = new linear::feature_node[feat->size()+1];
+						t_feat::iterator it_feat;
+						int feat_cnt = 0;
+						boost::unordered_map<int, double> feat4linear;
+						for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
+							if (feat2id.find(it_feat->first) == feat2id.end()) {
+								feat2id[it_feat->first] = feat2id.size();
+							}
+							feat4linear[feat2id[it_feat->first]] = it_feat->second;
+							feat_cnt++;
+							
+							os_feat << " " << it_feat->first << "(" << feat2id[it_feat->first] << "):" << it_feat->second;
+						}
+						os_feat << std::endl;
+						
+						// sorted by feature ID
+						feat_cnt = 0;
+						for (unsigned int i=0 ; i<feat2id.size() ; i++) {
+							if (feat4linear.find(i) != feat4linear.end()) {
+								xx[feat_cnt].index = i;
+								xx[feat_cnt].value = feat4linear[i];
+								feat_cnt++;
+							}
+						}
+						xx[feat_cnt].index = -1;
+						
+						x[node_cnt] = xx;
+						node_cnt++;
+					}
+				}
+			}
+		}
+
+		os_feat.close();
+
+		linear::problem _prob;
+		_prob.l = learning_data.size();
+		_prob.n = feat2id.size();
+		_prob.y = y;
+		_prob.x = x;
+		_prob.bias = -1;
+		
+		linear::parameter _param;
+		_param.solver_type = linear::L2R_LR;
+		_param.eps = 0.01;
+		_param.C = 1;
+		_param.nr_weight = 0;
+		_param.weight_label = new int(1);
+		_param.weight = new double(1.0);
+		
+		model = linear::train(&_prob, &_param);
+		linear::save_model(model_path.c_str(), model);
+	}
+#endif
+
+
+#if defined (USE_CLASSIAS)
+	void parser::learn(std::string model_path, std::string feature_path) {
 		classias::msdata data;
 		
 		std::ofstream os_feat(feature_path.c_str());
@@ -275,7 +421,7 @@ namespace modality {
 			os_model << "@label\t" << data.labels.to_item(l) << std::endl;
 		}
 
-		for (int i = 0;i < data.num_features();++i) {
+		for (int i=0 ; i<data.num_features() ; ++i) {
 			double w = tr.model()[i];
 			if (w != 0.) {
 				int a, l;
@@ -286,9 +432,8 @@ namespace modality {
 			}
 		}
 		os_model.close();
-		
-		return true;
 	}
+#endif
 
 
 	nlp::sentence parser::make_tagged_ipasents( std::vector< t_token > sent_orig ) {
@@ -564,6 +709,49 @@ namespace modality {
 		
 		return sents;
 	}
+
+
+#if defined (USE_LIBLINEAR)
+	void parser::save_hashDB() {
+		boost::unordered_map< std::string, int >::iterator it;
+		for (it=feat2id.begin() ; it!=feat2id.end() ; ++it) {
+			std::stringstream ss;
+			ss << it->second;
+			if (!f2iDB.set(it->first, ss.str())) {
+				std::cerr << "set error: " << f2iDB.error().name() << std::endl;
+			}
+		}
+		
+		for (it=label2id.begin() ; it!=label2id.end() ; ++it) {
+			std::stringstream ss;
+			ss << it->second;
+			if (!l2iDB.set(it->first, ss.str())) {
+				std::cerr << "set error: " << l2iDB.error().name() << std::endl;
+			}
+		}
+	}
+#endif
+
+
+#if defined (USE_LIBLINEAR)
+	void parser::load_hashDB() {
+		label2id.clear();
+		kyotocabinet::DB::Cursor *cur = l2iDB.cursor();
+		cur->jump();
+		std::string k, v;
+		while (cur->get(&k, &v, true)) {
+			label2id[k] = boost::lexical_cast<int>(v);
+		}
+
+		feat2id.clear();
+		cur = f2iDB.cursor();
+		cur->jump();
+		while (cur->get(&k, &v, true)) {
+			feat2id[k] = boost::lexical_cast<int>(v);
+		}
+	}
+#endif
+
 };
 
 

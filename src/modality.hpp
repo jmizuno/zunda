@@ -7,7 +7,14 @@
 //#include <mecab.h>
 #include <cabocha.h>
 #include <tinyxml2.h>
+#include <kcpolydb.h>
+
+#if defined (USE_LIBLINEAR)
+namespace linear {
 #include <linear.h>
+};
+
+#elif defined (USE_CLASSIAS)
 #include <classias/classias.h>
 #include <classias/classify/linear/multi.h>
 #include <classias/data.h>
@@ -15,19 +22,22 @@
 #include <classias/train/online_scheduler.h>
 #include <classias/feature_generator.h>
 #include <classias/quark.h>
-#include <kcpolydb.h>
+#include "defaultmap.h"
+
+#endif
 
 #include "sentence.hpp"
-#include "defaultmap.h"
 
 #define MODALITY_VERSION 1.0
 
 namespace modality {
 	typedef boost::unordered_map< std::string, double > t_feat;
 
+#if defined (USE_CLASSIAS)
 	typedef classias::train::lbfgs_logistic_multi<classias::msdata> trainer_type;
 	typedef defaultmap<std::string, double> model_type;
 	typedef classias::classify::linear_multi_logistic<model_type> classifier_type;
+#endif
 
 	enum {
 		raw_text = 0,
@@ -35,6 +45,7 @@ namespace modality {
 		chapas_text = 2,
 	};
 
+#if defined (USE_CLASSIAS)
 class feature_generator
 {
 public:
@@ -63,15 +74,7 @@ public:
         return true;
     }
 };
-
-
-/*	typedef classias::train::online_scheduler_multi<
-		classias::msdata,
-		classias::train::averaged_perceptron_multi<
-			classias::classify::linear_multi<classias::weight_vector>
-		>
-	> trainer_type;
-	*/
+#endif
 
 	typedef struct {
 		int sp;
@@ -80,19 +83,6 @@ public:
 		std::string morphID;
 		nlp::t_eme eme;
 	} t_token;
-
-	class instance {
-		public:
-			std::string label;
-			t_feat *feat;
-
-		public:
-			instance() {
-				feat = new t_feat;
-			}
-			~instance() {
-			}
-	};
 
 		
 	class parser {
@@ -105,6 +95,17 @@ public:
 			
 			std::vector< nlp::sentence > learning_data;
 			bool pred_detect_rule;
+
+#if defined (USE_LIBLINEAR)
+			kyotocabinet::HashDB l2iDB;
+			kyotocabinet::HashDB f2iDB;
+			boost::unordered_map< std::string, int > label2id;
+			boost::unordered_map< std::string, int > feat2id;
+			linear::model *model;
+#elif defined (USE_CLASSIAS)
+			model_type model;
+			classias::quark labels;
+#endif
 			
 			parser() {
 //				mecab = MeCab::createTagger("-p");
@@ -117,18 +118,46 @@ public:
 				cabocha = CaboCha::createParser("-f1");
 				
 				pred_detect_rule = false;
+
+#if defined (USE_LIBLINEAR)
+				if (!l2iDB.open("label2id.kch", kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
+					std::cerr << "open error: label2id: " << l2iDB.error().name() << std::endl;
+				}
+
+				if (!f2iDB.open("feat2id.kch", kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
+					std::cerr << "open error: feat2id: " << f2iDB.error().name() << std::endl;
+				}
+#endif
 			}
+
 			~parser() {
+				if (!ttjDB.close()) {
+					std::cerr << "close error: ttjcore2seq: " << ttjDB.error().name() << std::endl;
+				}
+				if (!fadicDB.close()) {
+					std::cerr << "close error: fadic: " << fadicDB.error().name() << std::endl;
+				}
+				
+#if defined (USE_LIBLINEAR)
+				if (!l2iDB.close()) {
+					std::cerr << "close error: label2id: " << l2iDB.error().name() << std::endl;
+				}
+				if (!f2iDB.close()) {
+					std::cerr << "close error: feat2id: " << f2iDB.error().name() << std::endl;
+				}
+#endif
 			}
 
 		public:
-			void read_model(model_type&, classias::quark&, std::istream&);
-			nlp::sentence classify(model_type, classias::quark, std::string, int);
-			nlp::sentence classify(model_type, classias::quark, nlp::sentence);
+			nlp::sentence analyze(std::string, int);
+			nlp::sentence analyze(nlp::sentence);
+#if defined (USE_CLASSIAS)
+			void read_model(std::istream&);
+#endif
 //			bool parse(std::string);
 			void load_xmls(std::vector< std::string >);
 			void load_deppasmods(std::vector< std::string >);
-			bool learnOC(std::string, std::string);
+			void learn(std::string, std::string);
 
 			nlp::sentence make_tagged_ipasents( std::vector< t_token > );
 
@@ -145,6 +174,11 @@ public:
 			void gen_feature_follow_chunks(nlp::sentence, int, t_feat &);
 			void gen_feature_ttj(nlp::sentence, int, t_feat &);
 			void gen_feature_fadic(nlp::sentence, int, t_feat &);
+			
+#if defined (USE_LIBLINEAR)
+			void save_hashDB();
+			void load_hashDB();
+#endif
 	};
 };
 
