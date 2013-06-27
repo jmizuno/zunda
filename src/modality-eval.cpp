@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 	boost::program_options::store(parse_command_line(argc, argv, opt), argmap);
 	boost::program_options::notify(argmap);
 
-	evaluator eval;
+	evaluator _evaluator;
 
 	std::string buf;
 	while( getline(std::cin, buf) ) {
@@ -22,18 +22,24 @@ int main(int argc, char *argv[]) {
 		boost::algorithm::split(l, buf, boost::algorithm::is_any_of(","));
 		
 		if (l.size() == 3) {
-			eval.add( l[0], l[1], l[2] );
+			_evaluator.add( l[0], l[1], l[2] );
 		}
 		else {
 			std::cerr << "WARN: invalid format " << buf << std::endl;
 		}
 	}
 
-	eval.eval();
-	double acc = eval.accuracy();
+	_evaluator.eval();
+
+	std::cout << "* confusion matrix" << std::endl;
+	_evaluator.print_confusion_matrix();
+
+	std::cout << "* Precision and Recall" << std::endl;
+	_evaluator.print_prec_rec();
+
+	double acc = _evaluator.accuracy();
+	std::cout << "* Accuracy" << std::endl;
 	std::cout << acc << std::endl;
-	eval.print_confusion_matrix();
-	eval.print_prec_rec();
 
 	return true;
 }

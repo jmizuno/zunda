@@ -117,11 +117,12 @@ class evaluator {
 			unsigned int width = max_width(labels);
 			width += 2;
 
+			double prec_sum = 0.0, rec_sum = 0.0;
 			BOOST_FOREACH (std::string label, labels) {
 				for (unsigned int i=0 ; i<(width-count_utf8(label)) ; ++i) {
 					std::cout << " ";
 				}
-				std::cout << label;
+				std::cout << label << ", ";
 
 				unsigned int tp = 0;
 				unsigned int tn = 0;
@@ -143,12 +144,40 @@ class evaluator {
 					}
 				}
 				
-				std::cout << " " << boost::format("%4.2lf") % ((double)tp / (double)(tp+fp));
-				std::cout << " (" << boost::format("%6d") % tp << "/" << boost::format("%6d") % (tp+fp) << ")";
-				std::cout << " " << boost::format("%4.2lf") % ((double)tp / (double)(tp+fn));
-				std::cout << " (" << boost::format("%6d") % tp << "/" << boost::format("%6d") % (tp+fn) << ")";
+				double prec = -1.0, rec = -1.0;
+				if (tp+fp == 0) {
+					std::cout << std::setw(4) << "-";
+				}
+				else {
+					prec = (double)tp / (double)(tp+fp);
+					prec_sum += prec;
+					std::cout << boost::format("%4.2lf") % (prec);
+				}
+				std::cout << ", ";
+				std::cout << "(" << boost::format("%6d") % (tp) << "/" << boost::format("%6d") % (tp+fp) << "), ";
+					
+				if (tp+fn == 0) {
+					std::cout << std::setw(4) << "-";
+				}
+				else {
+					rec = (double)tp / (double)(tp+fn);
+					rec_sum += rec;
+					std::cout << boost::format("%4.2lf") % (rec);
+				}
+				std::cout << ", ";
+				std::cout << "(" << boost::format("%6d") % (tp) << "/" << boost::format("%6d") % (tp+fn) << ")";
+
+				if (prec != -1.0 && rec != -1.0) {
+					std::cout << ", " << boost::format("%4.2lf") % (2 * prec * rec / (prec + rec));
+				}
 				std::cout << std::endl;
 			}
+			
+			double macro_prec = prec_sum / labels.size();
+			double macro_rec = rec_sum / labels.size();
+			std::cout << "Macro Precision: " << boost::format("%4.2lf") % (macro_prec) << std::endl;
+			std::cout << "Macro Recall:    " << boost::format("%4.2lf") % (macro_rec) << std::endl;
+			std::cout << "Macro F1:        " << boost::format("%4.2lf") % (2 * macro_prec * macro_rec / (macro_prec + macro_rec)) << std::endl;
 		}
 
 
