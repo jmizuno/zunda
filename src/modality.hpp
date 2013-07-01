@@ -95,7 +95,7 @@ public:
 			
 			std::vector< nlp::sentence > learning_data;
 			bool pred_detect_rule;
-
+			
 #if defined (USE_LIBLINEAR)
 			kyotocabinet::HashDB l2iDB;
 			kyotocabinet::HashDB f2iDB;
@@ -153,6 +153,8 @@ public:
 			nlp::sentence analyze(nlp::sentence);
 #if defined (USE_CLASSIAS)
 			void read_model(std::istream&);
+#elif defined (USE_LIBLINEAR)
+			linear::feature_node* pack_feat_linear(t_feat *);
 #endif
 //			bool parse(std::string);
 			void load_xmls(std::vector< std::string >);

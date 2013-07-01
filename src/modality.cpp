@@ -123,6 +123,36 @@ namespace modality {
 	}
 
 
+#if defined (USE_LIBLINEAR)
+	linear::feature_node* parser::pack_feat_linear(t_feat *feat) {
+		linear::feature_node* xx = new linear::feature_node[feat->size()+1];
+		t_feat::iterator it_feat;
+		int feat_cnt = 0;
+		boost::unordered_map<int, double> feat4linear;
+		for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
+			if (feat2id.find(it_feat->first) == feat2id.end()) {
+				feat2id[it_feat->first] = feat2id.size();
+			}
+			feat4linear[feat2id[it_feat->first]] = it_feat->second;
+			feat_cnt++;
+		}
+
+		// sorted by feature ID
+		feat_cnt = 0;
+		for (unsigned int i=0 ; i<feat2id.size() ; i++) {
+			if (feat4linear.find(i) != feat4linear.end()) {
+				xx[feat_cnt].index = i;
+				xx[feat_cnt].value = feat4linear[i];
+				feat_cnt++;
+			}
+		}
+		xx[feat_cnt].index = -1;
+
+		return xx;
+	}
+#endif
+
+
 	nlp::sentence parser::analyze(nlp::sentence sent) {
 		std::vector<nlp::chunk>::reverse_iterator rit_chk;
 		std::vector<nlp::token>::reverse_iterator rit_tok;
@@ -137,37 +167,16 @@ namespace modality {
 					t_feat *feat;
 					feat = new t_feat;
 					gen_feature( sent, rit_tok->id, *feat );
+					t_feat::iterator it_feat;
 
 #if defined (USE_LIBLINEAR)
-					linear::feature_node* xx = new linear::feature_node[feat->size()+1];
-					t_feat::iterator it_feat;
-					int feat_cnt = 0;
-					boost::unordered_map<int, double> feat4linear;
-					for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
-						if (feat2id.find(it_feat->first) == feat2id.end()) {
-							feat2id[it_feat->first] = feat2id.size();
-						}
-						feat4linear[feat2id[it_feat->first]] = it_feat->second;
-						feat_cnt++;
-					}
-
-					// sorted by feature ID
-					feat_cnt = 0;
-					for (unsigned int i=0 ; i<feat2id.size() ; i++) {
-						if (feat4linear.find(i) != feat4linear.end()) {
-							xx[feat_cnt].index = i;
-							xx[feat_cnt].value = feat4linear[i];
-							feat_cnt++;
-						}
-					}
-					xx[feat_cnt].index = -1;
+					linear::feature_node* xx = pack_feat_linear(feat);
 #elif defined (USE_CLASSIAS) 
 					classifier_type inst(model);
 					inst.clear();
 					inst.resize(labels.size());
 					feature_generator fgen;
 
-					t_feat::iterator it_feat;
 					for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
 						for (unsigned int i=0 ; i<labels.size() ; ++i) {
 							inst.set(i, fgen, it_feat->first, labels.to_item(i), it_feat->second);
@@ -307,33 +316,9 @@ namespace modality {
 						t_feat *feat;
 						feat = new t_feat;
 						gen_feature(sent, tok.id, *feat);
-
-						linear::feature_node* xx = new linear::feature_node[feat->size()+1];
 						t_feat::iterator it_feat;
-						int feat_cnt = 0;
-						boost::unordered_map<int, double> feat4linear;
-						for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
-							if (feat2id.find(it_feat->first) == feat2id.end()) {
-								feat2id[it_feat->first] = feat2id.size();
-							}
-							feat4linear[feat2id[it_feat->first]] = it_feat->second;
-							feat_cnt++;
-							
-							os_feat << " " << it_feat->first << "(" << feat2id[it_feat->first] << "):" << it_feat->second;
-						}
-						os_feat << std::endl;
 						
-						// sorted by feature ID
-						feat_cnt = 0;
-						for (unsigned int i=0 ; i<feat2id.size() ; i++) {
-							if (feat4linear.find(i) != feat4linear.end()) {
-								xx[feat_cnt].index = i;
-								xx[feat_cnt].value = feat4linear[i];
-								feat_cnt++;
-							}
-						}
-						xx[feat_cnt].index = -1;
-						
+						linear::feature_node* xx = pack_feat_linear(feat);
 						x[node_cnt] = xx;
 						node_cnt++;
 					}
@@ -742,7 +727,7 @@ namespace modality {
 		while (cur->get(&k, &v, true)) {
 			label2id[k] = boost::lexical_cast<int>(v);
 		}
-
+		
 		feat2id.clear();
 		cur = f2iDB.cursor();
 		cur->jump();
