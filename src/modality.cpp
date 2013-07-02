@@ -202,7 +202,7 @@ namespace modality {
 					std::string label = "";
 					
 #if defined (USE_LIBLINEAR)
-					int predict_val = linear::predict(model, xx);
+					int predict_val = linear::predict(models[AUTHENTICITY], xx);
 					boost::unordered_map< std::string, int >::iterator it;
 					for (it=label2id.begin() ; it!=label2id.end() ; ++it) {
 						if (it->second == predict_val) {
@@ -341,8 +341,8 @@ namespace modality {
 		_param.weight_label = new int(1);
 		_param.weight = new double(1.0);
 		
-		model = linear::train(&_prob, &_param);
-		linear::save_model(model_path.c_str(), model);
+		models[modality::AUTHENTICITY] = linear::train(&_prob, &_param);
+		linear::save_model(model_path.c_str(), models[modality::AUTHENTICITY]);
 	}
 #endif
 

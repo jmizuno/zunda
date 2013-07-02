@@ -45,6 +45,16 @@ namespace modality {
 		chapas_text = 2,
 	};
 
+	enum {
+		SOURCE = 0,  // 態度表明者
+		TENSE = 1,  // 時制
+		ASSUMPTIONAL = 2,  // 仮想
+		TYPE = 3,  // 態度
+		AUTHENTICITY = 4,  // 真偽判断
+		SENTIMENT = 5,  // 評価極性
+		FOCUS = 6,  // 焦点
+	};
+
 #if defined (USE_CLASSIAS)
 class feature_generator
 {
@@ -101,7 +111,7 @@ public:
 			kyotocabinet::HashDB f2iDB;
 			boost::unordered_map< std::string, int > label2id;
 			boost::unordered_map< std::string, int > feat2id;
-			linear::model *model;
+			linear::model *models[7];
 #elif defined (USE_CLASSIAS)
 			model_type model;
 			classias::quark labels;

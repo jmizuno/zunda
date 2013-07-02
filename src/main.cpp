@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
 	}
 
 #if defined (USE_LIBLINEAR)
-	mod_parser.model = linear::load_model(model_path.c_str());
+	mod_parser.models[modality::AUTHENTICITY] = linear::load_model(model_path.c_str());
 #elif defined (USE_CLASSIAS)
 	std::ifstream ifs(model_path.c_str());
 	mod_parser.read_model(ifs);
