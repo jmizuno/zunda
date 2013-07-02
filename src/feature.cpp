@@ -87,15 +87,19 @@ namespace modality {
 
 	void parser::gen_feature_follow_chunks(nlp::sentence sent, int tok_id, t_feat &feat) {
 		nlp::chunk chk_core = sent.get_chunk_by_tokenID(tok_id);
-		nlp::chunk chk_dep1;
-		nlp::chunk chk_dep2;
-		if (sent.get_dep_chunk(&chk_dep1, chk_core)) {
-			feat["chk_dep1_surf" + chk_dep1.str()] = 1.0;
-			feat["chk_dep1_orig" + chk_dep1.str_orig()] = 1.0;
-		}
-		if (sent.get_dep_chunk(&chk_dep2, chk_core, 2)) {
-			feat["chk_dep2_surf" + chk_dep2.str()] = 1.0;
-			feat["chk_dep2_orig" + chk_dep2.str_orig()] = 1.0;
+		for (unsigned int i=1 ; i<3 ; ++i) {
+			nlp::chunk chk_dep;
+			std::stringstream ss;
+			ss << i;
+			std::string chk_pos = ss.str();
+			if (sent.get_dep_chunk(&chk_dep, chk_core)) {
+				feat["chk_dep" + chk_pos + "_surf_" + chk_dep.str()] = 1.0;
+				feat["chk_dep" + chk_pos + "_orig_" + chk_dep.str_orig()] = 1.0;
+				BOOST_FOREACH (nlp::token tok, chk_dep.tokens) {
+					feat["chk_dep" + chk_pos + "_tok_surf_" + tok.surf] = 1.0;
+					feat["chk_dep" + chk_pos + "_tok_orig_" + tok.orig] = 1.0;
+				}
+			}
 		}
 	}
 
