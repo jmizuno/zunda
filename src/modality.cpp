@@ -213,16 +213,14 @@ namespace modality {
 						std::cerr << "ERORR: unknown predicted label: " << predict_val << std::endl;
 						exit(-1);
 					}
-#ifdef _MODEBUG
+#  ifdef _MODEBUG
 					std::cout << " -> " << label << "(" << predict_val << ")" << std::endl;
-#endif
+#  endif
 #elif defined (USE_CLASSIAS)
 					label = labels.to_item(inst.argmax());
-#endif
-					
-					
-#ifdef _MODEBUG
+#  ifdef _MODEBUG
 					std::cout << " -> " << label << std::endl;
+#  endif
 #endif
 
 					rit_tok->mod.tids.push_back(rit_tok->id);
