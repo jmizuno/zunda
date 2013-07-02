@@ -9,22 +9,9 @@
 #include <tinyxml2.h>
 #include <kcpolydb.h>
 
-#if defined (USE_LIBLINEAR)
 namespace linear {
 #include <linear.h>
 };
-
-#elif defined (USE_CLASSIAS)
-#include <classias/classias.h>
-#include <classias/classify/linear/multi.h>
-#include <classias/data.h>
-#include <classias/train/lbfgs.h>
-#include <classias/train/online_scheduler.h>
-#include <classias/feature_generator.h>
-#include <classias/quark.h>
-#include "defaultmap.h"
-
-#endif
 
 #include "sentence.hpp"
 
@@ -32,12 +19,6 @@ namespace linear {
 
 namespace modality {
 	typedef boost::unordered_map< std::string, double > t_feat;
-
-#if defined (USE_CLASSIAS)
-	typedef classias::train::lbfgs_logistic_multi<classias::msdata> trainer_type;
-	typedef defaultmap<std::string, double> model_type;
-	typedef classias::classify::linear_multi_logistic<model_type> classifier_type;
-#endif
 
 	enum {
 		raw_text = 0,
@@ -55,36 +36,6 @@ namespace modality {
 		FOCUS = 6,  // 焦点
 	};
 
-#if defined (USE_CLASSIAS)
-class feature_generator
-{
-public:
-    typedef std::string attribute_type;
-    typedef std::string label_type;
-    typedef std::string feature_type;
-
-public:
-    feature_generator()
-    {
-    }
-
-    virtual ~feature_generator()
-    {
-    }
-
-    inline bool forward(
-        const std::string& a,
-        const std::string& l,
-        std::string& f
-        ) const
-    {
-        f  = a;
-        f += '\t';
-        f += l;
-        return true;
-    }
-};
-#endif
 
 	typedef struct {
 		int sp;
@@ -106,16 +57,11 @@ public:
 			std::vector< nlp::sentence > learning_data;
 			bool pred_detect_rule;
 			
-#if defined (USE_LIBLINEAR)
 			kyotocabinet::HashDB l2iDB;
 			kyotocabinet::HashDB f2iDB;
 			boost::unordered_map< std::string, int > label2id;
 			boost::unordered_map< std::string, int > feat2id;
 			linear::model *models[7];
-#elif defined (USE_CLASSIAS)
-			model_type model;
-			classias::quark labels;
-#endif
 			
 			parser() {
 //				mecab = MeCab::createTagger("-p");
@@ -129,7 +75,6 @@ public:
 				
 				pred_detect_rule = false;
 
-#if defined (USE_LIBLINEAR)
 				if (!l2iDB.open("label2id.kch", kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
 					std::cerr << "open error: label2id: " << l2iDB.error().name() << std::endl;
 				}
@@ -137,7 +82,6 @@ public:
 				if (!f2iDB.open("feat2id.kch", kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
 					std::cerr << "open error: feat2id: " << f2iDB.error().name() << std::endl;
 				}
-#endif
 			}
 
 			~parser() {
@@ -148,24 +92,18 @@ public:
 					std::cerr << "close error: fadic: " << fadicDB.error().name() << std::endl;
 				}
 				
-#if defined (USE_LIBLINEAR)
 				if (!l2iDB.close()) {
 					std::cerr << "close error: label2id: " << l2iDB.error().name() << std::endl;
 				}
 				if (!f2iDB.close()) {
 					std::cerr << "close error: feat2id: " << f2iDB.error().name() << std::endl;
 				}
-#endif
 			}
 
 		public:
 			nlp::sentence analyze(std::string, int);
 			nlp::sentence analyze(nlp::sentence);
-#if defined (USE_CLASSIAS)
-			void read_model(std::istream&);
-#elif defined (USE_LIBLINEAR)
 			linear::feature_node* pack_feat_linear(t_feat *);
-#endif
 //			bool parse(std::string);
 			void load_xmls(std::vector< std::string >);
 			void load_deppasmods(std::vector< std::string >);
@@ -187,10 +125,8 @@ public:
 			void gen_feature_ttj(nlp::sentence, int, t_feat &);
 			void gen_feature_fadic(nlp::sentence, int, t_feat &);
 			
-#if defined (USE_LIBLINEAR)
 			void save_hashDB();
 			void load_hashDB();
-#endif
 	};
 };
 

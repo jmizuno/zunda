@@ -47,9 +47,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	modality::parser mod_parser;
-#if defined (USE_LIBLINEAR)
 	mod_parser.load_hashDB();
-#endif
 
 	if (argmap.count("pred-rule")) {
 		mod_parser.pred_detect_rule = true;
@@ -63,12 +61,7 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-#if defined (USE_LIBLINEAR)
 	mod_parser.models[modality::AUTHENTICITY] = linear::load_model(model_path.c_str());
-#elif defined (USE_CLASSIAS)
-	std::ifstream ifs(model_path.c_str());
-	mod_parser.read_model(ifs);
-#endif
 
 	std::vector< std::string > sents;
 	std::string buf;

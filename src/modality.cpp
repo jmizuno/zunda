@@ -57,45 +57,6 @@ namespace modality {
 	*/
 
 
-#if defined (USE_CLASSIAS)
-	void parser::read_model(std::istream& is) {
-		// init model data
-		model = model_type();
-		labels = classias::quark();
-
-		while(true) {
-			std::string line;
-			std::getline(is, line);
-			if (is.eof()) {
-				break;
-			}
-			
-			if (line.compare(0, 7, "@label\t") == 0) {
-				labels(line.substr(7));
-				continue;
-			}
-
-			if (line.compare(0, 1, "@") == 0) {
-				continue;
-			}
-
-			unsigned int pos = line.find('\t');
-			if (pos == line.npos) {
-				std::cerr << "feature weight is missing" << std::endl;
-				exit(-1);
-			}
-
-			double w = std::atof(line.c_str());
-			if (++pos == line.size()) {
-				std::cerr << "feature name is missing" << std::endl;
-				exit(-1);
-			}
-
-			model.insert(model_type::pair_type(line.substr(pos), w));
-		}
-	}
-#endif
-
 
 	nlp::sentence parser::analyze(std::string text, int input_layer) {
 		nlp::sentence sent;
@@ -123,7 +84,6 @@ namespace modality {
 	}
 
 
-#if defined (USE_LIBLINEAR)
 	linear::feature_node* parser::pack_feat_linear(t_feat *feat) {
 		linear::feature_node* xx = new linear::feature_node[feat->size()+1];
 		t_feat::iterator it_feat;
@@ -150,7 +110,6 @@ namespace modality {
 
 		return xx;
 	}
-#endif
 
 
 	nlp::sentence parser::analyze(nlp::sentence sent) {
@@ -169,21 +128,7 @@ namespace modality {
 					gen_feature( sent, rit_tok->id, *feat );
 					t_feat::iterator it_feat;
 
-#if defined (USE_LIBLINEAR)
 					linear::feature_node* xx = pack_feat_linear(feat);
-#elif defined (USE_CLASSIAS) 
-					classifier_type inst(model);
-					inst.clear();
-					inst.resize(labels.size());
-					feature_generator fgen;
-
-					for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
-						for (unsigned int i=0 ; i<labels.size() ; ++i) {
-							inst.set(i, fgen, it_feat->first, labels.to_item(i), it_feat->second);
-						}
-					}
-					inst.finalize();
-#endif
 
 #ifdef _MODEBUG
 					std::string feat_str = "";
@@ -201,7 +146,6 @@ namespace modality {
 
 					std::string label = "";
 					
-#if defined (USE_LIBLINEAR)
 					int predict_val = linear::predict(models[AUTHENTICITY], xx);
 					boost::unordered_map< std::string, int >::iterator it;
 					for (it=label2id.begin() ; it!=label2id.end() ; ++it) {
@@ -213,14 +157,9 @@ namespace modality {
 						std::cerr << "ERORR: unknown predicted label: " << predict_val << std::endl;
 						exit(-1);
 					}
-#  ifdef _MODEBUG
+
+#ifdef _MODEBUG
 					std::cout << " -> " << label << "(" << predict_val << ")" << std::endl;
-#  endif
-#elif defined (USE_CLASSIAS)
-					label = labels.to_item(inst.argmax());
-#  ifdef _MODEBUG
-					std::cout << " -> " << label << std::endl;
-#  endif
 #endif
 
 					rit_tok->mod.tids.push_back(rit_tok->id);
@@ -281,7 +220,6 @@ namespace modality {
 	}
 
 
-#if defined (USE_LIBLINEAR)
 	void parser::learn(std::string model_path, std::string feature_path) {
 
 		std::ofstream os_feat(feature_path.c_str());
@@ -344,79 +282,6 @@ namespace modality {
 		models[modality::AUTHENTICITY] = linear::train(&_prob, &_param);
 		linear::save_model(model_path.c_str(), models[modality::AUTHENTICITY]);
 	}
-#endif
-
-
-#if defined (USE_CLASSIAS)
-	void parser::learn(std::string model_path, std::string feature_path) {
-		classias::msdata data;
-		
-		std::ofstream os_feat(feature_path.c_str());
-		
-		BOOST_FOREACH ( nlp::sentence sent, learning_data ) {
-			std::vector< nlp::chunk >::iterator it_chk;
-			std::vector< nlp::token >::iterator it_tok;
-			for (it_chk=sent.chunks.begin() ; it_chk!=sent.chunks.end() ; ++it_chk) {
-				for (it_tok=it_chk->tokens.begin() ; it_tok!=it_chk->tokens.end() ; ++it_tok) {
-					if (it_tok->has_mod && it_tok->mod.authenticity != "") {
-						classias::minstance& inst = data.new_element();
-
-						std::string label = it_tok->mod.authenticity;
-						inst.set_group(0);
-						inst.set_label(data.labels(label));
-
-						t_feat *feat;
-						feat = new t_feat;
-						gen_feature( sent, it_tok->id, *feat );
-						t_feat::iterator it_feat;
-						os_feat << label;
-						for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
-							os_feat << " " << it_feat->first << ":" << it_feat->second;
-							inst.append(data.attributes(it_feat->first), it_feat->second);
-						}
-						os_feat << std::endl;
-					}
-				}
-			}
-		}
-		os_feat.close();
-
-		if (data.empty()) {
-			std::cerr << "The data set is empty" << std::endl;
-			exit(-1);
-		}
-
-		data.generate_features();
-		std::cerr << "Number of instances: " << data.size() << std::endl;
-		std::cerr << "Number of attributes: " << data.num_attributes() << std::endl;
-		std::cerr << "Number of labels: " << data.num_labels() << std::endl;
-		std::cerr << "Number of features: " << data.num_features() << std::endl;
-
-		trainer_type tr;
-		//tr.params().set("max_iterations", 100);
-		tr.train(data, std::cerr);
-
-		std::ofstream os_model(model_path.c_str());
-		os_model << "@classias\tlinear\tmulti\t";
-		os_model << data.feature_generator.name() << std::endl;
-
-		for (int l = 0;l < data.num_labels();++l) {
-			os_model << "@label\t" << data.labels.to_item(l) << std::endl;
-		}
-
-		for (int i=0 ; i<data.num_features() ; ++i) {
-			double w = tr.model()[i];
-			if (w != 0.) {
-				int a, l;
-				data.feature_generator.backward(i, a, l);
-				const std::string& attr = data.attributes.to_item(a);
-				const std::string& label = data.labels.to_item(l);
-				os_model << w << '\t' << attr << '\t' << label << std::endl;
-			}
-		}
-		os_model.close();
-	}
-#endif
 
 
 	nlp::sentence parser::make_tagged_ipasents( std::vector< t_token > sent_orig ) {
@@ -694,7 +559,6 @@ namespace modality {
 	}
 
 
-#if defined (USE_LIBLINEAR)
 	void parser::save_hashDB() {
 		boost::unordered_map< std::string, int >::iterator it;
 		for (it=feat2id.begin() ; it!=feat2id.end() ; ++it) {
@@ -713,10 +577,8 @@ namespace modality {
 			}
 		}
 	}
-#endif
 
 
-#if defined (USE_LIBLINEAR)
 	void parser::load_hashDB() {
 		label2id.clear();
 		kyotocabinet::DB::Cursor *cur = l2iDB.cursor();
@@ -733,7 +595,6 @@ namespace modality {
 			feat2id[k] = boost::lexical_cast<int>(v);
 		}
 	}
-#endif
 
 };
 

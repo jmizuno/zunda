@@ -106,9 +106,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	modality::parser mod_parser;
-#if defined (USE_LIBLINEAR)
 	mod_parser.load_hashDB();
-#endif
 
 	switch (input_layer) {
 		case 0:
@@ -198,12 +196,7 @@ int main(int argc, char *argv[]) {
 			std::cout << " learning data size: " << mod_parser.learning_data.size() << std::endl;
 			mod_parser.learn(model_path, feature_path);
 			
-#if defined (USE_LIBLINEAR)
 			mod_parser.models[modality::AUTHENTICITY] = linear::load_model(model_path.c_str());
-#elif defined (USE_CLASSIAS)
-			std::ifstream ifs(model_path.c_str());
-			mod_parser.read_model(ifs);
-#endif
 
 			std::ofstream os(result_path.c_str());
 
@@ -242,9 +235,7 @@ int main(int argc, char *argv[]) {
 		mod_parser.learn(model_path, feature_path);
 	}
 
-#if defined (USE_LIBLINEAR)
 	mod_parser.save_hashDB();
-#endif
 
 	return 1;
 }
