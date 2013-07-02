@@ -117,9 +117,9 @@ namespace modality {
 		}
 		sent.parse_cabocha(parsed_text);
 
-		analyze(sent);
+		nlp::sentence parsed_sent = analyze(sent);
 
-		return sent;
+		return parsed_sent;
 	}
 
 
