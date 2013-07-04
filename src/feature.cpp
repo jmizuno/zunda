@@ -40,8 +40,8 @@ namespace modality {
 			nlp::chunk chk_mod;
 			if (sent.get_chunk_has_mod(chk_mod, chk.id) == true) {
 				nlp::token tok = chk_mod.get_token_has_mod();
-				if (tok.has_mod && tok.mod.authenticity != "") {
-					feat["next_authenticity_" + tok.mod.authenticity] = 1.0;
+				if (tok.has_mod && tok.mod.tag["authenticity"] != "") {
+					feat["next_authenticity_" + tok.mod.tag["authenticity"]] = 1.0;
 				}
 			}
 			else {
@@ -174,7 +174,7 @@ namespace modality {
 			nlp::token tok = chk_mod.get_token_has_mod();
 			std::string key = tok.orig + ":";
 
-			if (tok.mod.authenticity == "成立" || tok.mod.authenticity == "高確率" || tok.mod.authenticity == "不成立から成立" || tok.mod.authenticity == "低確率から高確率") {
+			if (tok.mod.tag["authenticity"] == "成立" || tok.mod.tag["authenticity"] == "高確率" || tok.mod.tag["authenticity"] == "不成立から成立" || tok.mod.tag["authenticity"] == "低確率から高確率") {
 				key += "pos_present_actuality";
 			}
 			else {

@@ -57,6 +57,37 @@ namespace modality {
 	*/
 
 
+	std::string parser::id2tag(unsigned int id) {
+		switch(id) {
+			case SOURCE:
+				return "source";
+			case TENSE:
+				return "tense";
+			case ASSUMPTIONAL:
+				return "assumptional";
+			case TYPE:
+				return "type";
+			case AUTHENTICITY:
+				return "authenticity";
+			case SENTIMENT:
+				return "sentiment";
+			default:
+				return NULL;
+		}
+	}
+		
+
+	bool parser::load_models() {
+		return load_models(model_path);
+	}
+
+	bool parser::load_models(std::string *model_path) {
+		for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+			models[i] = linear::load_model(model_path[i].c_str());
+		}
+		return true;
+	}
+
 
 	nlp::sentence parser::analyze(std::string text, int input_layer) {
 		nlp::sentence sent;
@@ -144,26 +175,35 @@ namespace modality {
 					std::cout << feat_str << std::endl;
 #endif
 
-					std::string label = "";
-					
-					int predict_val = linear::predict(models[AUTHENTICITY], xx);
-					boost::unordered_map< std::string, int >::iterator it;
-					for (it=label2id.begin() ; it!=label2id.end() ; ++it) {
-						if (it->second == predict_val) {
-							label = it->first;
-						}
-					}
-					if (label == "") {
-						std::cerr << "ERORR: unknown predicted label: " << predict_val << std::endl;
-						exit(-1);
-					}
-
 #ifdef _MODEBUG
-					std::cout << " -> " << label << "(" << predict_val << ")" << std::endl;
+					std::cout << " ->";
+#endif
+					std::string labels[LABEL_NUM];
+					for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+						int predicted = linear::predict(models[i], xx);
+						boost::unordered_map< std::string, int >::iterator it;
+						for (it=label2id.begin() ; it!=label2id.end() ; ++it) {
+							if (predicted == it->second) {
+								labels[i] = it->first;
+								break;
+							}
+						}
+						if (labels[i] == "") {
+							std::cerr << "ERORR: unknown predicted label: " << predicted << std::endl;
+							exit(-1);
+						}
+#ifdef _MODEBUG
+						std::cout << " " << labels[i] << "(" << predicted << ")";
+#endif
+					}
+#ifdef _MODEBUG
+					std::cout << std::endl;
 #endif
 
 					rit_tok->mod.tids.push_back(rit_tok->id);
-					rit_tok->mod.authenticity = label;
+					for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+						rit_tok->mod.tag[id2tag(i)] = labels[i];
+					}
 					rit_tok->has_mod = true;
 					rit_chk->has_mod = true;
 				}
@@ -220,15 +260,20 @@ namespace modality {
 	}
 
 
-	void parser::learn(std::string model_path, std::string feature_path) {
+	void parser::learn() {
+		learn(model_path, feature_path);
+	}
 
-		std::ofstream os_feat(feature_path.c_str());
+
+	void parser::learn(std::string *model_path, std::string *feature_path) {
+
+//		std::ofstream os_feat(feature_path.c_str());
 		
 		int node_cnt = 0;
 		BOOST_FOREACH (nlp::sentence sent, learning_data) {
 			BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
 				BOOST_FOREACH (nlp::token tok, chk.tokens) {
-					if (tok.has_mod && tok.mod.authenticity != "") {
+					if (tok.has_mod && tok.mod.tag["authenticity"] != "") {
 						node_cnt++;
 					}
 				}
@@ -236,18 +281,21 @@ namespace modality {
 		}
 
 		linear::feature_node **x = new linear::feature_node*[node_cnt+1];
-		int y[node_cnt+1];
+		int y[LABEL_NUM][node_cnt+1];
 
 		node_cnt = 0;
 		BOOST_FOREACH (nlp::sentence sent, learning_data) {
 			BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
 				BOOST_FOREACH (nlp::token tok, chk.tokens) {
-					if (tok.has_mod && tok.mod.authenticity != "") {
-						if (label2id.find(tok.mod.authenticity) == label2id.end()) {
-							label2id[tok.mod.authenticity] = label2id.size();
+					if (tok.has_mod && tok.mod.tag["authenticity"] != "") {
+						for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+							std::string label = tok.mod.tag[id2tag(i)];
+							if (label2id.find(label) == label2id.end()) {
+								label2id[label] = label2id.size();
+							}
+							y[i][node_cnt] = label2id[label];
+//							os_feat << label << "(" << label2id[label] << ") ";
 						}
-						y[node_cnt] = label2id[tok.mod.authenticity];
-						os_feat << tok.mod.authenticity << "(" << label2id[tok.mod.authenticity] << ")";
 
 						t_feat *feat;
 						feat = new t_feat;
@@ -262,15 +310,9 @@ namespace modality {
 			}
 		}
 
-		os_feat.close();
+//		os_feat.close();
 
-		linear::problem _prob;
-		_prob.l = learning_data.size();
-		_prob.n = feat2id.size();
-		_prob.y = y;
-		_prob.x = x;
-		_prob.bias = -1;
-		
+	
 		linear::parameter _param;
 		_param.solver_type = linear::L2R_LR;
 		_param.eps = 0.01;
@@ -279,8 +321,16 @@ namespace modality {
 		_param.weight_label = new int(1);
 		_param.weight = new double(1.0);
 		
-		models[modality::AUTHENTICITY] = linear::train(&_prob, &_param);
-		linear::save_model(model_path.c_str(), models[modality::AUTHENTICITY]);
+		for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+			linear::problem _prob;
+			_prob.l = learning_data.size();
+			_prob.n = feat2id.size();
+			_prob.y = y[i];
+			_prob.x = x;
+			_prob.bias = -1;
+			models[i] = linear::train(&_prob, &_param);
+			linear::save_model(model_path[i].c_str(), models[i]);
+		}
 	}
 
 
@@ -330,25 +380,25 @@ namespace modality {
 							nlp::t_eme::iterator it_eme;
 							for (it_eme=tok.eme.begin() ; it_eme!=tok.eme.end() ; ++it_eme) {
 								if (it_eme->first == "source") {
-									it_tok->mod.source = it_eme->second;
+									it_tok->mod.tag["source"] = it_eme->second;
 								}
 								else if (it_eme->first == "time") {
-									it_tok->mod.tense = it_eme->second;
+									it_tok->mod.tag["tense"] = it_eme->second;
 								}
 								else if (it_eme->first == "conditional") {
-									it_tok->mod.assumptional = it_eme->second;
+									it_tok->mod.tag["assumptional"] = it_eme->second;
 								}
 								else if (it_eme->first == "pmtype") {
-									it_tok->mod.type = it_eme->second;
+									it_tok->mod.tag["type"] = it_eme->second;
 								}
 								else if (it_eme->first == "actuality") {
-									it_tok->mod.authenticity = it_eme->second;
+									it_tok->mod.tag["authenticity"] = it_eme->second;
 								}
 								else if (it_eme->first == "evaluation") {
-									it_tok->mod.sentiment = it_eme->second;
+									it_tok->mod.tag["sentiment"] = it_eme->second;
 								}
 								else if (it_eme->first == "focus") {
-									it_tok->mod.focus = it_eme->second;
+									it_tok->mod.tag["focus"] = it_eme->second;
 								}
 							}
 

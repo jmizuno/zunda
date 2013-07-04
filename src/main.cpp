@@ -8,7 +8,7 @@
 
 int main(int argc, char *argv[]) {
 	std::string model_path_def = "model.out";
-	std::string feature_path_def = "feature.out";
+//	std::string feature_path_def = "feature.out";
 
 	boost::program_options::options_description opt("Usage");
 	opt.add_options()
@@ -61,7 +61,8 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-	mod_parser.models[modality::AUTHENTICITY] = linear::load_model(model_path.c_str());
+	mod_parser.load_models();
+//	mod_parser.models[modality::AUTHENTICITY] = linear::load_model(model_path.c_str());
 
 	std::vector< std::string > sents;
 	std::string buf;

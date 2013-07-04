@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
 	std::cout << "load done: " << mod_parser.learning_data.size() << " sents" << std::endl;
 
 	if (argmap.count("cross")) {
-		evaluator eval;
+		evaluator evals[LABEL_NUM];
 		
 		std::string outdir = "output";
 		if (argmap.count("outdir")) {
@@ -169,70 +169,87 @@ int main(int argc, char *argv[]) {
 		}
 		std::cout << std::endl;
 		
+
+		
 		for (unsigned int step=0 ; step<split_num ; ++step) {
 			std::cout << "* step " << step << std::endl;
 			mod_parser.learning_data.clear();
-
-			std::stringstream ss_model;
-			ss_model << "model" << std::setw(3) << std::setfill('0') << step << ".out";
-			boost::filesystem::path model_p(ss_model.str());
-			model_path = (outdir_path / model_p).string();
-
-			std::stringstream ss_feat;
-			ss_feat << "feature" << std::setw(3) << std::setfill('0') << step << ".out";
-			boost::filesystem::path feat_p(ss_feat.str());
-			feature_path = (outdir_path / feat_p).string();
-
-			std::stringstream ss_res;
-			ss_res << "result" << std::setw(3) << std::setfill('0') << step << ".csv";
-			boost::filesystem::path res_p(ss_res.str());
-			std::string result_path = (outdir_path / res_p).string();
-
+			
+			std::string model_path[LABEL_NUM];
+			std::string feature_path[LABEL_NUM];
+			std::string result_path[LABEL_NUM];
+			
+			for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+				std::string label = mod_parser.id2tag(i);
+			
+				std::stringstream suffix_ss;
+				suffix_ss << std::setw(3) << std::setfill('0') << step;
+				boost::filesystem::path mp("model_" + label + suffix_ss.str());
+				model_path[i] = (outdir_path / mp).string();
+				boost::filesystem::path fp("feature_" + label + suffix_ss.str());
+				feature_path[i] = (outdir_path / fp).string();
+				boost::filesystem::path rp("result_" + label + suffix_ss.str());
+				result_path[i] = (outdir_path / rp).string();
+			}
+			
 			for (unsigned int i=0 ; i<split_num ; ++i) {
 				if (i != step) {
 					mod_parser.learning_data.insert(mod_parser.learning_data.end(), split_data[i].begin(), split_data[i].end());
 				}
 			}
 			std::cout << " learning data size: " << mod_parser.learning_data.size() << std::endl;
-			mod_parser.learn(model_path, feature_path);
 			
-			mod_parser.models[modality::AUTHENTICITY] = linear::load_model(model_path.c_str());
+			mod_parser.learn(model_path, feature_path);
 
-			std::ofstream os(result_path.c_str());
+			mod_parser.load_models(model_path);
+
+			std::ofstream *os = new std::ofstream[LABEL_NUM];
+			for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+				os[i].open(result_path[i].c_str());
+			}
 
 			std::vector< nlp::sentence > test_data = split_data[step];
-			for (unsigned int i=0 ; i<test_data.size() ; ++i) {
-				test_data[i].clear_mod();
-				nlp::sentence tagged_sent = mod_parser.analyze(test_data[i]);
+			for (unsigned int set=0 ; set<test_data.size() ; ++set) {
+				test_data[set].clear_mod();
+				nlp::sentence tagged_sent = mod_parser.analyze(test_data[set]);
 				for (unsigned int chk_cnt=0 ; chk_cnt<tagged_sent.chunks.size() ; ++chk_cnt) {
 					for (unsigned int tok_cnt=0 ; tok_cnt<tagged_sent.chunks[chk_cnt].tokens.size() ; ++tok_cnt) {
-						nlp::token tok_gold = split_data[step][i].chunks[chk_cnt].tokens[tok_cnt];
+						nlp::token tok_gold = split_data[step][set].chunks[chk_cnt].tokens[tok_cnt];
 						nlp::token tok_sys = tagged_sent.chunks[chk_cnt].tokens[tok_cnt];
 						if (tok_gold.has_mod && tok_sys.has_mod) {
 							std::stringstream id_ss;
 							id_ss << tagged_sent.sent_id << "_" << tok_sys.id;
-							eval.add( id_ss.str(), tok_gold.mod.authenticity, tok_sys.mod.authenticity );
-							
-							os << id_ss.str() << "," << tok_gold.mod.authenticity << "," << tok_sys.mod.authenticity << std::endl;
+
+							for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+								evals[i].add( id_ss.str() , tok_gold.mod.tag[mod_parser.id2tag(i)], tok_sys.mod.tag[mod_parser.id2tag(i)] );
+								os[i] << id_ss.str() << "," << tok_gold.mod.tag[mod_parser.id2tag(i)] << "," << tok_sys.mod.tag[mod_parser.id2tag(i)] << std::endl;
+							}
 						}
 						else if (tok_sys.has_mod && !tok_gold.has_mod) {
-							std::cerr << "ERROR: modality tag does not exist in token " << tok_sys.id << " in " << test_data[i].sent_id << std::endl;
+							std::cerr << "ERROR: modality tag does not exist in token " << tok_sys.id << " in " << test_data[set].sent_id << std::endl;
 						}
 					}
 				}
 			}
-			os.close();
+
+			for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+				os[i].close();
+			}
+
 		}
 
-		eval.eval();
-		double acc = eval.accuracy();
-		std::cout << acc << std::endl;
-		eval.print_confusion_matrix();
-		eval.print_prec_rec();
+		for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+			std::cout << "* " << mod_parser.id2tag(i) << std::endl;
+			evals[i].eval();
+			double acc = evals[i].accuracy();
+			std::cout << acc << std::endl;
+			evals[i].print_confusion_matrix();
+			evals[i].print_prec_rec();
+		}
 
 	}
 	else {
-		mod_parser.learn(model_path, feature_path);
+		mod_parser.learn();
 	}
 
 	mod_parser.save_hashDB();

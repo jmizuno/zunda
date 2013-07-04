@@ -11,11 +11,14 @@
 
 namespace linear {
 #include <linear.h>
+
 };
+
 
 #include "sentence.hpp"
 
 #define MODALITY_VERSION 1.0
+#define LABEL_NUM 6
 
 namespace modality {
 	typedef boost::unordered_map< std::string, double > t_feat;
@@ -33,9 +36,7 @@ namespace modality {
 		TYPE = 3,  // 態度
 		AUTHENTICITY = 4,  // 真偽判断
 		SENTIMENT = 5,  // 評価極性
-		FOCUS = 6,  // 焦点
 	};
-
 
 	typedef struct {
 		int sp;
@@ -61,10 +62,27 @@ namespace modality {
 			kyotocabinet::HashDB f2iDB;
 			boost::unordered_map< std::string, int > label2id;
 			boost::unordered_map< std::string, int > feat2id;
-			linear::model *models[7];
+			std::string model_path[LABEL_NUM];
+			std::string feature_path[LABEL_NUM];
+
+			linear::model *models[LABEL_NUM];
 			
 			parser() {
-//				mecab = MeCab::createTagger("-p");
+				model_path[SOURCE] = "model_source";
+				model_path[TENSE] = "model_tense";
+				model_path[ASSUMPTIONAL] = "model_assumptional";
+				model_path[TYPE] = "model_type";
+				model_path[AUTHENTICITY] = "model_authenticity";
+				model_path[SENTIMENT] = "model_sentiment";
+
+				feature_path[SOURCE] = "feature_source";
+				feature_path[TENSE] = "feature_tense";
+				feature_path[ASSUMPTIONAL] = "feature_assumptional";
+				feature_path[TYPE] = "feature_type";
+				feature_path[AUTHENTICITY] = "feature_authenticity";
+				feature_path[SENTIMENT] = "feature_sentiment";
+
+				//				mecab = MeCab::createTagger("-p");
 				if (!ttjDB.open("dic/ttjcore2seq.kch", kyotocabinet::HashDB::OREADER)) {
 					std::cerr << "open error: ttjcore2seq: " << ttjDB.error().name() << std::endl;
 				}
@@ -101,13 +119,18 @@ namespace modality {
 			}
 
 		public:
+			std::string id2tag(unsigned int);
+
+			bool load_models();
+			bool load_models(std::string *);
 			nlp::sentence analyze(std::string, int);
 			nlp::sentence analyze(nlp::sentence);
 			linear::feature_node* pack_feat_linear(t_feat *);
 //			bool parse(std::string);
 			void load_xmls(std::vector< std::string >);
 			void load_deppasmods(std::vector< std::string >);
-			void learn(std::string, std::string);
+			void learn(std::string *, std::string *);
+			void learn();
 
 			nlp::sentence make_tagged_ipasents( std::vector< t_token > );
 

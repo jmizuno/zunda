@@ -34,22 +34,23 @@ namespace nlp {
 	class modality {
 		public:
 			std::vector<int> tids;
-			std::string source;
-			std::string tense;
-			std::string assumptional;
-			std::string type;
-			std::string authenticity;
-			std::string sentiment;
-			std::string focus;
+			boost::unordered_map< std::string, std::string > tag;
+//			std::string source;
+//			std::string tense;
+//			std::string assumptional;
+//			std::string type;
+//			std::string authenticity;
+//			std::string sentiment;
+//			std::string focus;
 		public:
 			modality() {
-				source = "wr:筆者";
-				tense = "0";
-				assumptional = "0";
-				type = "0";
-				authenticity = "0";
-				sentiment = "0";
-				focus = "0";
+				tag["source"] = "wr:筆者";
+				tag["tense"] = "0";
+				tag["assumptional"] = "0";
+				tag["type"] = "0";
+				tag["authenticity"] = "0";
+				tag["sentiment"] = "0";
+				tag["focus"] = "0";
 			}
 			~modality() {
 			}

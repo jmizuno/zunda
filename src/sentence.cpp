@@ -35,13 +35,13 @@ namespace nlp {
 				tids.push_back(boost::lexical_cast<int>(tid_str));
 			}
 
-			source = l[2];
-			tense = l[3];
-			assumptional = l[4];
-			type = l[5];
-			authenticity = l[6];
-			sentiment = l[7];
-			focus = l[8];
+			tag["source"] = l[2];
+			tag["tense"] = l[3];
+			tag["assumptional"] = l[4];
+			tag["type"] = l[5];
+			tag["authenticity"] = l[6];
+			tag["sentiment"] = l[7];
+			tag["focus"] = l[8];
 		}
 	}
 
@@ -50,7 +50,7 @@ namespace nlp {
 		std::string tid_str;
 		join(tid_str, tids, ",");
 		
-		str = tid_str + "\t" + source + "\t" + tense + "\t" + assumptional + "\t" + type + "\t" + authenticity + "\t" + sentiment + "\t" + focus;
+		str = tid_str + "\t" + tag["source"] + "\t" + tag["tense"] + "\t" + tag["assumptional"] + "\t" + tag["type"] + "\t" + tag["authenticity"] + "\t" + tag["sentiment"] + "\t" + tag["focus"];
 
 		return str;
 	}
