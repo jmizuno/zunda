@@ -115,30 +115,26 @@ namespace modality {
 	}
 
 
+	bool comp_xx(const linear::feature_node &xx1, const linear::feature_node &xx2) {
+		return xx1.index < xx2.index;
+	}
+
 	linear::feature_node* parser::pack_feat_linear(t_feat *feat) {
 		linear::feature_node* xx = new linear::feature_node[feat->size()+1];
 		t_feat::iterator it_feat;
 		int feat_cnt = 0;
-		boost::unordered_map<int, double> feat4linear;
 		for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
 			if (feat2id.find(it_feat->first) == feat2id.end()) {
 				feat2id[it_feat->first] = feat2id.size();
 			}
-			feat4linear[feat2id[it_feat->first]] = it_feat->second;
+			xx[feat_cnt].index = feat2id[it_feat->first];
+			xx[feat_cnt].value = it_feat->second;
 			feat_cnt++;
 		}
-
 		// sorted by feature ID
-		feat_cnt = 0;
-		for (unsigned int i=0 ; i<feat2id.size() ; i++) {
-			if (feat4linear.find(i) != feat4linear.end()) {
-				xx[feat_cnt].index = i;
-				xx[feat_cnt].value = feat4linear[i];
-				feat_cnt++;
-			}
-		}
+		std::sort(xx, xx+feat_cnt-1, comp_xx);
 		xx[feat_cnt].index = -1;
-
+		
 		return xx;
 	}
 
