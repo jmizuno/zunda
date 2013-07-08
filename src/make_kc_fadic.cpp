@@ -67,12 +67,12 @@ int main( int argc, char *argv[] ) {
 		
 		Ent ent;
 		ent.midashi = l[4];
-		ent.tag["pos_future"]["actuality"] = l[7];
-		ent.tag["pos_future"]["worth"] = l[8];
-		ent.tag["pos_future"]["sentiment"] = l[9];
-		ent.tag["pos_present"]["actuality"] = l[14];
-		ent.tag["pos_present"]["worth"] = l[15];
-		ent.tag["pos_present"]["sentiment"] = l[16];
+		ent.tag["pos_present"]["actuality"] = l[7];
+		ent.tag["pos_present"]["worth"] = l[8];
+		ent.tag["pos_present"]["sentiment"] = l[9];
+		ent.tag["pos_future"]["actuality"] = l[14];
+		ent.tag["pos_future"]["worth"] = l[15];
+		ent.tag["pos_future"]["sentiment"] = l[16];
 		
 		dic.push_back(ent);
 	}
