@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
 		("outdir,o", boost::program_options::value<std::string>(), "directory path to output results of cross validation including feature, model and classified resutls (optional): default: output")
 		("model,m", boost::program_options::value<std::string>(), "model file path (optional): default model.out")
 		("feature,f", boost::program_options::value<std::string>(), "feature file path (optional): default feature.out")
+		("pred-rule", "use rule-based event detection")
 		("help,h", "Show help messages")
 		("version,v", "Show version informaion");
 
@@ -107,6 +108,11 @@ int main(int argc, char *argv[]) {
 
 	modality::parser mod_parser;
 	mod_parser.load_hashDB();
+
+	if (argmap.count("pred-rule")) {
+		mod_parser.pred_detect_rule = true;
+	}
+
 
 	switch (input_layer) {
 		case 0:
