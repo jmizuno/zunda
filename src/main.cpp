@@ -61,7 +61,12 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
+	clock_t st;
+	clock_t et;
+	st = std::clock();
 	mod_parser.load_models();
+	et = std::clock();
+	std::cerr << "* load model done: " << (et-st) / (double)CLOCKS_PER_SEC << " sec" << std::endl;
 //	mod_parser.models[modality::AUTHENTICITY] = linear::load_model(model_path.c_str());
 
 	std::vector< std::string > sents;
