@@ -5,7 +5,7 @@
 #include <sstream>
 
 template< typename Tattr, typename Tspl >
-void join( std::string &str, std::vector< Tattr > vec, Tspl splitter ) {
+static void join( std::string &str, std::vector< Tattr > vec, Tspl splitter ) {
 	std::stringstream ss;
 	if (vec.size() != 0) {
 		ss << vec[0];
@@ -17,6 +17,7 @@ void join( std::string &str, std::vector< Tattr > vec, Tspl splitter ) {
 	}
 	str = ss.str();
 }
+
 
 #endif
 
