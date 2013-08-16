@@ -21,7 +21,7 @@ namespace modality {
 	void parser::gen_feature(nlp::sentence sent, int tok_id, t_feat &feat) {
 		gen_feature_basic(sent, tok_id, feat, 3);
 		gen_feature_function(sent, tok_id, feat);
-		gen_feature_follow_mod(sent, tok_id, feat);
+//		gen_feature_follow_mod(sent, tok_id, feat);
 		gen_feature_follow_chunks(sent, tok_id, feat);
 		gen_feature_ttj(sent, tok_id, feat);
 		gen_feature_fadic(sent, tok_id, feat);
@@ -118,7 +118,7 @@ namespace modality {
 			std::string val;
 			if (ttjDB.get(rit_tok->orig, &val)) {
 				std::vector< std::string > ents;
-				boost::algorithm::split(ents, val, boost::algorithm::is_space());
+				boost::algorithm::split(ents, val, boost::algorithm::is_any_of("\t"));
 //				std::cout << rit_tok->orig << "->" << val << std::endl;
 
 				BOOST_FOREACH(std::string ent, ents) {

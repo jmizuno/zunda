@@ -250,7 +250,7 @@ namespace nlp {
 			else if (boost::regex_search(l, m, chk_line)) {
 				chunk chk;
 				std::vector<std::string> v, v2;
-				boost::algorithm::split(v, l, boost::algorithm::is_space() );
+				boost::algorithm::split(v, l, boost::algorithm::is_any_of(" ") );
 				chk.id = boost::lexical_cast<int>(v[1]);
 
 				if (chk.id != (int)chunks.size()) {
