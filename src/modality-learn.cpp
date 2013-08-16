@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
 			std::string feature_path[LABEL_NUM];
 			std::string result_path[LABEL_NUM];
 			
-			for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+			BOOST_FOREACH (unsigned int i, mod_parser.analyze_tags) {
 				std::string label = mod_parser.id2tag(i);
 			
 				std::stringstream suffix_ss;
@@ -210,7 +210,7 @@ int main(int argc, char *argv[]) {
 			mod_parser.load_models(model_path);
 
 			std::ofstream *os = new std::ofstream[LABEL_NUM];
-			for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+			BOOST_FOREACH (unsigned int i, mod_parser.analyze_tags) {
 				os[i].open(result_path[i].c_str());
 			}
 
@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
 							std::stringstream id_ss;
 							id_ss << tagged_sent.sent_id << "_" << tok_sys.id;
 
-							for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+							BOOST_FOREACH (unsigned int i, mod_parser.analyze_tags) {
 								evals[i].add( id_ss.str() , tok_gold.mod.tag[mod_parser.id2tag(i)], tok_sys.mod.tag[mod_parser.id2tag(i)] );
 								os[i] << id_ss.str() << "," << tok_gold.mod.tag[mod_parser.id2tag(i)] << "," << tok_sys.mod.tag[mod_parser.id2tag(i)] << std::endl;
 							}
@@ -238,13 +238,13 @@ int main(int argc, char *argv[]) {
 				}
 			}
 
-			for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+			BOOST_FOREACH (unsigned int i, mod_parser.analyze_tags) {
 				os[i].close();
 			}
 
 		}
 
-		for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+		BOOST_FOREACH (unsigned int i, mod_parser.analyze_tags) {
 			std::cout << "* " << mod_parser.id2tag(i) << std::endl;
 			evals[i].eval();
 			double acc = evals[i].accuracy();

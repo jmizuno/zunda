@@ -10,8 +10,8 @@
 #include <kcpolydb.h>
 
 namespace linear {
+#define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 #include <linear.h>
-
 };
 
 
@@ -66,8 +66,15 @@ namespace modality {
 			std::string feature_path[LABEL_NUM];
 
 			linear::model *models[LABEL_NUM];
+			std::vector<unsigned int> analyze_tags;
 			
 			parser() {
+				analyze_tags.push_back(TENSE);
+				analyze_tags.push_back(ASSUMPTIONAL);
+				analyze_tags.push_back(TYPE);
+				analyze_tags.push_back(AUTHENTICITY);
+				analyze_tags.push_back(SENTIMENT);
+
 				model_path[SOURCE] = "model_source";
 				model_path[TENSE] = "model_tense";
 				model_path[ASSUMPTIONAL] = "model_assumptional";
@@ -93,11 +100,11 @@ namespace modality {
 				
 				pred_detect_rule = false;
 
-				if (!l2iDB.open("label2id.kch", kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
+				if (!l2iDB.open("label2id.kch", kyotocabinet::HashDB::OREADER)) {
 					std::cerr << "open error: label2id: " << l2iDB.error().name() << std::endl;
 				}
 
-				if (!f2iDB.open("feat2id.kch", kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
+				if (!f2iDB.open("feat2id.kch", kyotocabinet::HashDB::OREADER)) {
 					std::cerr << "open error: feat2id: " << f2iDB.error().name() << std::endl;
 				}
 			}
@@ -125,7 +132,7 @@ namespace modality {
 			bool load_models(std::string *);
 			nlp::sentence analyze(std::string, int);
 			nlp::sentence analyze(nlp::sentence);
-			linear::feature_node* pack_feat_linear(t_feat *);
+			linear::feature_node* pack_feat_linear(t_feat *, bool);
 //			bool parse(std::string);
 			void load_xmls(std::vector< std::string >);
 			void load_deppasmods(std::vector< std::string >);

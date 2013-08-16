@@ -82,7 +82,7 @@ namespace modality {
 	}
 
 	bool parser::load_models(std::string *model_path) {
-		for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+		BOOST_FOREACH (unsigned int i, analyze_tags) {
 			models[i] = linear::load_model(model_path[i].c_str());
 		}
 		return true;
@@ -119,17 +119,30 @@ namespace modality {
 		return xx1.index < xx2.index;
 	}
 
-	linear::feature_node* parser::pack_feat_linear(t_feat *feat) {
+	linear::feature_node* parser::pack_feat_linear(t_feat *feat, bool read_only) {
 		linear::feature_node* xx = new linear::feature_node[feat->size()+1];
 		t_feat::iterator it_feat;
 		int feat_cnt = 0;
 		for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
-			if (feat2id.find(it_feat->first) == feat2id.end()) {
-				feat2id[it_feat->first] = feat2id.size();
+			int feat_id = -1;
+			if (read_only) {
+				std::string val;
+				if (f2iDB.get(it_feat->first, &val)) {
+					feat_id = boost::lexical_cast<int>(val);
+				}
 			}
-			xx[feat_cnt].index = feat2id[it_feat->first];
-			xx[feat_cnt].value = it_feat->second;
-			feat_cnt++;
+			else {
+				if (feat2id.find(it_feat->first) == feat2id.end()) {
+					feat2id[it_feat->first] = feat2id.size();
+				}
+				feat_id = feat2id[it_feat->first];
+			}
+			
+			if (feat_id != -1) {
+				xx[feat_cnt].index = feat_id;
+				xx[feat_cnt].value = it_feat->second;
+				feat_cnt++;
+			}
 		}
 		// sorted by feature ID
 		std::sort(xx, xx+feat_cnt-1, comp_xx);
@@ -155,7 +168,7 @@ namespace modality {
 					gen_feature( sent, rit_tok->id, *feat );
 					t_feat::iterator it_feat;
 
-					linear::feature_node* xx = pack_feat_linear(feat);
+					linear::feature_node* xx = pack_feat_linear(feat, true);
 
 #ifdef _MODEBUG
 					std::string feat_str = "";
@@ -175,7 +188,7 @@ namespace modality {
 					std::cout << " ->";
 #endif
 					std::string labels[LABEL_NUM];
-					for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+					BOOST_FOREACH (unsigned int i, analyze_tags) {
 						int predicted = linear::predict(models[i], xx);
 						boost::unordered_map< std::string, int >::iterator it;
 						for (it=label2id.begin() ; it!=label2id.end() ; ++it) {
@@ -197,7 +210,7 @@ namespace modality {
 #endif
 
 					rit_tok->mod.tids.push_back(rit_tok->id);
-					for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+					BOOST_FOREACH (unsigned int i, analyze_tags) {
 						rit_tok->mod.tag[id2tag(i)] = labels[i];
 					}
 					rit_tok->has_mod = true;
@@ -270,7 +283,7 @@ namespace modality {
 			BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
 				BOOST_FOREACH (nlp::token tok, chk.tokens) {
 					if (
-							(pred_detect_rule && ( (tok.pos == "動詞" && tok.pos1 == "自立") || (tok.pos == "形容詞" && tok.pos1 == "自立") || (tok.pos == "名詞" && tok.pos1 == "サ変接続") || (tok.pos == "名詞" && tok.pos1 == "形容動詞語幹") ))
+							(pred_detect_rule && tok.has_mod && ( (tok.pos == "動詞" && tok.pos1 == "自立") || (tok.pos == "形容詞" && tok.pos1 == "自立") || (tok.pos == "名詞" && tok.pos1 == "サ変接続") || (tok.pos == "名詞" && tok.pos1 == "形容動詞語幹") ))
 							||
 							(!pred_detect_rule && tok.has_mod && tok.mod.tag["authenticity"] != "")
 						 ) {
@@ -288,11 +301,11 @@ namespace modality {
 			BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
 				BOOST_FOREACH (nlp::token tok, chk.tokens) {
 					if (
-							(pred_detect_rule && ( (tok.pos == "動詞" && tok.pos1 == "自立") || (tok.pos == "形容詞" && tok.pos1 == "自立") || (tok.pos == "名詞" && tok.pos1 == "サ変接続") || (tok.pos == "名詞" && tok.pos1 == "形容動詞語幹") ))
+							(pred_detect_rule && tok.has_mod && ( (tok.pos == "動詞" && tok.pos1 == "自立") || (tok.pos == "形容詞" && tok.pos1 == "自立") || (tok.pos == "名詞" && tok.pos1 == "サ変接続") || (tok.pos == "名詞" && tok.pos1 == "形容動詞語幹") ))
 							||
 							(!pred_detect_rule && tok.has_mod && tok.mod.tag["authenticity"] != "")
 						 ) {
-						for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+						BOOST_FOREACH (unsigned int i, analyze_tags) {
 							std::string label = tok.mod.tag[id2tag(i)];
 							if (label2id.find(label) == label2id.end()) {
 								label2id[label] = label2id.size();
@@ -306,7 +319,7 @@ namespace modality {
 						gen_feature(sent, tok.id, *feat);
 						t_feat::iterator it_feat;
 						
-						linear::feature_node* xx = pack_feat_linear(feat);
+						linear::feature_node* xx = pack_feat_linear(feat, false);
 						x[node_cnt] = xx;
 						node_cnt++;
 					}
@@ -325,7 +338,7 @@ namespace modality {
 		_param.weight_label = new int(1);
 		_param.weight = new double(1.0);
 		
-		for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+		BOOST_FOREACH (unsigned int i, analyze_tags) {
 			linear::problem _prob;
 			_prob.l = learning_data.size();
 			_prob.n = feat2id.size();
@@ -614,6 +627,18 @@ namespace modality {
 
 
 	void parser::save_hashDB() {
+		f2iDB.close();
+		if (!f2iDB.open("feat2id.kch", kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
+			std::cerr << "open error: feat2id: " << f2iDB.error().name() << std::endl;
+		}
+		f2iDB.clear();
+
+		l2iDB.close();
+		if (!l2iDB.open("label2id.kch", kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
+			std::cerr << "open error: label2id: " << l2iDB.error().name() << std::endl;
+		}
+		l2iDB.clear();
+
 		boost::unordered_map< std::string, int >::iterator it;
 		for (it=feat2id.begin() ; it!=feat2id.end() ; ++it) {
 			std::stringstream ss;
@@ -642,12 +667,14 @@ namespace modality {
 			label2id[k] = boost::lexical_cast<int>(v);
 		}
 		
+		/*
 		feat2id.clear();
 		cur = f2iDB.cursor();
 		cur->jump();
 		while (cur->get(&k, &v, true)) {
 			feat2id[k] = boost::lexical_cast<int>(v);
 		}
+		*/
 	}
 
 };
