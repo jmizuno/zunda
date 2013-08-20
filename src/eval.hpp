@@ -188,6 +188,10 @@ class evaluator {
 			boost::unordered_map<std::string, int> label_w;
 
 			std::string sg = "sys\\gold";
+			unsigned int sg_size = count_utf8(sg);
+			if (width < sg_size) {
+				width = sg_size;
+			}
 			for (unsigned int i=0 ; i<(width-count_utf8(sg)) ; i++) {
 				std::cout << " ";
 			}
