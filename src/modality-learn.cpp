@@ -8,22 +8,37 @@
 #include "eval.hpp"
 
 
+bool mkdir(boost::filesystem::path dir_path) {
+	boost::system::error_code error;
+	const bool result = boost::filesystem::exists(dir_path, error);
+	if (!result) {
+		std::cerr << "mkdir " << dir_path.string() << std::endl;
+		const bool res = boost::filesystem::create_directories(dir_path, error);
+		if (!res || error) {
+			std::cerr << "ERROR: mkdir " << dir_path.string() << " failed" << std::endl;
+			return false;
+		}
+	}
+	else if (error) {
+		std::cerr << "ERROR" << std::endl;
+		return false;
+	}
+	return true;
+}
+
+
 int main(int argc, char *argv[]) {
 
-	std::string model_path_def = "model.out";
-	std::string feature_path_def = "feature.out";
 	unsigned int split_num = 5;
 
 	boost::program_options::options_description opt("Usage");
 	opt.add_options()
 		("data,d", boost::program_options::value< std::vector<std::string> >()->multitoken(), "directory path containing learning data (required)")
-		("input,i", boost::program_options::value<int>(), "format of learning data (optional)\n 0 - cabocha(default)\n 1 - XML")
-		("ext,e", boost::program_options::value<std::string>(), "extension of learning files (optional): default: 0 - .deppasmod, 1 - .xml")
+		("input,i", boost::program_options::value<int>(), "format of learning data (optional)\n 0 - cabocha (default)\n 1 - XML")
+		("ext,e", boost::program_options::value<std::string>(), "extension of learning files (optional)\n 0 - .deppasmod (default)\n 1 - .xml")
 		("cross,x", "enable cross validation (optional): default off")
-		("split,g", boost::program_options::value<unsigned int>(), "number of groups for cross-validation (optional): default 5")
-		("outdir,o", boost::program_options::value<std::string>(), "directory path to output results of cross validation including feature, model and classified resutls (optional): default: output")
-		("model,m", boost::program_options::value<std::string>(), "model file path (optional): default model.out")
-		("feature,f", boost::program_options::value<std::string>(), "feature file path (optional): default feature.out")
+		("split,g", boost::program_options::value<unsigned int>(), "number of groups for cross validation (optional): default 5")
+		("outdir,o", boost::program_options::value<std::string>(), "directory to store output files (optional)\n simple training -  stores model file and feature file to \"model (default)\"\n cross validation - stores model file, feature file and result file to \"output (default)\"")
 		("pred-rule", "use rule-based event detection")
 		("help,h", "Show help messages")
 		("version,v", "Show version informaion");
@@ -31,16 +46,6 @@ int main(int argc, char *argv[]) {
 	boost::program_options::variables_map argmap;
 	boost::program_options::store(parse_command_line(argc, argv, opt), argmap);
 	boost::program_options::notify(argmap);
-
-	std::string model_path = model_path_def;
-	if (argmap.count("model")) {
-		model_path = argmap["model"].as<std::string>();
-	}
-
-	std::string feature_path = feature_path_def;
-	if (argmap.count("feature")) {
-		feature_path = argmap["feature"].as<std::string>();
-	}
 
 	if (argmap.count("help")) {
 		std::cout << opt << std::endl;
@@ -51,6 +56,21 @@ int main(int argc, char *argv[]) {
 		std::cout << MODALITY_VERSION << std::endl;
 		return 1;
 	}
+
+	std::string outdir;
+	if (argmap.count("outdir")) {
+		outdir = argmap["outdir"].as<std::string>();
+	}
+	else {
+		if (argmap.count("cross")) {
+			outdir = "output";
+		}
+		else {
+			outdir = "model";
+		}
+	}
+	boost::filesystem::path outdir_path(outdir);
+	mkdir(outdir_path);
 
 	int input_layer = 0;
 	if (argmap.count("input")) {
@@ -68,7 +88,7 @@ int main(int argc, char *argv[]) {
 			break;
 		default:
 			std::cerr << "ERROR: invalid data format type" << std::endl;
-			exit(-1);
+			return false;
 	}
 	if (argmap.count("ext")) {
 		ext = argmap["ext"].as<std::string>();
@@ -79,7 +99,7 @@ int main(int argc, char *argv[]) {
 
 	if (!argmap.count("data")) {
 		std::cerr << "ERROR: no data directory" << std::endl;
-		exit(-1);
+		return false;
 	}
 
 	std::vector<std::string> files;
@@ -94,7 +114,7 @@ int main(int argc, char *argv[]) {
 		}
 		else {
 			std::cerr << "ERROR: no such directory: " << learn_data_dir << std::endl;
-			exit(-1);
+			return false;
 		}
 	}
 
@@ -113,7 +133,6 @@ int main(int argc, char *argv[]) {
 		mod_parser.pred_detect_rule = true;
 	}
 
-
 	switch (input_layer) {
 		case 0:
 			mod_parser.load_deppasmods(files);
@@ -127,30 +146,10 @@ int main(int argc, char *argv[]) {
 	}
 	std::cout << "load done: " << mod_parser.learning_data.size() << " sents" << std::endl;
 
+
 	if (argmap.count("cross")) {
 		evaluator evals[LABEL_NUM];
-		
-		std::string outdir = "output";
-		if (argmap.count("outdir")) {
-			outdir = argmap["outdir"].as<std::string>();
-		}
-		boost::filesystem::path outdir_path(outdir);
-		
-		boost::system::error_code error;
-		const bool result = boost::filesystem::exists(outdir_path, error);
-		if (!result) {
-			std::cerr << "mkdir " << outdir_path.string() << std::endl;
-			const bool res = boost::filesystem::create_directories(outdir_path, error);
-			if (!res || error) {
-				std::cerr << "ERROR: mkdir " << outdir_path.string() << " failed" << std::endl;
-				exit(-1);
-			}
-		}
-		else if (error) {
-			std::cerr << "ERROR" << std::endl;
-			exit(-1);
-		}
-
+	
 		if (argmap.count("x")) {
 			split_num = argmap["x"].as<unsigned int>();
 		}
@@ -180,22 +179,20 @@ int main(int argc, char *argv[]) {
 		for (unsigned int step=0 ; step<split_num ; ++step) {
 			std::cout << "* step " << step << std::endl;
 			mod_parser.learning_data.clear();
-			
-			std::string model_path[LABEL_NUM];
-			std::string feature_path[LABEL_NUM];
-			std::string result_path[LABEL_NUM];
-			
+
+			boost::filesystem::path model_path[LABEL_NUM];
+			boost::filesystem::path feat_path[LABEL_NUM];
+			boost::filesystem::path result_path[LABEL_NUM];
+
 			BOOST_FOREACH (unsigned int i, mod_parser.analyze_tags) {
-				std::string label = mod_parser.id2tag(i);
-			
 				std::stringstream suffix_ss;
 				suffix_ss << std::setw(3) << std::setfill('0') << step;
-				boost::filesystem::path mp("model_" + label + suffix_ss.str());
-				model_path[i] = (outdir_path / mp).string();
-				boost::filesystem::path fp("feature_" + label + suffix_ss.str());
-				feature_path[i] = (outdir_path / fp).string();
-				boost::filesystem::path rp("result_" + label + suffix_ss.str());
-				result_path[i] = (outdir_path / rp).string();
+				boost::filesystem::path mp("model_" + mod_parser.id2tag(i) + suffix_ss.str());
+				model_path[i] = outdir_path / mp;
+				boost::filesystem::path fp("feat_" + mod_parser.id2tag(i) + suffix_ss.str());
+				feat_path[i] = outdir_path / fp;
+				boost::filesystem::path rp("result_" + mod_parser.id2tag(i) + suffix_ss.str());
+				result_path[i] = outdir_path / rp;
 			}
 			
 			for (unsigned int i=0 ; i<split_num ; ++i) {
@@ -205,7 +202,7 @@ int main(int argc, char *argv[]) {
 			}
 			std::cout << " learning data size: " << mod_parser.learning_data.size() << std::endl;
 			
-			mod_parser.learn(model_path, feature_path);
+			mod_parser.learn(model_path, feat_path);
 
 			mod_parser.load_models(model_path);
 
@@ -255,6 +252,8 @@ int main(int argc, char *argv[]) {
 
 	}
 	else {
+		mod_parser.set_path(outdir_path);
+		mod_parser.openDB_writable();
 		mod_parser.learn();
 	}
 

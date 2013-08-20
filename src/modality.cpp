@@ -9,6 +9,7 @@
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <sstream>
 #include <tinyxml2.h>
 #include <mecab.h>
@@ -75,16 +76,52 @@ namespace modality {
 				return NULL;
 		}
 	}
-		
 
-	bool parser::load_models() {
-		return load_models(model_path);
+
+	void parser::set_model_dir(std::string dir) {
+		boost::filesystem::path dir_path(dir);
+		set_model_dir(dir_path);
 	}
 
-	bool parser::load_models(std::string *model_path) {
-		BOOST_FOREACH (unsigned int i, analyze_tags) {
-			models[i] = linear::load_model(model_path[i].c_str());
+
+	void parser::set_model_dir(boost::filesystem::path dir_path) {
+		for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
+			boost::filesystem::path mp("model_" + id2tag(i));
+			model_path[i] = dir_path / mp;
+
+			boost::filesystem::path fp("feat_" + id2tag(i));
+			feat_path[i] = dir_path / fp;
 		}
+		
+		boost::filesystem::path f2ip("feat2id.kch");
+		f2i_path = dir_path / f2ip;
+		boost::filesystem::path l2ip("label2id.kch");
+		l2i_path = dir_path / l2ip;
+	}
+
+
+	bool parser::load_models(boost::filesystem::path *model_path_new) {
+		model_path = model_path_new;
+		return load_models();
+	}
+
+
+	bool parser::load_models() {
+		boost::system::error_code error;
+		BOOST_FOREACH (unsigned int i, analyze_tags) {
+			const bool res = boost::filesystem::exists(model_path[i], error);
+			if (!res || error) {
+				std::cerr << "ERROR: " << model_path[i].string() << " not found" << std::endl;
+				return false;
+			}
+			else {
+#ifdef _MODEBUG
+				std::cerr << "loaded " << model_path[i].string() << ": " << boost::filesystem::file_size(model_path[i]) << " byte, " << boost::posix_time::from_time_t(boost::filesystem::last_write_time(model_path[i])) << std::endl;
+#endif
+				models[i] = linear::load_model( model_path[i].string().c_str() );
+			}
+		}
+
 		return true;
 	}
 
@@ -269,15 +306,14 @@ namespace modality {
 	}
 
 
-	void parser::learn() {
-		learn(model_path, feature_path);
+	void parser::learn(boost::filesystem::path *model_path_new, boost::filesystem::path *feat_path_new) {
+		model_path = model_path_new;
+		feat_path = feat_path_new;
+		learn();
 	}
 
 
-	void parser::learn(std::string *model_path, std::string *feature_path) {
-
-//		std::ofstream os_feat(feature_path.c_str());
-		
+	void parser::learn() {
 		int node_cnt = 0;
 		BOOST_FOREACH (nlp::sentence sent, learning_data) {
 			BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
@@ -346,7 +382,7 @@ namespace modality {
 			_prob.x = x;
 			_prob.bias = -1;
 			models[i] = linear::train(&_prob, &_param);
-			linear::save_model(model_path[i].c_str(), models[i]);
+			linear::save_model(model_path[i].string().c_str(), models[i]);
 		}
 	}
 
@@ -628,13 +664,13 @@ namespace modality {
 
 	void parser::save_hashDB() {
 		f2iDB.close();
-		if (!f2iDB.open("feat2id.kch", kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
+		if (!f2iDB.open(f2i_path.string().c_str(), kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
 			std::cerr << "open error: feat2id: " << f2iDB.error().name() << std::endl;
 		}
 		f2iDB.clear();
 
 		l2iDB.close();
-		if (!l2iDB.open("label2id.kch", kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
+		if (!l2iDB.open(l2i_path.string().c_str(), kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
 			std::cerr << "open error: label2id: " << l2iDB.error().name() << std::endl;
 		}
 		l2iDB.clear();
@@ -676,6 +712,59 @@ namespace modality {
 		}
 		*/
 	}
+
+
+	void parser::openDB_writable() {
+		boost::filesystem::path dir_path[2];
+	 	dir_path[0] = l2i_path.parent_path();
+		dir_path[1] = f2i_path.parent_path();
+		for (unsigned int i=0 ; i<2 ; ++i) {
+			boost::system::error_code error;
+			const bool result = boost::filesystem::exists(dir_path[i], error);
+			if (!result) {
+				std::cerr << "mkdir " << dir_path[i].string() << std::endl;
+				const bool res = boost::filesystem::create_directories(dir_path[i], error);
+				if (!res || error) {
+					std::cerr << "ERROR: mkdir " << dir_path[i].string() << " failed" << std::endl;
+					exit(-1);
+				}
+			}
+			else if (error) {
+				std::cerr << "ERROR" << std::endl;
+				exit(-1);
+			}
+		}
+
+		if (!l2iDB.open(l2i_path.string().c_str(), kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
+			std::cerr << "open error: label2id: " << l2iDB.error().name() << std::endl;
+		}
+
+		if (!f2iDB.open(f2i_path.string().c_str(), kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
+			std::cerr << "open error: feat2id: " << f2iDB.error().name() << std::endl;
+		}
+	}
+
+
+	void parser::openDB() {
+		if (!l2iDB.open(l2i_path.string().c_str(), kyotocabinet::HashDB::OREADER)) {
+			std::cerr << "open error: label2id: " << l2iDB.error().name() << std::endl;
+		}
+
+		if (!f2iDB.open(f2i_path.string().c_str(), kyotocabinet::HashDB::OREADER)) {
+			std::cerr << "open error: feat2id: " << f2iDB.error().name() << std::endl;
+		}
+	}
+
+
+	void parser::closeDB() {
+		if (!l2iDB.close()) {
+			std::cerr << "close error: label2id: " << l2iDB.error().name() << std::endl;
+		}
+		if (!f2iDB.close()) {
+			std::cerr << "close error: feat2id: " << f2iDB.error().name() << std::endl;
+		}
+	}
+
 
 };
 

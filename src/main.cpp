@@ -6,15 +6,14 @@
 #include "sentence.hpp"
 #include "modality.hpp"
 
-int main(int argc, char *argv[]) {
-	std::string model_path_def = "model.out";
-//	std::string feature_path_def = "feature.out";
 
+int main(int argc, char *argv[]) {
 	boost::program_options::options_description opt("Usage");
 	opt.add_options()
 		("input,i", boost::program_options::value<int>(), "input layer;\n 0 - raw text [default]\n 1 - cabocha parsed text\n 2 - chapas parsed text")
-		("model,m", boost::program_options::value<std::string>(), "model file path (optional): default model.out")
 		("pred-rule", "use rule-based event detection")
+		("model,m", boost::program_options::value<std::string>(), "model directory (optional)")
+		("dic,d", boost::program_options::value<std::string>(), "dictionary directory (optional)")
 		("help,h", "Show help messages")
 		("version,v", "Show version informaion");
 
@@ -31,9 +30,14 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	std::string model_path = model_path_def;
+	std::string model_dir = MODELDIR;
 	if (argmap.count("model")) {
-		model_path = argmap["model"].as<std::string>();
+		model_dir = argmap["model"].as<std::string>();
+	}
+
+	std::string dic_dir = DICDIR;
+	if (argmap.count("dic")) {
+		dic_dir = argmap["dic"].as<std::string>();
 	}
 
 	if (argmap.count("help")) {
@@ -46,28 +50,22 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	modality::parser mod_parser;
+	modality::parser mod_parser(model_dir, dic_dir);
 	mod_parser.load_hashDB();
 
 	if (argmap.count("pred-rule")) {
 		mod_parser.pred_detect_rule = true;
 	}
 
-	const boost::filesystem::path path(model_path.c_str());
-	boost::system::error_code error;
-	const bool result = boost::filesystem::exists(path, error);
-	if (!result || error) {
-		std::cerr << "ERROR: model file is not found: " << model_path << std::endl;
-		exit(-1);
-	}
-
 	clock_t st;
 	clock_t et;
 	st = std::clock();
-	mod_parser.load_models();
+	if (!mod_parser.load_models()) {
+		std::cerr << "ERROR: load models failed" << std::endl;
+		return false;
+	}
 	et = std::clock();
 	std::cerr << "* load model done: " << (et-st) / (double)CLOCKS_PER_SEC << " sec" << std::endl;
-//	mod_parser.models[modality::AUTHENTICITY] = linear::load_model(model_path.c_str());
 
 	std::vector< std::string > sents;
 	std::string buf;
