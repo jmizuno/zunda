@@ -252,7 +252,7 @@ int main(int argc, char *argv[]) {
 
 	}
 	else {
-		mod_parser.set_path(outdir_path);
+		mod_parser.set_model_dir(outdir_path);
 		mod_parser.openDB_writable();
 		mod_parser.learn();
 	}
