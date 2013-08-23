@@ -1,0 +1,98 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ([2.69])
+#AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
+AC_INIT([zunda], [1.0], [jmizuno@gmail.com])
+AM_INIT_AUTOMAKE([$PACKAGE_NAME], [$PACKAGE_VERSION])
+AC_CONFIG_SRCDIR([src/main.cpp])
+AC_CONFIG_HEADERS([config.h])
+
+# Checks for programs.
+AC_PROG_CXX
+
+# Checks for libraries.
+
+# Checks for header files.
+AC_CHECK_HEADERS([stdlib.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_CHECK_HEADER_STDBOOL
+AC_TYPE_SIZE_T
+
+# Checks for library functions.
+AC_FUNC_ERROR_AT_LINE
+
+AC_LANG_CPLUSPLUS
+
+AC_CHECK_HEADERS(iostream,,[AC_MSG_ERROR(iostream not found)])
+AC_CHECK_HEADERS(fstream, ,[AC_MSG_ERROR(fstream not found)])
+AC_CHECK_HEADERS(cstdlib, ,[AC_MSG_ERROR(cstdlib not found)])
+AC_CHECK_HEADERS(vector,  ,[AC_MSG_ERROR(vector not found)])
+AC_CHECK_HEADERS(sstream, ,[AC_MSG_ERROR(sstream not found)])
+AC_CHECK_HEADERS(iomanip, ,[AC_MSG_ERROR(iomanip not found)])
+
+AC_ARG_WITH(
+						linear,
+						[AC_HELP_STRING([--with-linear=DIR], [liblinear directory])],
+						[INCLUDES=${withval}/include ${INCLUDES}]
+						)
+AC_CHECK_HEADERS(linear.h,,[AC_MSG_ERROR(linear.h not found)])
+AC_CHECK_LIB(linear, main,   ,[AC_MSG_ERROR(boost/unordered_map.hpp not found)])
+
+AC_ARG_WITH(
+						boost,
+						[AC_HELP_STRING([--with-boost=DIR],[boost directory])],
+						[INCLUDES=${withval}/include ${INCLUDES}; LDFLAGS=${withval}/lib ${LDFLAGS}]
+						)
+AC_CHECK_HEADERS(boost/unordered_map.hpp,   ,[AC_MSG_ERROR(boost/unordered_map.hpp not found)])
+AC_CHECK_HEADERS(boost/algorithm/string.hpp,,[AC_MSG_ERROR(boost/algorithm/string.hpp not found)])
+AC_CHECK_HEADERS(boost/format.hpp,          ,[AC_MSG_ERROR(boost/format.hpp not found)])
+AC_CHECK_HEADERS(boost/foreach.hpp,         ,[AC_MSG_ERROR(boost/foreach.hpp not found)])
+AC_CHECK_HEADERS(boost/lexical_cast.hpp,    ,[AC_MSG_ERROR(boost/lexical_cast.hpp not found)])
+AC_CHECK_HEADERS(boost/filesystem.hpp,      ,[AC_MSG_ERROR(boost/filesystem.hpp not found)])
+AC_CHECK_HEADERS(boost/program_options.hpp, ,[AC_MSG_ERROR(boost/program_options.hpp not found)])
+AC_CHECK_HEADERS(boost/date_time/posix_time/posix_time.hpp,   ,[AC_MSG_ERROR(boost/date_time/posix_time/posix_time.hpp not found)])
+AC_CHECK_LIB(boost_regex, main,          ,[AC_MSG_ERROR(boost_regex library not found)])
+AC_CHECK_LIB(boost_program_options, main,,[AC_MSG_ERROR(boost_program_options library not found)])
+AC_CHECK_LIB(boost_filesystem, main,     ,[AC_MSG_ERROR(boost_filesystem library not found)])
+AC_CHECK_LIB(boost_system, main,         ,[AC_MSG_ERROR(boost_system library not found)])
+
+AC_ARG_WITH(
+						tinyxml2,
+						[AC_HELP_STRING([--with-tinyxml2=DIR], [tinyxml2 directory])],
+						[INCLUDES=${withval}/include ${INCLUDES}]
+						)
+AC_CHECK_HEADERS(tinyxml2.h,   ,[AC_MSG_ERROR(tinyxml2.h not found)])
+AC_CHECK_LIB(tinyxml2, main,   ,[AC_MSG_ERROR(tinyxml2 library not found)])
+
+AC_ARG_WITH(
+						cabocha,	
+						[AC_HELP_STRING([--with-cabocha=DIR], [cabocha directory])],
+						[INCLUDES=${withval}/include ${INCLUDES}; LDFALGS=${LDFALGS}]
+						)
+AC_CHECK_HEADERS(cabocha.h,   ,[AC_MSG_ERROR(cabocha.h not found)])
+AC_CHECK_LIB(cabocha, main,   ,[AC_MSG_ERROR(cabocha library not found)])
+
+AC_ARG_WITH(
+						kyotocabinet,	
+						[AC_HELP_STRING([--with-kyotocabinet=DIR], [kyotocabinet directory])],
+						[INCLUDES=${withval}/include ${INCLUDES}; LDFALGS=${LDFALGS}]
+						)
+AC_CHECK_HEADERS(kcpolydb.h,     ,[AC_MSG_ERROR(kcpolydb.h not found)])
+AC_CHECK_LIB(kyotocabinet, main, ,[AC_MSG_ERROR(kyotocabinet library not found)])
+
+AC_SUBST(INCLUDES)
+AC_SUBST(LDFALGS)
+
+DICDIR=${datarootdir}/${PACKAGE}/dic
+AC_SUBST(DICDIR)
+
+MODELDIR=${datarootdir}/${PACKAGE}/model
+AC_SUBST(MODELDIR)
+
+AC_CONFIG_FILES([Makefile src/Makefile dic/Makefile model/Makefile])
+AC_OUTPUT
+
+
+

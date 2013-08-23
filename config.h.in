@@ -1,0 +1,142 @@
+/* config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* Define to 1 if you have the <boost/algorithm/string.hpp> header file. */
+#undef HAVE_BOOST_ALGORITHM_STRING_HPP
+
+/* Define to 1 if you have the <boost/date_time/posix_time/posix_time.hpp>
+   header file. */
+#undef HAVE_BOOST_DATE_TIME_POSIX_TIME_POSIX_TIME_HPP
+
+/* Define to 1 if you have the <boost/filesystem.hpp> header file. */
+#undef HAVE_BOOST_FILESYSTEM_HPP
+
+/* Define to 1 if you have the <boost/foreach.hpp> header file. */
+#undef HAVE_BOOST_FOREACH_HPP
+
+/* Define to 1 if you have the <boost/format.hpp> header file. */
+#undef HAVE_BOOST_FORMAT_HPP
+
+/* Define to 1 if you have the <boost/lexical_cast.hpp> header file. */
+#undef HAVE_BOOST_LEXICAL_CAST_HPP
+
+/* Define to 1 if you have the <boost/program_options.hpp> header file. */
+#undef HAVE_BOOST_PROGRAM_OPTIONS_HPP
+
+/* Define to 1 if you have the <boost/unordered_map.hpp> header file. */
+#undef HAVE_BOOST_UNORDERED_MAP_HPP
+
+/* Define to 1 if you have the <cabocha.h> header file. */
+#undef HAVE_CABOCHA_H
+
+/* Define to 1 if you have the <cstdlib> header file. */
+#undef HAVE_CSTDLIB
+
+/* Define to 1 if you have the <fstream> header file. */
+#undef HAVE_FSTREAM
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the <iomanip> header file. */
+#undef HAVE_IOMANIP
+
+/* Define to 1 if you have the <iostream> header file. */
+#undef HAVE_IOSTREAM
+
+/* Define to 1 if you have the <kcpolydb.h> header file. */
+#undef HAVE_KCPOLYDB_H
+
+/* Define to 1 if you have the `boost_filesystem' library
+   (-lboost_filesystem). */
+#undef HAVE_LIBBOOST_FILESYSTEM
+
+/* Define to 1 if you have the `boost_program_options' library
+   (-lboost_program_options). */
+#undef HAVE_LIBBOOST_PROGRAM_OPTIONS
+
+/* Define to 1 if you have the `boost_regex' library (-lboost_regex). */
+#undef HAVE_LIBBOOST_REGEX
+
+/* Define to 1 if you have the `boost_system' library (-lboost_system). */
+#undef HAVE_LIBBOOST_SYSTEM
+
+/* Define to 1 if you have the `cabocha' library (-lcabocha). */
+#undef HAVE_LIBCABOCHA
+
+/* Define to 1 if you have the `kyotocabinet' library (-lkyotocabinet). */
+#undef HAVE_LIBKYOTOCABINET
+
+/* Define to 1 if you have the `linear' library (-llinear). */
+#undef HAVE_LIBLINEAR
+
+/* Define to 1 if you have the `tinyxml2' library (-ltinyxml2). */
+#undef HAVE_LIBTINYXML2
+
+/* Define to 1 if you have the <linear.h> header file. */
+#undef HAVE_LINEAR_H
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the <sstream> header file. */
+#undef HAVE_SSTREAM
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <tinyxml2.h> header file. */
+#undef HAVE_TINYXML2_H
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the <vector> header file. */
+#undef HAVE_VECTOR
+
+/* Define to 1 if the system has the type `_Bool'. */
+#undef HAVE__BOOL
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Version number of package */
+#undef VERSION
+
+/* Define to `unsigned int' if <sys/types.h> does not define. */
+#undef size_t
