@@ -4,6 +4,7 @@
 #include <boost/regex.hpp>
 #include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/filesystem.hpp>
 #include <kcpolydb.h>
 #include <sstream>
 
@@ -11,7 +12,30 @@
 
 
 int main( int argc, char *argv[] ) {
-	std::ifstream ifs("ttjcore2seq", std::ios::in);
+	if (argc < 3) {
+		std::cerr << "ERROR: use " << argv[0] << " infile outdb" << std::endl;
+		return false;
+	}
+
+	boost::filesystem::path infile_path(argv[1]);
+	boost::filesystem::path outdb_path(argv[2]);
+	std::cerr << "infile: " << infile_path.string() << std::endl;
+	std::cerr << "outdb:  " << outdb_path.string() << std::endl;
+
+	boost::system::error_code error;
+	bool res = boost::filesystem::exists(infile_path, error);
+	if (!res || error) {
+		std::cerr << "ERROR: no such file \"" << infile_path.string() << "\"" << std::endl;
+		return false;
+	}
+
+	res = boost::filesystem::exists(outdb_path, error);
+	if (res && !error) {
+		std::cerr << "ERROR: DB file already exists \"" << outdb_path.string() << "\"" << std::endl;
+		return false;
+	}
+
+	std::ifstream ifs(infile_path.string().c_str(), std::ios::in);
 
 	boost::regex surf_sep("\\.");
 	boost::regex ignore_class("^[abcdefghijklnstuvwDJNOPQRS]");
@@ -58,7 +82,7 @@ int main( int argc, char *argv[] ) {
 			std::string sem = labels[0];
 			
 			std::stringstream ss;
-			ss << semlabel << "(" << sem << ")_" << surf;
+			ss << surf << "_" << semlabel << "(" << sem << ")";
 			
 			funcs.push_back(ss.str());
 		}
@@ -67,12 +91,12 @@ int main( int argc, char *argv[] ) {
 		std::string func;
 		join(func, funcs, "\t");
 		dic[midashi] = func;
-		std::cout << midashi << "\t" << funcs.size() << func << std::endl;
+		//std::cout << midashi << "\t" << funcs.size() << func << std::endl;
 	}
 
 	kyotocabinet::HashDB db;
 
-	if (!db.open("ttjcore2seq.kch", kyotocabinet::HashDB::OWRITER | kyotocabinet::HashDB::OCREATE)) {
+	if (!db.open(outdb_path.string().c_str(), kyotocabinet::HashDB::OWRITER | kyotocabinet::HashDB::OCREATE)) {
 		std::cerr << "open error: " << db.error().name() << std::endl;
 	}
 
