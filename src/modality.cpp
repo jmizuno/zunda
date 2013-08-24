@@ -126,7 +126,7 @@ namespace modality {
 	}
 
 
-	nlp::sentence parser::analyze(std::string text, int input_layer) {
+	nlp::sentence parser::analyze(std::string text, int input_layer, bool read_only=true) {
 		nlp::sentence sent;
 		sent.ma_tool = nlp::sentence::MeCab;
 		std::string parsed_text;
@@ -146,7 +146,7 @@ namespace modality {
 		}
 		sent.parse_cabocha(parsed_text);
 
-		nlp::sentence parsed_sent = analyze(sent);
+		nlp::sentence parsed_sent = analyze(sent, read_only);
 
 		return parsed_sent;
 	}
@@ -189,7 +189,7 @@ namespace modality {
 	}
 
 
-	nlp::sentence parser::analyze(nlp::sentence sent) {
+	nlp::sentence parser::analyze(nlp::sentence sent, bool read_only=true) {
 		std::vector<nlp::chunk>::reverse_iterator rit_chk;
 		std::vector<nlp::token>::reverse_iterator rit_tok;
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sent.chunks.rend() ; ++rit_chk) {
@@ -205,7 +205,7 @@ namespace modality {
 					gen_feature( sent, rit_tok->id, *feat );
 					t_feat::iterator it_feat;
 
-					linear::feature_node* xx = pack_feat_linear(feat, true);
+					linear::feature_node* xx = pack_feat_linear(feat, read_only);
 
 #ifdef _MODEBUG
 					std::string feat_str = "";

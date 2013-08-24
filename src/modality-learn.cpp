@@ -120,6 +120,7 @@ int main(int argc, char *argv[]) {
 
 	sort(files.begin(), files.end());
 	files.erase(unique(files.begin(), files.end()), files.end());
+	std::cout << "found " << files.size() << " files" << std::endl;
 
 	if (files.size() == 0) {
 		std::cerr << "ERROR: no learn data" << std::endl;
@@ -127,7 +128,9 @@ int main(int argc, char *argv[]) {
 	}
 
 	modality::parser mod_parser;
-	mod_parser.load_hashDB();
+	mod_parser.closeDB();
+	mod_parser.set_model_dir(outdir_path);
+	mod_parser.openDB_writable();
 
 	if (argmap.count("pred-rule")) {
 		mod_parser.pred_detect_rule = true;
@@ -174,8 +177,6 @@ int main(int argc, char *argv[]) {
 		}
 		std::cout << std::endl;
 		
-
-		
 		for (unsigned int step=0 ; step<split_num ; ++step) {
 			std::cout << "* step " << step << std::endl;
 			mod_parser.learning_data.clear();
@@ -201,7 +202,7 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			std::cout << " learning data size: " << mod_parser.learning_data.size() << std::endl;
-			
+
 			mod_parser.learn(model_path, feat_path);
 
 			mod_parser.load_models(model_path);
@@ -214,7 +215,7 @@ int main(int argc, char *argv[]) {
 			std::vector< nlp::sentence > test_data = split_data[step];
 			for (unsigned int set=0 ; set<test_data.size() ; ++set) {
 				test_data[set].clear_mod();
-				nlp::sentence tagged_sent = mod_parser.analyze(test_data[set]);
+				nlp::sentence tagged_sent = mod_parser.analyze(test_data[set], false);
 				for (unsigned int chk_cnt=0 ; chk_cnt<tagged_sent.chunks.size() ; ++chk_cnt) {
 					for (unsigned int tok_cnt=0 ; tok_cnt<tagged_sent.chunks[chk_cnt].tokens.size() ; ++tok_cnt) {
 						nlp::token tok_gold = split_data[step][set].chunks[chk_cnt].tokens[tok_cnt];
@@ -238,7 +239,6 @@ int main(int argc, char *argv[]) {
 			BOOST_FOREACH (unsigned int i, mod_parser.analyze_tags) {
 				os[i].close();
 			}
-
 		}
 
 		BOOST_FOREACH (unsigned int i, mod_parser.analyze_tags) {
@@ -252,8 +252,6 @@ int main(int argc, char *argv[]) {
 
 	}
 	else {
-		mod_parser.set_model_dir(outdir_path);
-		mod_parser.openDB_writable();
 		mod_parser.learn();
 	}
 

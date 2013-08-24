@@ -132,8 +132,8 @@ namespace modality {
 
 			bool load_models(boost::filesystem::path *);
 			bool load_models();
-			nlp::sentence analyze(std::string, int);
-			nlp::sentence analyze(nlp::sentence);
+			nlp::sentence analyze(std::string, int, bool);
+			nlp::sentence analyze(nlp::sentence, bool);
 			linear::feature_node* pack_feat_linear(t_feat *, bool);
 //			bool parse(std::string);
 			void load_xmls(std::vector< std::string >);
