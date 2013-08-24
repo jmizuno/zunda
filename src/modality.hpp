@@ -54,6 +54,10 @@ namespace modality {
 		nlp::t_eme eme;
 	} t_token;
 
+	typedef struct {
+		std::vector<int> tok_ids;
+		std::string semrel;
+	} t_match_func;
 		
 	class parser {
 		public:
@@ -151,6 +155,7 @@ namespace modality {
 			void gen_feature_basic(nlp::sentence, int, t_feat &, int);
 			void gen_feature_follow_chunks(nlp::sentence, int, t_feat &);
 			void gen_feature_ttj(nlp::sentence, int, t_feat &);
+			void gen_feature_ttj_orig(nlp::sentence, int, t_feat &);
 			void gen_feature_fadic(nlp::sentence, int, t_feat &);
 			
 			void save_hashDB();

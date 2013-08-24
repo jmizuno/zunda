@@ -24,6 +24,7 @@ namespace modality {
 //		gen_feature_follow_mod(sent, tok_id, feat);
 		gen_feature_follow_chunks(sent, tok_id, feat);
 		gen_feature_ttj(sent, tok_id, feat);
+//		gen_feature_ttj_orig(sent, tok_id, feat);
 		gen_feature_fadic(sent, tok_id, feat);
 	}
 
@@ -106,9 +107,124 @@ namespace modality {
 
 	void parser::gen_feature_ttj(nlp::sentence sent, int tok_id, t_feat &feat) {
 		nlp::chunk chk_core = sent.get_chunk_by_tokenID(tok_id);
+
+		int tok_id_start = tok_id;
+		std::vector< t_match_func > match_funcs;
+
+		BOOST_FOREACH (nlp::token tok, chk_core.tokens) {
+			std::vector< t_match_func > match_funcs_local;
+			if (tok.id > tok_id_start) {
+				std::string val;
+				if (ttjDB.get(tok.surf, &val)) {
+					std::vector<std::string> ents;
+					boost::algorithm::split(ents, val, boost::algorithm::is_any_of("\t"));
+					
+					BOOST_FOREACH (std::string ent, ents) {
+						std::vector<std::string> seq;
+						boost::algorithm::split(seq, ent, boost::algorithm::is_any_of("_"));
+						std::string semclass = seq.back();
+						seq.pop_back();
+						bool match = true;
+						t_match_func match_func;
+						match_func.tok_ids.push_back(tok.id);
+
+						// functional expression containing only single token
+						if (seq.size() == 1 && seq[0] == "") {
+							if ( 
+									// n(添加) IPA品詞体系では接続詞の一部になるので不可能
+									// R(比況) 例文が分からず
+									( (semclass == "Q(並立)") && (tok.pos == "助詞" && tok.pos1 == "並立助詞") )
+									|| ( (semclass == "O(主体)" || semclass == "N(目的)" || semclass == "b(対象)" || semclass == "d(状況)" || semclass == "e(起点)") && (tok.pos == "助詞" && tok.pos1 == "格助詞") )
+									|| ( (semclass == "t(逆接)" || semclass == "r(順接)") && (tok.pos == "助詞" && (tok.pos1 == "接続助詞" || tok.pos1 == "副助詞")) )
+									|| ( (semclass == "D(判断)") && (tok.pos == "助動詞" || tok.pos == "名詞") )
+									|| ( (semclass == "z(願望)") && (tok.pos == "助動詞" || tok.pos == "動詞") )
+									|| ( (semclass == "m(限定)") && (tok.pos == "名詞" || (tok.pos == "助詞" && tok.pos1 == "副助詞")) )
+									|| ( (semclass == "f(範囲)") && (tok.pos == "助詞" && tok.pos1 == "副助詞") )
+									|| ( (semclass == "v(付帯)") && (tok.pos == "名詞" || (tok.pos == "助詞" && tok.pos1 == "接続助詞")) )
+									|| ( (semclass == "I(推量)" || semclass == "A(伝聞)") && (tok.pos == "助動詞" || tok.pos == "動詞") )
+									|| ( (semclass == "s(理由)") && (tok.pos == "名詞" || (tok.pos == "助詞" && tok.pos1 == "接続助詞")) )
+									|| ( (semclass == "B(過去)" || semclass == "E(可能)") && (tok.pos == "動詞" || tok.pos == "助動詞") )
+									|| ( (semclass == "u(対比)" || semclass == "l(強調)") && (tok.pos == "名詞") )
+									|| ( (semclass == "J(進行)") && (tok.pos == "動詞" || tok.pos == "名詞" || tok.pos == "接続詞") )
+									|| ( (semclass == "P(例示)") && (tok.pos == "名詞" || (tok.pos == "助詞" && (tok.pos1 == "副助詞" || tok.pos1 == "係助詞"))) )
+									|| ( (semclass == "o(同時性)") && (tok.pos == "名詞") )
+									|| ( (semclass == "G(意志)") && (tok.pos == "名詞" || tok.pos == "助動詞") )
+									|| ( semclass == "y(否定)" || semclass == "")
+								 ) {
+							}
+							else {
+								match = false;
+							}
+						}
+						// functional expression containing multiple tokens
+						else {
+							BOOST_FOREACH (std::string s, seq) {
+								std::vector<std::string> word;
+								boost::algorithm::split(word, s, boost::algorithm::is_any_of(":"));
+								int pos = boost::lexical_cast<int>(word[0]);
+								std::string surf = word[1];
+								
+								int around_tid = tok.id + pos;
+								if (around_tid < sent.tid_min || sent.tid_max < around_tid) {
+									match = false;
+									break;
+								}
+
+								nlp::token tok = sent.get_token(around_tid);
+								if (tok.surf != surf) {
+									match = false;
+									break;
+								}
+								match_func.tok_ids.push_back(around_tid);
+							}
+						}
+
+						if (match) {
+							match_func.semrel = semclass;
+							sort(match_func.tok_ids.begin(), match_func.tok_ids.end());
+							match_funcs_local.push_back(match_func);
+						}
+					}
+				}
+			}
+			
+			unsigned int tok_width = 0;
+			BOOST_FOREACH (t_match_func mf, match_funcs_local) {
+				if (mf.tok_ids.size() > tok_width) {
+					tok_width = mf.tok_ids.size();
+				}
+			}
+			BOOST_FOREACH (t_match_func mf, match_funcs_local) {
+				if (mf.tok_ids.size() == tok_width) {
+					tok_id_start = mf.tok_ids.back();
+					match_funcs.push_back(mf);
+				}
+			}
+		}
 		
 		std::vector< std::string > sems;
+		BOOST_FOREACH (t_match_func mf, match_funcs) {
+#ifdef _MODEBUG
+			std::cerr << "functional expression\t" << mf.semrel << ":";
+			BOOST_FOREACH (int id, mf.tok_ids) {
+				std::cerr << " " << sent.get_token(id).surf << "(" << id << ")";
+			}
+			std::cerr << std::endl;
+#endif
+			sems.push_back(mf.semrel);
+		}
+		sort(sems.begin(), sems.end());
+		sems.erase(unique(sems.begin(), sems.end()), sems.end());
+		BOOST_FOREACH(std::string sem, sems) {
+			feat[sem] = 1.0;
+		}
+	}
 
+
+	void parser::gen_feature_ttj_orig(nlp::sentence sent, int tok_id, t_feat &feat) {
+		nlp::chunk chk_core = sent.get_chunk_by_tokenID(tok_id);
+
+		std::vector< std::string > sems;
 		std::vector<nlp::token>::reverse_iterator rit_tok;
 		for (rit_tok=(chk_core.tokens).rbegin() ; rit_tok!=(chk_core.tokens).rend() ; ++rit_tok) {
 			if (rit_tok->id == tok_id) {
@@ -126,18 +242,19 @@ namespace modality {
 					bool match = true;
 					std::vector< std::string > seq;
 					boost::algorithm::split(seq, ent, boost::algorithm::is_any_of("_"));
-					std::string semclass = seq[0];
-					if (seq[1] == "") {
+					std::string semclass = seq.back();
+					seq.pop_back();
+					if (seq[0] == "") {
 //						std::cout << rit_tok->orig << "->" << ent << std::endl;
 					}
 					else {
-						for (unsigned int i=1 ; i<seq.size() ; ++i) {
+						BOOST_FOREACH (std::string s, seq) {
 							std::vector< std::string > word;
-							boost::algorithm::split(word, seq[i], boost::algorithm::is_any_of(":"));
+							boost::algorithm::split(word, s, boost::algorithm::is_any_of(":"));
 							int pos = boost::lexical_cast<int>(word[0]);
 							std::string surf = word[1];
 
-							int around_tid = tok_id + pos;
+							int around_tid = rit_tok->id + pos;
 							if (around_tid < sent.tid_min || sent.tid_max < around_tid) {
 								match = false;
 								break;
