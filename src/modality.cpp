@@ -100,6 +100,34 @@ namespace modality {
 	}
 
 
+	bool parser::detect_target(nlp::token tok) {
+		switch (target_detection) {
+			case DETECT_BY_POS:
+				if (
+						(tok.pos == "動詞" && tok.pos1 == "自立")
+					 	|| (tok.pos == "形容詞" && tok.pos1 == "自立")
+					 	|| (tok.pos == "名詞" && tok.pos1 == "サ変接続")
+					 	|| (tok.pos == "名詞" && tok.pos1 == "形容動詞語幹")
+					 ) {
+					return true;
+				}
+				break;
+			case DETECT_BY_PAS:
+				if (tok.pas.is_pred()) {
+					return true;
+				}
+				break;
+			case DETECT_BY_ML:
+				std::cerr << "SORRY: this method has not been implemented" << std::endl;
+				return false;
+			default:
+				std::cerr << "ERROR: no such detection method" << std::endl;
+				return false;
+		}
+		return false;
+	}
+
+
 	bool parser::load_models(boost::filesystem::path *model_path_new) {
 		model_path = model_path_new;
 		return load_models();
@@ -194,12 +222,7 @@ namespace modality {
 		std::vector<nlp::token>::reverse_iterator rit_tok;
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sent.chunks.rend() ; ++rit_chk) {
 			for (rit_tok=(rit_chk->tokens).rbegin() ; rit_tok!=(rit_chk->tokens).rend() ; ++rit_tok) {
-				if (
-						(pred_detect_rule && ( (rit_tok->pos == "動詞" && rit_tok->pos1 == "自立") || (rit_tok->pos == "形容詞" && rit_tok->pos1 == "自立") || (rit_tok->pos == "名詞" && rit_tok->pos1 == "サ変接続") || (rit_tok->pos == "名詞" && rit_tok->pos1 == "形容動詞語幹") ))
-						||
-						(!pred_detect_rule && rit_tok->pas.is_pred())
-					 ) {
-					
+				if (detect_target(*rit_tok)) {
 					t_feat *feat;
 					feat = new t_feat;
 					gen_feature( sent, rit_tok->id, *feat );
@@ -318,11 +341,7 @@ namespace modality {
 		BOOST_FOREACH (nlp::sentence sent, learning_data) {
 			BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
 				BOOST_FOREACH (nlp::token tok, chk.tokens) {
-					if (
-							(pred_detect_rule && tok.has_mod && ( (tok.pos == "動詞" && tok.pos1 == "自立") || (tok.pos == "形容詞" && tok.pos1 == "自立") || (tok.pos == "名詞" && tok.pos1 == "サ変接続") || (tok.pos == "名詞" && tok.pos1 == "形容動詞語幹") ))
-							||
-							(!pred_detect_rule && tok.has_mod && tok.mod.tag["authenticity"] != "")
-						 ) {
+					if (detect_target(tok) && tok.has_mod) {
 						node_cnt++;
 					}
 				}
@@ -336,11 +355,7 @@ namespace modality {
 		BOOST_FOREACH (nlp::sentence sent, learning_data) {
 			BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
 				BOOST_FOREACH (nlp::token tok, chk.tokens) {
-					if (
-							(pred_detect_rule && tok.has_mod && ( (tok.pos == "動詞" && tok.pos1 == "自立") || (tok.pos == "形容詞" && tok.pos1 == "自立") || (tok.pos == "名詞" && tok.pos1 == "サ変接続") || (tok.pos == "名詞" && tok.pos1 == "形容動詞語幹") ))
-							||
-							(!pred_detect_rule && tok.has_mod && tok.mod.tag["authenticity"] != "")
-						 ) {
+					if (detect_target(tok) && tok.has_mod) {
 						BOOST_FOREACH (unsigned int i, analyze_tags) {
 							std::string label = tok.mod.tag[id2tag(i)];
 							if (label2id.find(label) == label2id.end()) {

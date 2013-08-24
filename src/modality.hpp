@@ -46,6 +46,12 @@ namespace modality {
 		SENTIMENT = 5,  // 評価極性
 	};
 
+	enum {
+		DETECT_BY_POS = 0,
+		DETECT_BY_PAS = 1,
+		DETECT_BY_ML = 2,
+	};
+
 	typedef struct {
 		int sp;
 		int ep;
@@ -68,7 +74,7 @@ namespace modality {
 			CaboCha::Parser *cabocha;
 			
 			std::vector< nlp::sentence > learning_data;
-			bool pred_detect_rule;
+			unsigned int target_detection;
 			
 			kyotocabinet::HashDB l2iDB;
 			kyotocabinet::HashDB f2iDB;
@@ -110,7 +116,7 @@ namespace modality {
 				}
 				cabocha = CaboCha::createParser("-f1");
 				
-				pred_detect_rule = false;
+				target_detection = DETECT_BY_POS;
 				openDB();
 			}
 
@@ -129,6 +135,7 @@ namespace modality {
 			std::string id2tag(unsigned int);
 			void set_model_dir(std::string);
 			void set_model_dir(boost::filesystem::path);
+			bool detect_target(nlp::token);
 
 			bool load_models(boost::filesystem::path *);
 			bool load_models();

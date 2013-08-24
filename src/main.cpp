@@ -10,8 +10,8 @@
 int main(int argc, char *argv[]) {
 	boost::program_options::options_description opt("Usage");
 	opt.add_options()
-		("input,i", boost::program_options::value<int>(), "input layer;\n 0 - raw text [default]\n 1 - cabocha parsed text\n 2 - chapas parsed text")
-		("pred-rule", "use rule-based event detection")
+		("input,i", boost::program_options::value<int>(), "input layer\n 0 - raw text [default]\n 1 - cabocha parsed text\n 2 - chapas parsed text")
+		("target,t", boost::program_options::value<unsigned int>(), "target detection method\n 0 - by part of speech [default]\n 1 - predicate output by PAS (syncha format)\n 2 - by machine learning (has not been implemented)")
 		("model,m", boost::program_options::value<std::string>(), "model directory (optional)")
 		("dic,d", boost::program_options::value<std::string>(), "dictionary directory (optional)")
 		("help,h", "Show help messages")
@@ -53,8 +53,8 @@ int main(int argc, char *argv[]) {
 	modality::parser mod_parser(model_dir, dic_dir);
 	mod_parser.load_hashDB();
 
-	if (argmap.count("pred-rule")) {
-		mod_parser.pred_detect_rule = true;
+	if (argmap.count("target")) {
+		mod_parser.target_detection = argmap["target"].as<unsigned int>();
 	}
 
 	clock_t st;
@@ -89,11 +89,14 @@ int main(int argc, char *argv[]) {
 					ct.clear();
 				}
 				break;
+			default:
+				std::cerr << "ERROR: no such input layer" << std::endl;
+				return -1;
 		}
 	}
 
 	BOOST_FOREACH ( std::string sent, sents ) {
-		nlp::sentence parsed_sent = mod_parser.analyze(sent, input_layer);
+		nlp::sentence parsed_sent = mod_parser.analyze(sent, input_layer, true);
 		std::cout << parsed_sent.cabocha() << std::endl;
 	}
 

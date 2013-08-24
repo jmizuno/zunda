@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 		("cross,x", "enable cross validation (optional): default off")
 		("split,g", boost::program_options::value<unsigned int>(), "number of groups for cross validation (optional): default 5")
 		("outdir,o", boost::program_options::value<std::string>(), "directory to store output files (optional)\n simple training -  stores model file and feature file to \"model (default)\"\n cross validation - stores model file, feature file and result file to \"output (default)\"")
-		("pred-rule", "use rule-based event detection")
+		("target,t", boost::program_options::value<unsigned int>(), "target detection method\n 0 - by part of speech [default]\n 1 - predicate output by PAS (syncha format)\n 2 - by machine learning (has not been implemented)")
 		("help,h", "Show help messages")
 		("version,v", "Show version informaion");
 
@@ -132,8 +132,8 @@ int main(int argc, char *argv[]) {
 	mod_parser.set_model_dir(outdir_path);
 	mod_parser.openDB_writable();
 
-	if (argmap.count("pred-rule")) {
-		mod_parser.pred_detect_rule = true;
+	if (argmap.count("target")) {
+		mod_parser.target_detection = argmap["target"].as<unsigned int>();
 	}
 
 	switch (input_layer) {
