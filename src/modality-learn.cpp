@@ -215,6 +215,7 @@ int main(int argc, char *argv[]) {
 			std::vector< nlp::sentence > test_data = split_data[step];
 			for (unsigned int set=0 ; set<test_data.size() ; ++set) {
 				test_data[set].clear_mod();
+				// tokens to be analyzed are detected by specified method in analyze() and gold data validation
 				nlp::sentence tagged_sent = mod_parser.analyze(test_data[set], false);
 				for (unsigned int chk_cnt=0 ; chk_cnt<tagged_sent.chunks.size() ; ++chk_cnt) {
 					for (unsigned int tok_cnt=0 ; tok_cnt<tagged_sent.chunks[chk_cnt].tokens.size() ; ++tok_cnt) {
