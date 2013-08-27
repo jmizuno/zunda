@@ -18,14 +18,27 @@
 
 namespace modality {
 
-	void parser::gen_feature(nlp::sentence sent, int tok_id, t_feat &feat) {
+	void parser::gen_feature_common(nlp::sentence sent, int tok_id, t_feat &feat) {
 		gen_feature_basic(sent, tok_id, feat, 3);
 		gen_feature_function(sent, tok_id, feat);
-//		gen_feature_follow_mod(sent, tok_id, feat);
 		gen_feature_follow_chunks(sent, tok_id, feat);
 		gen_feature_ttj(sent, tok_id, feat);
-//		gen_feature_ttj_orig(sent, tok_id, feat);
-		gen_feature_fadic(sent, tok_id, feat);
+	}
+		
+	void parser::gen_feature_ex(nlp::sentence sent, int tok_id, t_feat &feat, const int tag) {
+		switch (tag) {
+			case TENSE:
+				break;
+			case ASSUMPTIONAL:
+				break;
+			case TYPE:
+				break;
+			case AUTHENTICITY:
+				gen_feature_fadic(sent, tok_id, feat);
+				break;
+			case SENTIMENT:
+				break;
+		};
 	}
 
 
@@ -283,26 +296,67 @@ namespace modality {
 //		std::cout << chk_core.str() << "->" << join(sems, ",") << std::endl;
 	}
 
+	
 
 	void parser::gen_feature_fadic(nlp::sentence sent, int tok_id, t_feat &feat) {
+		nlp::token tok_core = sent.get_token(tok_id);
 		nlp::chunk chk_core = sent.get_chunk_by_tokenID(tok_id);
-		nlp::chunk chk_mod;
-		if (sent.get_chunk_has_mod(chk_mod, chk_core.id) == true) {
-			nlp::token tok = chk_mod.get_token_has_mod();
-			std::string key = tok.orig + ":";
-
-			if (tok.mod.tag["authenticity"] == "成立" || tok.mod.tag["authenticity"] == "高確率" || tok.mod.tag["authenticity"] == "不成立から成立" || tok.mod.tag["authenticity"] == "低確率から高確率") {
-				key += "pos_present_actuality";
+		
+		std::string tense, auth;
+		
+		if (tok_core.has_mod) {
+			if (tok_core.mod.tag["tense"] == "未来") {
+				tense = "future";
+			}
+			else if (tok_core.mod.tag["tense"] == "非未来") {
+				tense = "present";
 			}
 			else {
-				key += "neg_present_actuality";
+				tense = "";
 			}
-			
+		}
+#ifdef _MODEBUG
+		std::cerr << " lookup fadic: " << tok_core.orig << " tense -> " << tense << std::endl;
+#endif
+
+		nlp::token tok_dst;
+		if (chk_core.dst == -1) {
+		}
+		else {
+			nlp::chunk chk_dst = sent.get_chunk(chk_core.dst);
+			tok_dst = chk_dst.get_token_has_mod();
+			if (tok_dst.orig != "*") {
+				if (tok_dst.mod.tag["authenticity"] == "成立" || tok_dst.mod.tag["authenticity"] == "高確率" || tok_dst.mod.tag["authenticity"] == "不成立から成立" || tok_dst.mod.tag["authenticity"] == "低確率から高確率") {
+					auth = "pos";
+				}
+				else if (tok_dst.mod.tag["authenticity"] == "0") {
+					auth = "";
+				}
+				else {
+					auth = "neg";
+				}
+#ifdef _MODEBUG
+				std::cerr << " lookup fadic: " << tok_core.orig << " auth " << "(" << tok_dst.orig << ")" << " -> " << auth << std::endl;
+#endif
+			}
+		}
+		
+		if (auth != "" && tense != "") {
+			std::string key = tok_dst.orig + ":" + auth + "_" + tense + "_actuality";
+#ifdef _MODEBUG
+			std::cerr << " lookup fadic: " << key;
+#endif
 			std::string val;
 			if (fadicDB.get(key, &val)) {
+#ifdef _MODEBUG
+				std::cerr << " -> " << val << std::endl;
+#endif
 				feat["fadic_authenticity_" + val] = 1.0;
 			}
 			else {
+#ifdef _MODEBUG
+				std::cerr << " -> none" << std::endl;
+#endif
 				feat["fadic_noent"] = 1.0;
 			}
 		}

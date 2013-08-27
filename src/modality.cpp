@@ -217,12 +217,74 @@ namespace modality {
 	}
 
 
+	void copy_feat(t_feat *feat1, t_feat *feat2) {
+		t_feat::iterator it_feat;
+		for (it_feat=feat1->begin() ; it_feat!=feat1->end() ; ++it_feat) {
+			(*feat2)[it_feat->first] = it_feat->second;
+		}
+	}
+
 	nlp::sentence parser::analyze(nlp::sentence sent, bool read_only=true) {
 		std::vector<nlp::chunk>::reverse_iterator rit_chk;
 		std::vector<nlp::token>::reverse_iterator rit_tok;
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sent.chunks.rend() ; ++rit_chk) {
 			for (rit_tok=(rit_chk->tokens).rbegin() ; rit_tok!=(rit_chk->tokens).rend() ; ++rit_tok) {
 				if (detect_target(*rit_tok)) {
+					rit_tok->mod.tids.push_back(rit_tok->id);
+					rit_tok->has_mod = true;
+					rit_chk->has_mod = true;
+					
+					t_feat::iterator it_feat;
+
+					t_feat *feat_common;
+					feat_common = new t_feat;
+					gen_feature_common(sent, rit_tok->id, *feat_common);
+
+					BOOST_FOREACH (unsigned int i, analyze_tags) {
+						t_feat *feat;
+						feat = new t_feat;
+						copy_feat(feat_common, feat);
+						gen_feature_ex(sent, rit_tok->id, *feat, i);
+						linear::feature_node* xx = pack_feat_linear(feat, read_only);
+
+#ifdef _MODEBUG
+						std::string feat_str = "";
+						for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
+							std::stringstream ss;
+							ss << it_feat->first;
+							ss << ":";
+							ss << it_feat->second;
+							ss << " ";
+							feat_str += ss.str();
+						}
+						std::cout << " feature for " << id2tag(i) << " of " << rit_tok->orig << " -> " << feat_str << std::endl;
+#endif
+						
+						int predicted = linear::predict(models[i], xx);
+						boost::unordered_map<std::string, int>::iterator it;
+						std::string label;
+						for (it=label2id.begin() ; it!=label2id.end() ; ++it) {
+							if (predicted == it->second) {
+								label = it->first;
+								break;
+							}
+						}
+						if (label == "") {
+							std::cerr << "ERORR: unknown predicted label: " << predicted << std::endl;
+							exit(-1);
+						}
+						else {
+							rit_tok->mod.tag[id2tag(i)] = label;
+#ifdef _MODEBUG
+							std::cout << "   -> " << label << "(" << predicted << ")" << std::endl;
+#endif
+						}
+					}
+				}
+			}
+		}
+					
+/*
 					t_feat *feat;
 					feat = new t_feat;
 					gen_feature( sent, rit_tok->id, *feat );
@@ -254,6 +316,7 @@ namespace modality {
 						for (it=label2id.begin() ; it!=label2id.end() ; ++it) {
 							if (predicted == it->second) {
 								labels[i] = it->first;
+								rit_tok->mod.tag[id2tag(i)] = labels[i];
 								break;
 							}
 						}
@@ -269,15 +332,12 @@ namespace modality {
 					std::cout << std::endl;
 #endif
 
-					rit_tok->mod.tids.push_back(rit_tok->id);
 					BOOST_FOREACH (unsigned int i, analyze_tags) {
 						rit_tok->mod.tag[id2tag(i)] = labels[i];
-					}
-					rit_tok->has_mod = true;
-					rit_chk->has_mod = true;
 				}
 			}
 		}
+		*/
 		return sent;
 	}
 
@@ -338,66 +398,77 @@ namespace modality {
 
 	void parser::learn() {
 		int node_cnt = 0;
+		boost::unordered_map<std::string, t_feat *> feats_common;
+
 		BOOST_FOREACH (nlp::sentence sent, learning_data) {
 			BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
 				BOOST_FOREACH (nlp::token tok, chk.tokens) {
 					if (detect_target(tok) && tok.has_mod) {
 						node_cnt++;
+						std::stringstream tok_id_full;
+						tok_id_full << sent.sent_id << "_" << chk.id << "_" << tok.id;
+						t_feat *feat_common;
+						feat_common = new t_feat;
+						gen_feature_common(sent, tok.id, *feat_common);
+						if (feats_common.find(tok_id_full.str()) != feats_common.end()) {
+							std::cerr << "ERROR: duplicate tokens" << std::endl;
+							exit(-1);
+						}
+						feats_common[tok_id_full.str()] = feat_common;
 					}
 				}
 			}
 		}
 
-		linear::feature_node **x = new linear::feature_node*[node_cnt+1];
-		int y[LABEL_NUM][node_cnt+1];
+		BOOST_FOREACH (unsigned int tag_id, analyze_tags) {
+			linear::feature_node **x = new linear::feature_node*[node_cnt+1];
+			int y[node_cnt+1];
 
-		node_cnt = 0;
-		BOOST_FOREACH (nlp::sentence sent, learning_data) {
-			BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
-				BOOST_FOREACH (nlp::token tok, chk.tokens) {
-					if (detect_target(tok) && tok.has_mod) {
-						BOOST_FOREACH (unsigned int i, analyze_tags) {
-							std::string label = tok.mod.tag[id2tag(i)];
+			node_cnt = 0;
+
+			BOOST_FOREACH (nlp::sentence sent, learning_data) {
+				BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
+					BOOST_FOREACH (nlp::token tok, chk.tokens) {
+						if (detect_target(tok) && tok.has_mod) {
+							std::string label = tok.mod.tag[id2tag(tag_id)];
 							if (label2id.find(label) == label2id.end()) {
 								label2id[label] = label2id.size();
 							}
-							y[i][node_cnt] = label2id[label];
-//							os_feat << label << "(" << label2id[label] << ") ";
-						}
+							y[node_cnt] = label2id[label];
 
-						t_feat *feat;
-						feat = new t_feat;
-						gen_feature(sent, tok.id, *feat);
-						t_feat::iterator it_feat;
-						
-						linear::feature_node* xx = pack_feat_linear(feat, false);
-						x[node_cnt] = xx;
-						node_cnt++;
+							std::stringstream tok_id_full;
+							tok_id_full << sent.sent_id << "_" << chk.id << "_" << tok.id;
+
+							t_feat *feat;
+							feat = new t_feat;
+							copy_feat(feats_common[tok_id_full.str()], feat);
+							gen_feature_ex(sent, tok.id, *feat, tag_id);
+							linear::feature_node* xx = pack_feat_linear(feat, false);
+							x[node_cnt] = xx;
+							node_cnt++;
+						}
 					}
 				}
 			}
-		}
 
-//		os_feat.close();
+			linear::parameter _param;
+			_param.solver_type = linear::L2R_LR;
+			_param.eps = 0.01;
+			_param.C = 1;
+			_param.nr_weight = 0;
+			_param.weight_label = new int(1);
+			_param.weight = new double(1.0);
 
-	
-		linear::parameter _param;
-		_param.solver_type = linear::L2R_LR;
-		_param.eps = 0.01;
-		_param.C = 1;
-		_param.nr_weight = 0;
-		_param.weight_label = new int(1);
-		_param.weight = new double(1.0);
-		
-		BOOST_FOREACH (unsigned int i, analyze_tags) {
 			linear::problem _prob;
 			_prob.l = learning_data.size();
 			_prob.n = feat2id.size();
-			_prob.y = y[i];
+			_prob.y = y;
 			_prob.x = x;
 			_prob.bias = -1;
-			models[i] = linear::train(&_prob, &_param);
-			linear::save_model(model_path[i].string().c_str(), models[i]);
+
+			linear::model *model;
+			model = linear::train(&_prob, &_param);
+			linear::save_model(model_path[tag_id].string().c_str(), model);
 		}
 	}
 
