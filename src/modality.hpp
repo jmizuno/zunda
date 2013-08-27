@@ -158,6 +158,7 @@ namespace modality {
 
 			void gen_feature_common(nlp::sentence, int, t_feat &);
 			void gen_feature_ex(nlp::sentence, int, t_feat &, const int);
+			void gen_feature_type(nlp::sentence, int, t_feat &);
 			void gen_feature_follow_mod(nlp::sentence, int, t_feat &);
 			void gen_feature_function(nlp::sentence, int, t_feat &);
 			void gen_feature_basic(nlp::sentence, int, t_feat &, int);

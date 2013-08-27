@@ -35,10 +35,19 @@ namespace modality {
 				break;
 			case AUTHENTICITY:
 				gen_feature_fadic(sent, tok_id, feat);
+				gen_feature_type(sent, tok_id, feat);
 				break;
 			case SENTIMENT:
 				break;
 		};
+	}
+
+
+	void parser::gen_feature_type(nlp::sentence sent, int tok_id, t_feat &feat) {
+		nlp::token tok_core = sent.get_token(tok_id);
+		if (tok_core.has_mod) {
+			feat["mod_type_" + tok_core.mod.tag["type"]] = 1.0;
+		}
 	}
 
 
