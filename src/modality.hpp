@@ -9,6 +9,7 @@
 #include <cabocha.h>
 #include <tinyxml2.h>
 #include <kcpolydb.h>
+#include "cdbpp.h"
 
 namespace linear {
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
@@ -29,6 +30,7 @@ namespace linear {
 
 
 namespace modality {
+	typedef boost::unordered_map< std::string, boost::unordered_map< std::string, double > > t_feat_cat;
 	typedef boost::unordered_map< std::string, double > t_feat;
 
 	enum {
@@ -67,9 +69,9 @@ namespace modality {
 		
 	class parser {
 		public:
-			kyotocabinet::HashDB ttjDB;
-			kyotocabinet::HashDB fadicDB;
-			
+			cdbpp::cdbpp dbr_ttj;
+			cdbpp::cdbpp dbr_fadic;
+
 //			MeCab::Tagger *mecab;
 			CaboCha::Parser *cabocha;
 			
@@ -87,33 +89,56 @@ namespace modality {
 
 			linear::model *models[LABEL_NUM];
 			std::vector<unsigned int> analyze_tags;
+
+			std::string use_feats_str[LABEL_NUM];
+			std::vector<std::string> use_feats[LABEL_NUM];
 			
 			parser(std::string model_dir = MODELDIR, std::string dic_dir = DICDIR) {
 				analyze_tags.push_back(TENSE);
-				analyze_tags.push_back(ASSUMPTIONAL);
 				analyze_tags.push_back(TYPE);
+				analyze_tags.push_back(ASSUMPTIONAL);
 				analyze_tags.push_back(AUTHENTICITY);
 				analyze_tags.push_back(SENTIMENT);
 				
+				std::string use_feats_common_str = "func_surf,tok,chunk,func_sem";
+				use_feats_str[TENSE] = use_feats_common_str;
+				use_feats_str[TYPE] = use_feats_common_str + ",fadic_worth";
+				use_feats_str[ASSUMPTIONAL] = use_feats_common_str;
+				use_feats_str[AUTHENTICITY] = use_feats_common_str + ",fadic_authenticity";
+				use_feats_str[SENTIMENT] = use_feats_common_str + ",fadic_sentiment";
+				
+				BOOST_FOREACH (unsigned int i, analyze_tags) {
+					boost::algorithm::split(use_feats[i], use_feats_str[i], boost::algorithm::is_any_of(","));
+				}
+
 				model_path = new boost::filesystem::path[LABEL_NUM];
 				feat_path = new boost::filesystem::path[LABEL_NUM];
 				set_model_dir(model_dir);
 
 				//				mecab = MeCab::createTagger("-p");
 				//				
+				std::ifstream ifs_db;
 				boost::filesystem::path dic_dir_path(dic_dir);
-				boost::filesystem::path ttj_path("ttjcore2seq.kch");
+				boost::filesystem::path ttj_path("ttjcore2seq.cdb");
 				ttj_path = dic_dir_path / ttj_path;
-				if (!ttjDB.open(ttj_path.string().c_str(), kyotocabinet::HashDB::OREADER)) {
-					std::cerr << "open error: ttjcore2seq: " << ttjDB.error().name() << std::endl;
+				ifs_db.open(ttj_path.string().c_str(), std::ios_base::binary);
+				if (ifs_db.fail()) {
+					std::cerr << "ERROR: Failed to open a database file \"" << ttj_path.string() << "\"" << std::endl;
 					exit(-1);
 				}
-				boost::filesystem::path fadic_path("FAdic.kch");
+				dbr_ttj.open(ifs_db);
+				ifs_db.close();
+
+				boost::filesystem::path fadic_path("FAdic.cdb");
 				fadic_path = dic_dir_path / fadic_path;
-				if (!fadicDB.open(fadic_path.string().c_str(), kyotocabinet::HashDB::OREADER)) {
-					std::cerr << "open error: fadic: " << fadicDB.error().name() << std::endl;
+				ifs_db.open(fadic_path.string().c_str(), std::ios_base::binary);
+				if (ifs_db.fail()) {
+					std::cerr << "ERROR: Failed to open a database file \"" << fadic_path.string() << "\"" << std::endl;
 					exit(-1);
 				}
+				dbr_fadic.open(ifs_db);
+				ifs_db.close();
+
 				cabocha = CaboCha::createParser("-f1");
 				
 				target_detection = DETECT_BY_POS;
@@ -121,13 +146,6 @@ namespace modality {
 			}
 
 			~parser() {
-				if (!ttjDB.close()) {
-					std::cerr << "close error: ttjcore2seq: " << ttjDB.error().name() << std::endl;
-				}
-				if (!fadicDB.close()) {
-					std::cerr << "close error: fadic: " << fadicDB.error().name() << std::endl;
-				}
-				
 				closeDB();
 			}
 
@@ -141,7 +159,7 @@ namespace modality {
 			bool load_models();
 			nlp::sentence analyze(std::string, int, bool);
 			nlp::sentence analyze(nlp::sentence, bool);
-			linear::feature_node* pack_feat_linear(t_feat *, bool);
+			linear::feature_node* pack_feat_linear(t_feat, bool);
 //			bool parse(std::string);
 			void load_xmls(std::vector< std::string >);
 			void load_deppasmods(std::vector< std::string >);
@@ -156,22 +174,44 @@ namespace modality {
 			std::vector<t_token> parse_bccwj_sent(tinyxml2::XMLElement *, int *);
 			void parse_modtag_for_sent(tinyxml2::XMLElement *, std::vector< t_token > *);
 
-			void gen_feature_common(nlp::sentence, int, t_feat &);
-			void gen_feature_ex(nlp::sentence, int, t_feat &, const int);
-			void gen_feature_type(nlp::sentence, int, t_feat &);
-			void gen_feature_follow_mod(nlp::sentence, int, t_feat &);
-			void gen_feature_function(nlp::sentence, int, t_feat &);
-			void gen_feature_basic(nlp::sentence, int, t_feat &, int);
-			void gen_feature_follow_chunks(nlp::sentence, int, t_feat &);
-			void gen_feature_ttj(nlp::sentence, int, t_feat &);
-			void gen_feature_ttj_orig(nlp::sentence, int, t_feat &);
-			void gen_feature_fadic(nlp::sentence, int, t_feat &);
-			
 			void save_hashDB();
 			void load_hashDB();
 			void openDB_writable();
 			void openDB();
 			void closeDB();
+	};
+
+
+	class feature_generator {
+		public:
+			nlp::token tok_core;
+			nlp::chunk chk_core, chk_dst;
+			bool has_chk_dst;
+			nlp::sentence sent;
+			int tok_id;
+			t_feat_cat feat_cat;
+		public:
+			feature_generator(nlp::sentence _sent, int _tok_id) {
+				has_chk_dst = false;
+
+				sent = _sent;
+				tok_id = _tok_id;
+				tok_core = sent.get_token(tok_id);
+				chk_core = sent.get_chunk_by_tokenID(tok_id);
+				if (chk_core.dst != -1) {
+					chk_dst = sent.get_chunk(chk_core.dst);
+					has_chk_dst = true;
+				}
+			}
+
+			
+			std::string compile_feat_str(std::vector<std::string>);
+			t_feat compile_feat(std::vector<std::string>);
+			void gen_feature_function();
+			void gen_feature_basic(const int);
+			void gen_feature_dst_chunks();
+			void gen_feature_ttj(cdbpp::cdbpp *);
+			void gen_feature_fadic(cdbpp::cdbpp *);
 	};
 };
 

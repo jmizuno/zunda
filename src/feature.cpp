@@ -11,140 +11,181 @@
 #include <tinyxml2.h>
 #include <mecab.h>
 #include <cabocha.h>
+#include <kcpolydb.h>
 
 #include "sentence.hpp"
 #include "modality.hpp"
 
 
 namespace modality {
-
-	void parser::gen_feature_common(nlp::sentence sent, int tok_id, t_feat &feat) {
-		gen_feature_basic(sent, tok_id, feat, 3);
-		gen_feature_function(sent, tok_id, feat);
-		gen_feature_follow_chunks(sent, tok_id, feat);
-		gen_feature_ttj(sent, tok_id, feat);
-	}
-		
-	void parser::gen_feature_ex(nlp::sentence sent, int tok_id, t_feat &feat, const int tag) {
-		switch (tag) {
-			case TENSE:
-				break;
-			case ASSUMPTIONAL:
-				break;
-			case TYPE:
-				break;
-			case AUTHENTICITY:
-				gen_feature_fadic(sent, tok_id, feat);
-				gen_feature_type(sent, tok_id, feat);
-				break;
-			case SENTIMENT:
-				break;
-		};
-	}
+	/*
+		 void parser::gen_feature_ex(nlp::sentence sent, int tok_id, t_feat &feat, const int tag) {
+		 switch (tag) {
+		 case TENSE:
+		 break;
+		 case ASSUMPTIONAL:
+		 break;
+		 case TYPE:
+		 gen_feature_tense(sent, tok_id, feat);
+		 break;
+		 case AUTHENTICITY:
+		 gen_feature_fadic(sent, tok_id, feat);
+		 gen_feature_type(sent, tok_id, feat);
+		 break;
+		 case SENTIMENT:
+		 break;
+		 };
+		 }
+		 */
 
 
-	void parser::gen_feature_type(nlp::sentence sent, int tok_id, t_feat &feat) {
-		nlp::token tok_core = sent.get_token(tok_id);
-		if (tok_core.has_mod) {
-			feat["mod_type_" + tok_core.mod.tag["type"]] = 1.0;
+	/*
+		 void parser::gen_feature_tense(nlp::sentence sent, int tok_id, t_feat &feat) {
+		 nlp::token tok_core = sent.get_token(tok_id);
+		 if (tok_core.has_mod) {
+		 feat["mod_type_" + tok_core.mod.tag["tense"]] = 1.0;
+		 }
+		 }
+		 */
+
+
+	/*
+		 void parser::gen_feature_type(nlp::sentence sent, int tok_id, t_feat &feat) {
+		 nlp::token tok_core = sent.get_token(tok_id);
+		 if (tok_core.has_mod) {
+		 feat["mod_type_" + tok_core.mod.tag["type"]] = 1.0;
+		 }
+		 }
+		 */
+
+
+	/*
+		 void parser::gen_feature_follow_mod(nlp::sentence sent, int tok_id, t_feat &feat) {
+		 nlp::chunk chk;
+		 chk = sent.get_chunk_by_tokenID(tok_id);
+
+		 if (chk.dst == -1) {
+		 feat["last_chunk"] = 1.0;
+		 feat["no_following_mod"] = 1.0;
+		 }
+		 else {
+		 nlp::chunk chk_mod;
+		 if (sent.get_chunk_has_mod(chk_mod, chk.id) == true) {
+		 nlp::token tok = chk_mod.get_token_has_mod();
+		 if (tok.has_mod && tok.mod.tag["authenticity"] != "") {
+		 feat["next_authenticity_" + tok.mod.tag["authenticity"]] = 1.0;
+		 }
+		 }
+		 else {
+		 feat["no_following_mod"] = 1.0;
+		 }
+		 }
+		 }
+		 */
+
+
+	std::string feature_generator::compile_feat_str(std::vector<std::string> use_feats) {
+		std::stringstream feat_str;
+		t_feat compiled_feat = compile_feat(use_feats);
+		for (t_feat::iterator it=compiled_feat.begin() ; it!=compiled_feat.end() ; ++it) {
+			feat_str << it->first << ":" << it->second << " ";
 		}
+		return feat_str.str();
 	}
 
 
-	void parser::gen_feature_follow_mod(nlp::sentence sent, int tok_id, t_feat &feat) {
-		nlp::chunk chk;
-		chk = sent.get_chunk_by_tokenID(tok_id);
-		
-		if (chk.dst == -1) {
-			feat["last_chunk"] = 1.0;
-			feat["no_following_mod"] = 1.0;
-		}
-		else {
-			nlp::chunk chk_mod;
-			if (sent.get_chunk_has_mod(chk_mod, chk.id) == true) {
-				nlp::token tok = chk_mod.get_token_has_mod();
-				if (tok.has_mod && tok.mod.tag["authenticity"] != "") {
-					feat["next_authenticity_" + tok.mod.tag["authenticity"]] = 1.0;
+	t_feat feature_generator::compile_feat(std::vector<std::string> use_feats) {
+		t_feat compiled_feat;
+		BOOST_FOREACH (std::string cat, use_feats) {
+			t_feat::iterator it_feat;
+			if (feat_cat.find(cat) != feat_cat.end()) {
+				for (it_feat=feat_cat[cat].begin() ; it_feat!=feat_cat[cat].end() ; ++it_feat) {
+					compiled_feat[cat + "_" + it_feat->first] = it_feat->second;
 				}
 			}
 			else {
-				feat["no_following_mod"] = 1.0;
+#ifdef _MODEBUG
+//				std::cerr << "WARN: no such feature \"" << cat << "\"" << std::endl;
+#endif
 			}
 		}
+		return compiled_feat;
 	}
 
 
-	void parser::gen_feature_function(nlp::sentence sent, int tok_id, t_feat &feat) {
+	void feature_generator::gen_feature_function() {
 		std::string func_ex = "";
 		std::vector< int > func_ids;
 
 		nlp::chunk chk = sent.get_chunk_by_tokenID(tok_id);
-		
+
 		BOOST_FOREACH ( nlp::token tok, chk.tokens ) {
 			if (tok_id < tok.id) {
-				func_ex += tok.orig;
+				func_ex += tok.surf + ".";
 			}
 		}
 
-		feat["func_expression_" + func_ex] = 1.0;
+		feat_cat["func_surf"][func_ex] = 1.0;
 	}
 
 
-	void parser::gen_feature_basic(nlp::sentence sent, int tok_id, t_feat &feat, int n) {
+	void feature_generator::gen_feature_basic(const int n) {
 		BOOST_FOREACH(nlp::chunk chk, sent.chunks) {
 			BOOST_FOREACH(nlp::token tok, chk.tokens) {
 				if (tok_id <= tok.id + n && tok.id - n <= tok_id && tok_id != tok.id) {
 					std::stringstream ss;
 					ss << tok.id - tok_id;
-					feat["tok_surf_" + ss.str() + "_" + tok.surf] = 1.0;
-					feat["tok_orig_" + ss.str() + "_" + tok.orig] = 1.0;
+					feat_cat["tok"]["surf_" + ss.str() + "_" + tok.surf] = 1.0;
+					feat_cat["tok"]["orig_" + ss.str() + "_" + tok.orig] = 1.0;
 				}
 				if (tok.id == tok_id) {
-					feat["tok_surf_" + tok.surf] = 1.0;
-					feat["tok_orig_" + tok.orig] = 1.0;
+					feat_cat["tok"]["surf_" + tok.surf] = 1.0;
+					feat_cat["tok"]["orig_" + tok.orig] = 1.0;
 				}
 			}
 		}
 	}
 
 
-	void parser::gen_feature_follow_chunks(nlp::sentence sent, int tok_id, t_feat &feat) {
-		nlp::chunk chk_core = sent.get_chunk_by_tokenID(tok_id);
+	void feature_generator::gen_feature_dst_chunks() {
 		for (unsigned int i=1 ; i<3 ; ++i) {
-			nlp::chunk chk_dep;
-			std::stringstream ss;
-			ss << i;
-			std::string chk_pos = ss.str();
-			if (sent.get_dep_chunk(&chk_dep, chk_core)) {
-				feat["chk_dep" + chk_pos + "_surf_" + chk_dep.str()] = 1.0;
-				feat["chk_dep" + chk_pos + "_orig_" + chk_dep.str_orig()] = 1.0;
-				BOOST_FOREACH (nlp::token tok, chk_dep.tokens) {
-					feat["chk_dep" + chk_pos + "_tok_surf_" + tok.surf] = 1.0;
-					feat["chk_dep" + chk_pos + "_tok_orig_" + tok.orig] = 1.0;
+			if (has_chk_dst) {
+				feat_cat["chunk"]["dst_surf_" + chk_dst.str()] = 1.0;
+				feat_cat["chunk"]["dst_orig_" + chk_dst.str_orig()] = 1.0;
+				int tid = 0;
+				BOOST_FOREACH (nlp::token tok, chk_dst.tokens) {
+					std::stringstream ss;
+					ss << tid;
+					feat_cat["chunk"]["dst_tok_surf_" + ss.str() + "_" + tok.surf] = 1.0;
+					feat_cat["chunk"]["dst_tok_orig_" + ss.str() + "_" + tok.orig] = 1.0;
+					tid++;
 				}
 			}
 		}
 	}
 
 
-	void parser::gen_feature_ttj(nlp::sentence sent, int tok_id, t_feat &feat) {
-		nlp::chunk chk_core = sent.get_chunk_by_tokenID(tok_id);
-
+	void feature_generator::gen_feature_ttj(cdbpp::cdbpp *dbr_ttj) {
 		int tok_id_start = tok_id;
 		std::vector< t_match_func > match_funcs;
 
 		BOOST_FOREACH (nlp::token tok, chk_core.tokens) {
 			std::vector< t_match_func > match_funcs_local;
 			if (tok.id > tok_id_start) {
-				std::string val;
-				if (ttjDB.get(tok.surf, &val)) {
+				size_t vsize;
+				const char *value = (const char *)dbr_ttj->get(tok.surf.c_str(), tok.surf.length(), &vsize);
+				if (value != NULL) {
+					std::string val = value;
 					std::vector<std::string> ents;
 					boost::algorithm::split(ents, val, boost::algorithm::is_any_of("\t"));
-					
+
 					BOOST_FOREACH (std::string ent, ents) {
 						std::vector<std::string> seq;
 						boost::algorithm::split(seq, ent, boost::algorithm::is_any_of("_"));
 						std::string semclass = seq.back();
+						if (semclass == "") {
+							continue;
+						}
 						seq.pop_back();
 						bool match = true;
 						t_match_func match_func;
@@ -185,7 +226,7 @@ namespace modality {
 								boost::algorithm::split(word, s, boost::algorithm::is_any_of(":"));
 								int pos = boost::lexical_cast<int>(word[0]);
 								std::string surf = word[1];
-								
+
 								int around_tid = tok.id + pos;
 								if (around_tid < sent.tid_min || sent.tid_max < around_tid) {
 									match = false;
@@ -209,7 +250,7 @@ namespace modality {
 					}
 				}
 			}
-			
+
 			unsigned int tok_width = 0;
 			BOOST_FOREACH (t_match_func mf, match_funcs_local) {
 				if (mf.tok_ids.size() > tok_width) {
@@ -223,11 +264,11 @@ namespace modality {
 				}
 			}
 		}
-		
+
 		std::vector< std::string > sems;
 		BOOST_FOREACH (t_match_func mf, match_funcs) {
 #ifdef _MODEBUG
-			std::cerr << "functional expression\t" << mf.semrel << ":";
+			std::cerr << " lookup ttj: " << mf.semrel << ":";
 			BOOST_FOREACH (int id, mf.tok_ids) {
 				std::cerr << " " << sent.get_token(id).surf << "(" << id << ")";
 			}
@@ -238,81 +279,15 @@ namespace modality {
 		sort(sems.begin(), sems.end());
 		sems.erase(unique(sems.begin(), sems.end()), sems.end());
 		BOOST_FOREACH(std::string sem, sems) {
-			feat[sem] = 1.0;
+			feat_cat["func_sem"][sem] = 1.0;
 		}
 	}
 
 
-	void parser::gen_feature_ttj_orig(nlp::sentence sent, int tok_id, t_feat &feat) {
-		nlp::chunk chk_core = sent.get_chunk_by_tokenID(tok_id);
 
-		std::vector< std::string > sems;
-		std::vector<nlp::token>::reverse_iterator rit_tok;
-		for (rit_tok=(chk_core.tokens).rbegin() ; rit_tok!=(chk_core.tokens).rend() ; ++rit_tok) {
-			if (rit_tok->id == tok_id) {
-				break;
-			}
-
-			std::string val;
-			if (ttjDB.get(rit_tok->orig, &val)) {
-				std::vector< std::string > ents;
-				boost::algorithm::split(ents, val, boost::algorithm::is_any_of("\t"));
-//				std::cout << rit_tok->orig << "->" << val << std::endl;
-
-				BOOST_FOREACH(std::string ent, ents) {
-//					std::cout << rit_tok->orig << "->" << ent << std::endl;
-					bool match = true;
-					std::vector< std::string > seq;
-					boost::algorithm::split(seq, ent, boost::algorithm::is_any_of("_"));
-					std::string semclass = seq.back();
-					seq.pop_back();
-					if (seq[0] == "") {
-//						std::cout << rit_tok->orig << "->" << ent << std::endl;
-					}
-					else {
-						BOOST_FOREACH (std::string s, seq) {
-							std::vector< std::string > word;
-							boost::algorithm::split(word, s, boost::algorithm::is_any_of(":"));
-							int pos = boost::lexical_cast<int>(word[0]);
-							std::string surf = word[1];
-
-							int around_tid = rit_tok->id + pos;
-							if (around_tid < sent.tid_min || sent.tid_max < around_tid) {
-								match = false;
-								break;
-							}
-							nlp::token tok = sent.get_token(around_tid);
-							if (tok.surf != surf) {
-								match = false;
-								break;
-							}
-						}
-					}
-
-					if (match) {
-						sems.push_back(semclass);
-//						std::cout << rit_tok->orig << "->" << ent << std::endl;
-					}
-				}
-			}
-		}
-		
-		sort(sems.begin(), sems.end());
-		sems.erase(unique(sems.begin(), sems.end()), sems.end());
-		BOOST_FOREACH(std::string sem, sems) {
-			feat[sem] = 1.0;
-		}
-//		std::cout << chk_core.str() << "->" << join(sems, ",") << std::endl;
-	}
-
-	
-
-	void parser::gen_feature_fadic(nlp::sentence sent, int tok_id, t_feat &feat) {
-		nlp::token tok_core = sent.get_token(tok_id);
-		nlp::chunk chk_core = sent.get_chunk_by_tokenID(tok_id);
-		
+	void feature_generator::gen_feature_fadic(cdbpp::cdbpp *dbr_fadic) {
 		std::string tense, auth;
-		
+
 		if (tok_core.has_mod) {
 			if (tok_core.mod.tag["tense"] == "未来") {
 				tense = "future";
@@ -349,27 +324,35 @@ namespace modality {
 #endif
 			}
 		}
-		
+
 		if (auth != "" && tense != "") {
-			std::string key = tok_dst.orig + ":" + auth + "_" + tense + "_actuality";
+			boost::unordered_map<std::string, std::string> keys;
+			keys["authenticity"] = tok_dst.orig + ":" + auth + "_" + tense + "_actuality";
+			keys["sentiment"] = tok_dst.orig + ":" + auth + "_" + tense + "_sentiment";
+			keys["worth"] = tok_dst.orig + ":" + auth + "_" + tense + "_worth";
+
+			for (boost::unordered_map<std::string, std::string>::iterator it=keys.begin() ; it!=keys.end() ; ++it) {
 #ifdef _MODEBUG
-			std::cerr << " lookup fadic: " << key;
+				std::cerr << " lookup fadic: " << it->first;
 #endif
-			std::string val;
-			if (fadicDB.get(key, &val)) {
+				size_t vsize;
+				const char *value = (const char *)dbr_fadic->get(it->second.c_str(), it->second.length(), &vsize);
+				if (value != NULL) {
+					std::string val = value;
 #ifdef _MODEBUG
-				std::cerr << " -> " << val << std::endl;
+					std::cerr << " -> " << val << std::endl;
 #endif
-				feat["fadic_authenticity_" + val] = 1.0;
-			}
-			else {
+					feat_cat["fadic_" + it->first][val] = 1.0;
+				}
+				else {
 #ifdef _MODEBUG
-				std::cerr << " -> none" << std::endl;
+					std::cerr << " -> none" << std::endl;
 #endif
-				feat["fadic_noent"] = 1.0;
+//					feat_cat["fadic_" + it->first]["noent"] = 1.0;
+				}
 			}
 		}
 	}
-
 };
+
 

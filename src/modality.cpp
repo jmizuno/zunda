@@ -184,11 +184,11 @@ namespace modality {
 		return xx1.index < xx2.index;
 	}
 
-	linear::feature_node* parser::pack_feat_linear(t_feat *feat, bool read_only) {
-		linear::feature_node* xx = new linear::feature_node[feat->size()+1];
+	linear::feature_node* parser::pack_feat_linear(t_feat feat, bool read_only) {
+		linear::feature_node* xx = new linear::feature_node[feat.size()+1];
 		t_feat::iterator it_feat;
 		int feat_cnt = 0;
-		for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
+		for (it_feat=feat.begin() ; it_feat!=feat.end() ; ++it_feat) {
 			int feat_id = -1;
 			if (read_only) {
 				std::string val;
@@ -230,36 +230,27 @@ namespace modality {
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sent.chunks.rend() ; ++rit_chk) {
 			for (rit_tok=(rit_chk->tokens).rbegin() ; rit_tok!=(rit_chk->tokens).rend() ; ++rit_tok) {
 				if (detect_target(*rit_tok)) {
+#ifdef _MODEBUG
+					std::cerr << "* " << rit_tok->orig << " - " << rit_chk->str() << std::endl;
+#endif
 					rit_tok->mod.tids.push_back(rit_tok->id);
 					rit_tok->has_mod = true;
 					rit_chk->has_mod = true;
+
+					feature_generator fgen(sent, rit_tok->id);
+					fgen.gen_feature_basic(3);
+					fgen.gen_feature_function();
+					fgen.gen_feature_dst_chunks();
+					fgen.gen_feature_ttj(&dbr_ttj);
+					fgen.gen_feature_fadic(&dbr_fadic);
 					
 					t_feat::iterator it_feat;
 
-					t_feat *feat_common;
-					feat_common = new t_feat;
-					gen_feature_common(sent, rit_tok->id, *feat_common);
-
 					BOOST_FOREACH (unsigned int i, analyze_tags) {
-						t_feat *feat;
-						feat = new t_feat;
-						copy_feat(feat_common, feat);
-						gen_feature_ex(sent, rit_tok->id, *feat, i);
-						linear::feature_node* xx = pack_feat_linear(feat, read_only);
+						t_feat compiled_feat = fgen.compile_feat(use_feats[i]);
+						linear::feature_node* xx = pack_feat_linear(compiled_feat, read_only);
 
-#ifdef _MODEBUG
-						std::string feat_str = "";
-						for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
-							std::stringstream ss;
-							ss << it_feat->first;
-							ss << ":";
-							ss << it_feat->second;
-							ss << " ";
-							feat_str += ss.str();
-						}
-						std::cout << " feature for " << id2tag(i) << " of " << rit_tok->orig << " -> " << feat_str << std::endl;
-#endif
-						
+					
 						int predicted = linear::predict(models[i], xx);
 						boost::unordered_map<std::string, int>::iterator it;
 						std::string label;
@@ -275,10 +266,12 @@ namespace modality {
 						}
 						else {
 							rit_tok->mod.tag[id2tag(i)] = label;
-#ifdef _MODEBUG
-							std::cout << "   -> " << label << "(" << predicted << ")" << std::endl;
-#endif
 						}
+						
+#ifdef _MODEBUG
+						std::string feat_str = fgen.compile_feat_str(use_feats[i]);
+						std::cerr << " " << id2tag(i) << ": " << feat_str << " -> " << label << "(" << predicted << ")" << std::endl;
+#endif
 					}
 				}
 			}
@@ -398,6 +391,7 @@ namespace modality {
 
 	void parser::learn() {
 		int node_cnt = 0;
+		/*
 		boost::unordered_map<std::string, t_feat *> feats_common;
 
 		BOOST_FOREACH (nlp::sentence sent, learning_data) {
@@ -419,6 +413,7 @@ namespace modality {
 				}
 			}
 		}
+		*/
 
 		BOOST_FOREACH (unsigned int tag_id, analyze_tags) {
 			linear::feature_node **x = new linear::feature_node*[node_cnt+1];
@@ -439,11 +434,9 @@ namespace modality {
 							std::stringstream tok_id_full;
 							tok_id_full << sent.sent_id << "_" << chk.id << "_" << tok.id;
 
-							t_feat *feat;
-							feat = new t_feat;
-							copy_feat(feats_common[tok_id_full.str()], feat);
-							gen_feature_ex(sent, tok.id, *feat, tag_id);
-							linear::feature_node* xx = pack_feat_linear(feat, false);
+							feature_generator fgen(sent, tok.id);
+							fgen.gen_feature_basic(3);
+							linear::feature_node* xx = pack_feat_linear(fgen.compile_feat(use_feats[tag_id]), false);
 							x[node_cnt] = xx;
 							node_cnt++;
 						}
