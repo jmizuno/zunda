@@ -102,9 +102,9 @@ namespace modality {
 				
 				std::string use_feats_common_str = "func_surf,tok,chunk,func_sem";
 				use_feats_str[TENSE] = use_feats_common_str;
-				use_feats_str[TYPE] = use_feats_common_str + ",fadic_worth";
+				use_feats_str[TYPE] = use_feats_common_str + ",fadic_worth,mod_tense";
 				use_feats_str[ASSUMPTIONAL] = use_feats_common_str;
-				use_feats_str[AUTHENTICITY] = use_feats_common_str + ",fadic_authenticity";
+				use_feats_str[AUTHENTICITY] = use_feats_common_str + ",fadic_authenticity,mod_type";
 				use_feats_str[SENTIMENT] = use_feats_common_str + ",fadic_sentiment";
 				
 				BOOST_FOREACH (unsigned int i, analyze_tags) {
@@ -191,11 +191,7 @@ namespace modality {
 			int tok_id;
 			t_feat_cat feat_cat;
 		public:
-			feature_generator(nlp::sentence _sent, int _tok_id) {
-				has_chk_dst = false;
-
-				sent = _sent;
-				tok_id = _tok_id;
+			void update(nlp::sentence sent) {
 				tok_core = sent.get_token(tok_id);
 				chk_core = sent.get_chunk_by_tokenID(tok_id);
 				if (chk_core.dst != -1) {
@@ -204,10 +200,19 @@ namespace modality {
 				}
 			}
 
+			feature_generator(nlp::sentence _sent, int _tok_id) {
+				has_chk_dst = false;
+
+				sent = _sent;
+				tok_id = _tok_id;
+				update(sent);
+			}
+
 			
 			std::string compile_feat_str(std::vector<std::string>);
 			t_feat compile_feat(std::vector<std::string>);
 			void gen_feature_function();
+			void gen_feature_mod(std::string);
 			void gen_feature_basic(const int);
 			void gen_feature_dst_chunks();
 			void gen_feature_ttj(cdbpp::cdbpp *);

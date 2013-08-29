@@ -242,11 +242,29 @@ namespace modality {
 					fgen.gen_feature_function();
 					fgen.gen_feature_dst_chunks();
 					fgen.gen_feature_ttj(&dbr_ttj);
-					fgen.gen_feature_fadic(&dbr_fadic);
-					
+
 					t_feat::iterator it_feat;
 
 					BOOST_FOREACH (unsigned int i, analyze_tags) {
+						fgen.update(sent);
+						switch (i) {
+							case TENSE:
+								break;
+							case ASSUMPTIONAL:
+								break;
+							case TYPE:
+								fgen.gen_feature_mod("tense");
+								fgen.gen_feature_fadic(&dbr_fadic);
+								break;
+							case AUTHENTICITY:
+								fgen.gen_feature_mod("type");
+								fgen.gen_feature_fadic(&dbr_fadic);
+								break;
+							case SENTIMENT:
+								fgen.gen_feature_fadic(&dbr_fadic);
+								break;
+						}
+
 						t_feat compiled_feat = fgen.compile_feat(use_feats[i]);
 						linear::feature_node* xx = pack_feat_linear(compiled_feat, read_only);
 

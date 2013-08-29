@@ -38,25 +38,11 @@ namespace modality {
 		 }
 		 */
 
-
-	/*
-		 void parser::gen_feature_tense(nlp::sentence sent, int tok_id, t_feat &feat) {
-		 nlp::token tok_core = sent.get_token(tok_id);
-		 if (tok_core.has_mod) {
-		 feat["mod_type_" + tok_core.mod.tag["tense"]] = 1.0;
-		 }
-		 }
-		 */
-
-
-	/*
-		 void parser::gen_feature_type(nlp::sentence sent, int tok_id, t_feat &feat) {
-		 nlp::token tok_core = sent.get_token(tok_id);
-		 if (tok_core.has_mod) {
-		 feat["mod_type_" + tok_core.mod.tag["type"]] = 1.0;
-		 }
-		 }
-		 */
+	void feature_generator::gen_feature_mod(std::string tag) {
+		if (tok_core.has_mod) {
+			feat_cat["mod_" + tag][tok_core.mod.tag[tag]] = 1.0;
+		}
+	}
 
 
 	/*
