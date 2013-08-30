@@ -18,56 +18,11 @@
 
 
 namespace modality {
-	/*
-		 void parser::gen_feature_ex(nlp::sentence sent, int tok_id, t_feat &feat, const int tag) {
-		 switch (tag) {
-		 case TENSE:
-		 break;
-		 case ASSUMPTIONAL:
-		 break;
-		 case TYPE:
-		 gen_feature_tense(sent, tok_id, feat);
-		 break;
-		 case AUTHENTICITY:
-		 gen_feature_fadic(sent, tok_id, feat);
-		 gen_feature_type(sent, tok_id, feat);
-		 break;
-		 case SENTIMENT:
-		 break;
-		 };
-		 }
-		 */
-
 	void feature_generator::gen_feature_mod(std::string tag) {
 		if (tok_core.has_mod) {
 			feat_cat["mod_" + tag][tok_core.mod.tag[tag]] = 1.0;
 		}
 	}
-
-
-	/*
-		 void parser::gen_feature_follow_mod(nlp::sentence sent, int tok_id, t_feat &feat) {
-		 nlp::chunk chk;
-		 chk = sent.get_chunk_by_tokenID(tok_id);
-
-		 if (chk.dst == -1) {
-		 feat["last_chunk"] = 1.0;
-		 feat["no_following_mod"] = 1.0;
-		 }
-		 else {
-		 nlp::chunk chk_mod;
-		 if (sent.get_chunk_has_mod(chk_mod, chk.id) == true) {
-		 nlp::token tok = chk_mod.get_token_has_mod();
-		 if (tok.has_mod && tok.mod.tag["authenticity"] != "") {
-		 feat["next_authenticity_" + tok.mod.tag["authenticity"]] = 1.0;
-		 }
-		 }
-		 else {
-		 feat["no_following_mod"] = 1.0;
-		 }
-		 }
-		 }
-		 */
 
 
 	std::string feature_generator::compile_feat_str(std::vector<std::string> use_feats) {

@@ -21,43 +21,6 @@
 
 
 namespace modality {
-	/*
-	bool parser::parse(std::string str) {
-		std::vector<std::string> lines;
-		boost::algorithm::split(lines, str, boost::algorithm::is_any_of("\n"));
-		BOOST_FOREACH(std::string line, lines) {
-			std::cout << line << std::endl;
-		}
-
-		nlp::sentence sent;
-		sent.ma_tool = sent.ChaSen;
-		sent.parse_cabocha(lines);
-		sent.pp();
-
-		std::vector<nlp::chunk>::reverse_iterator rit_chk;
-		std::vector<nlp::token>::reverse_iterator rit_tok;
-		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sent.chunks.rend() ; ++rit_chk) {
-			std::cout << rit_chk->id << std::endl;
-			for (rit_tok=(rit_chk->tokens).rbegin() ; rit_tok!=(rit_chk->tokens).rend() ; ++rit_tok) {
-				if ((rit_tok->pas).is_pred()) {
-					t_feat *feat;
-					feat = new t_feat;
-
-					gen_feature(sent, rit_tok->id, *feat);
-					t_feat::iterator it_feat;
-					std::cout << "feature " << rit_tok->id << std::endl;
-					for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
-						std::cout << "\t" << it_feat->first << " : " << it_feat->second << std::endl;
-					}
-				}
-			}
-		}
-
-		return true;
-	}
-	*/
-
-
 	std::string parser::id2tag(unsigned int id) {
 		switch(id) {
 			case SOURCE:
@@ -408,36 +371,26 @@ namespace modality {
 
 
 	void parser::learn() {
-		int node_cnt = 0;
-		/*
-		boost::unordered_map<std::string, t_feat *> feats_common;
-
+		int num_node = 0;
+		
+		// count a number of instances for liblinear
 		BOOST_FOREACH (nlp::sentence sent, learning_data) {
 			BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
 				BOOST_FOREACH (nlp::token tok, chk.tokens) {
 					if (detect_target(tok) && tok.has_mod) {
-						node_cnt++;
-						std::stringstream tok_id_full;
-						tok_id_full << sent.sent_id << "_" << chk.id << "_" << tok.id;
-						t_feat *feat_common;
-						feat_common = new t_feat;
-						gen_feature_common(sent, tok.id, *feat_common);
-						if (feats_common.find(tok_id_full.str()) != feats_common.end()) {
-							std::cerr << "ERROR: duplicate tokens" << std::endl;
-							exit(-1);
-						}
-						feats_common[tok_id_full.str()] = feat_common;
+						num_node++;
 					}
 				}
 			}
 		}
-		*/
 
 		BOOST_FOREACH (unsigned int tag_id, analyze_tags) {
-			linear::feature_node **x = new linear::feature_node*[node_cnt+1];
-			int y[node_cnt+1];
+			linear::feature_node **x = new linear::feature_node*[num_node+1];
+			int y[num_node+1];
 
-			node_cnt = 0;
+			int node_cnt = 0;
+			
+			std::ofstream ofs(feat_path[tag_id].string().c_str());
 
 			BOOST_FOREACH (nlp::sentence sent, learning_data) {
 				BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
@@ -454,6 +407,31 @@ namespace modality {
 
 							feature_generator fgen(sent, tok.id);
 							fgen.gen_feature_basic(3);
+							fgen.gen_feature_function();
+							fgen.gen_feature_dst_chunks();
+							fgen.gen_feature_ttj(&dbr_ttj);
+
+							//fgen.update(sent);
+							switch (tag_id) {
+								case TENSE:
+									break;
+								case ASSUMPTIONAL:
+									break;
+								case TYPE:
+									fgen.gen_feature_mod("tense");
+									fgen.gen_feature_fadic(&dbr_fadic);
+									break;
+								case AUTHENTICITY:
+									fgen.gen_feature_mod("type");
+									fgen.gen_feature_fadic(&dbr_fadic);
+									break;
+								case SENTIMENT:
+									fgen.gen_feature_fadic(&dbr_fadic);
+									break;
+							}
+							
+							ofs << sent.sent_id << "(" << chk.id << "_" << tok.id << "): " << fgen.compile_feat_str(use_feats[tag_id]) << std::endl;
+
 							linear::feature_node* xx = pack_feat_linear(fgen.compile_feat(use_feats[tag_id]), false);
 							x[node_cnt] = xx;
 							node_cnt++;
@@ -461,6 +439,8 @@ namespace modality {
 					}
 				}
 			}
+			
+			ofs.close();
 
 			linear::parameter _param;
 			_param.solver_type = linear::L2R_LR;
@@ -471,7 +451,7 @@ namespace modality {
 			_param.weight = new double(1.0);
 
 			linear::problem _prob;
-			_prob.l = learning_data.size();
+			_prob.l = num_node;
 			_prob.n = feat2id.size();
 			_prob.y = y;
 			_prob.x = x;
