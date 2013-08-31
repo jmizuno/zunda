@@ -83,8 +83,13 @@ namespace modality {
 			case DETECT_BY_ML:
 				std::cerr << "SORRY: this method has not been implemented" << std::endl;
 				return false;
+			case DETECT_BY_GOLD:
+				if (tok.has_mod) {
+					return true;
+				}
+				break;
 			default:
-				std::cerr << "ERROR: no such detection method" << std::endl;
+				std::cerr << "ERROR: no such detection method " << target_detection << std::endl;
 				return false;
 		}
 		return false;
@@ -179,13 +184,6 @@ namespace modality {
 		return xx;
 	}
 
-
-	void copy_feat(t_feat *feat1, t_feat *feat2) {
-		t_feat::iterator it_feat;
-		for (it_feat=feat1->begin() ; it_feat!=feat1->end() ; ++it_feat) {
-			(*feat2)[it_feat->first] = it_feat->second;
-		}
-	}
 
 	nlp::sentence parser::analyze(nlp::sentence sent, bool read_only=true) {
 		std::vector<nlp::chunk>::reverse_iterator rit_chk;

@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 		("cross,x", "enable cross validation (optional): default off")
 		("split,g", boost::program_options::value<unsigned int>(), "number of groups for cross validation (optional): default 5")
 		("outdir,o", boost::program_options::value<std::string>(), "directory to store output files (optional)\n simple training -  stores model file and feature file to \"model (default)\"\n cross validation - stores model file, feature file and result file to \"output (default)\"")
-		("target,t", boost::program_options::value<unsigned int>(), "target detection method\n 0 - by part of speech [default]\n 1 - predicate output by PAS (syncha format)\n 2 - by machine learning (has not been implemented)")
+		("target,t", boost::program_options::value<unsigned int>(), "target detection method\n 0 - by part of speech [default]\n 1 - predicate output by PAS (syncha format)\n 2 - by machine learning (has not been implemented)\n 3 - by gold data")
 		("help,h", "Show help messages")
 		("version,v", "Show version informaion");
 
@@ -214,9 +214,41 @@ int main(int argc, char *argv[]) {
 
 			std::vector< nlp::sentence > test_data = split_data[step];
 			for (unsigned int set=0 ; set<test_data.size() ; ++set) {
-				test_data[set].clear_mod();
+
+				std::vector<int> tagged_tok_ids;
+
+				// when target detection is DETECT_BY_GOLD, only bool value of having modality is set to test data
+				if (mod_parser.target_detection == modality::DETECT_BY_GOLD) {
+					BOOST_FOREACH (nlp::chunk chk, test_data[set].chunks) {
+						BOOST_FOREACH (nlp::token tok, chk.tokens) {
+							if (tok.has_mod) {
+								tok.mod.tag.clear();
+//								tagged_tok_ids.push_back(tok.id);
+							}
+						}
+					}
+				}
+				else {
+					test_data[set].clear_mod();
+				}
+
+				// when target detection is DETECT_BY_GOLD, only bool value of having modality is set to test data
+				/*
+				if (mod_parser.target_detection == modality::DETECT_BY_GOLD) {
+					for (std::vector< nlp::chunk >::iterator it_chk=test_data[set].chunks.begin() ; it_chk!=test_data[set].chunks.end() ; ++it_chk) {
+						for (std::vector< nlp::token >::iterator it_tok=it_chk->tokens.begin() ; it_tok!=it_chk->tokens.end() ; ++it_tok) {
+							if ( std::find(tagged_tok_ids.begin(), tagged_tok_ids.end(), it_tok->id) != tagged_tok_ids.end() ) {
+								it_tok->has_mod = true;
+								it_chk->has_mod = true;
+							}
+						}
+					}
+				}
+				*/
+
 				// tokens to be analyzed are detected by specified method in analyze() and gold data validation
 				nlp::sentence tagged_sent = mod_parser.analyze(test_data[set], false);
+
 				for (unsigned int chk_cnt=0 ; chk_cnt<tagged_sent.chunks.size() ; ++chk_cnt) {
 					for (unsigned int tok_cnt=0 ; tok_cnt<tagged_sent.chunks[chk_cnt].tokens.size() ; ++tok_cnt) {
 						nlp::token tok_gold = split_data[step][set].chunks[chk_cnt].tokens[tok_cnt];

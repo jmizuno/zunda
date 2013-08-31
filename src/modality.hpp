@@ -52,6 +52,7 @@ namespace modality {
 		DETECT_BY_POS = 0,
 		DETECT_BY_PAS = 1,
 		DETECT_BY_ML = 2,
+		DETECT_BY_GOLD = 3,
 	};
 
 	typedef struct {
