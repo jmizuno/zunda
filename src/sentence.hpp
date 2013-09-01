@@ -176,6 +176,8 @@ namespace nlp {
 			bool get_dep_chunk(chunk*, int);
 			bool get_dep_chunk(chunk*, chunk, int);
 			bool get_dep_chunk(chunk*, int, int);
+			bool get_chunks_src(std::vector< nlp::chunk > *, nlp::chunk);
+			bool get_chunks_src(std::vector< nlp::chunk > *, int);
 			token get_token(int);
 			bool get_chunk_has_mod(chunk&, int);
 			std::string str(std::string);

@@ -187,6 +187,7 @@ namespace modality {
 		public:
 			nlp::token tok_core;
 			nlp::chunk chk_core, chk_dst;
+			std::vector< nlp::chunk > chks_src;
 			bool has_chk_dst;
 			nlp::sentence sent;
 			int tok_id;
@@ -199,6 +200,7 @@ namespace modality {
 					chk_dst = sent.get_chunk(chk_core.dst);
 					has_chk_dst = true;
 				}
+				sent.get_chunks_src(&chks_src, chk_core);
 			}
 
 			feature_generator(nlp::sentence _sent, int _tok_id) {

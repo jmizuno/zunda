@@ -423,6 +423,27 @@ namespace nlp {
 		return false;
 	}
 
+
+	bool sentence::get_chunks_src(std::vector< nlp::chunk > *chks_src, nlp::chunk chk_core) {
+		BOOST_FOREACH (nlp::chunk chk, chunks) {
+			if (chk.dst == chk.id) {
+				chks_src->push_back(chk);
+			}
+		}
+		if (chks_src->size() == 0) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+
+
+	bool sentence::get_chunks_src(std::vector< nlp::chunk > *chks_src, int cid) {
+		nlp::chunk chk_core = get_chunk(cid);
+		return get_chunks_src(chks_src, chk_core);
+	}
+
 		
 	std::string sentence::cabocha() {
 		std::stringstream cabocha_ss;
