@@ -116,7 +116,7 @@ namespace modality {
 				size_t vsize;
 				const char *value = (const char *)dbr_ttj->get(tok.surf.c_str(), tok.surf.length(), &vsize);
 				if (value != NULL) {
-					std::string val = value;
+					std::string val = std::string(value, vsize);
 					std::vector<std::string> ents;
 					boost::algorithm::split(ents, val, boost::algorithm::is_any_of("\t"));
 
@@ -279,7 +279,7 @@ namespace modality {
 				size_t vsize;
 				const char *value = (const char *)dbr_fadic->get(it->second.c_str(), it->second.length(), &vsize);
 				if (value != NULL) {
-					std::string val = value;
+					std::string val = std::string(value, vsize);
 #ifdef _MODEBUG
 					std::cerr << " -> " << val << std::endl;
 #endif
