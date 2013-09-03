@@ -95,19 +95,19 @@ namespace modality {
 			std::vector<std::string> use_feats[LABEL_NUM];
 			
 			parser(std::string model_dir = MODELDIR, std::string dic_dir = DICDIR) {
-				analyze_tags.push_back(TENSE);
 				analyze_tags.push_back(TYPE);
+				analyze_tags.push_back(TENSE);
 				analyze_tags.push_back(ASSUMPTIONAL);
 				analyze_tags.push_back(AUTHENTICITY);
 				analyze_tags.push_back(SENTIMENT);
 				
 				std::string use_feats_common_str = "func_surf,tok,chunk,func_sem";
-				use_feats_str[TENSE] = use_feats_common_str;
-				use_feats_str[TYPE] = use_feats_common_str + ",fadic_worth,mod_tense";
-				use_feats_str[ASSUMPTIONAL] = use_feats_common_str;
+				use_feats_str[TENSE] = use_feats_common_str + ",mod_type";
+				use_feats_str[TYPE] = use_feats_common_str + ",fadic_worth";
+				use_feats_str[ASSUMPTIONAL] = use_feats_common_str + ",mod_type";
 				use_feats_str[AUTHENTICITY] = use_feats_common_str + ",fadic_authenticity,mod_type";
-				use_feats_str[SENTIMENT] = use_feats_common_str + ",fadic_sentiment";
-				
+				use_feats_str[SENTIMENT] = use_feats_common_str + ",fadic_sentiment,mod_type";
+
 				BOOST_FOREACH (unsigned int i, analyze_tags) {
 					boost::algorithm::split(use_feats[i], use_feats_str[i], boost::algorithm::is_any_of(","));
 				}
