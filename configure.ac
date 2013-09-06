@@ -4,17 +4,19 @@
 AC_PREREQ([2.69])
 #AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
 AC_INIT([zunda], [1.0], [jmizuno@gmail.com])
-AM_INIT_AUTOMAKE([$PACKAGE_NAME], [$PACKAGE_VERSION])
+AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/main.cpp])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CXX
+AC_PROG_RANLIB
 
 # Checks for libraries.
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h])
+
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL
@@ -32,13 +34,13 @@ AC_CHECK_HEADERS(vector,  ,[AC_MSG_ERROR(vector not found)])
 AC_CHECK_HEADERS(sstream, ,[AC_MSG_ERROR(sstream not found)])
 AC_CHECK_HEADERS(iomanip, ,[AC_MSG_ERROR(iomanip not found)])
 
-AC_ARG_WITH(
-						linear,
-						[AC_HELP_STRING([--with-linear=DIR], [liblinear directory])],
-						[INCLUDES=${withval}/include ${INCLUDES}]
-						)
-AC_CHECK_HEADERS(linear.h,,[AC_MSG_ERROR(linear.h not found)])
-AC_CHECK_LIB(linear, main,   ,[AC_MSG_ERROR(boost/unordered_map.hpp not found)])
+#AC_ARG_WITH(
+#						linear,
+#						[AC_HELP_STRING([--with-linear=DIR], [liblinear directory])],
+#						[INCLUDES=${withval}/include ${INCLUDES}]
+#						)
+#AC_CHECK_HEADERS(linear.h,,[AC_MSG_ERROR(linear.h not found)])
+#AC_CHECK_LIB(linear, main,   ,[AC_MSG_ERROR(boost/unordered_map.hpp not found)])
 
 AC_ARG_WITH(
 						boost,
@@ -91,7 +93,7 @@ AC_SUBST(DICDIR)
 MODELDIR=${datarootdir}/${PACKAGE}/model
 AC_SUBST(MODELDIR)
 
-AC_CONFIG_FILES([Makefile src/Makefile dic/Makefile model/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile dic/Makefile model/Makefile liblinear-1.8/Makefile liblinear-1.8/blas/Makefile])
 AC_OUTPUT
 
 

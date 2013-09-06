@@ -6,9 +6,10 @@ zunda_SOURCES = main.cpp \
 								sentence.cpp \
 								feature.cpp \
 								util.hpp \
-								eval.hpp
+								eval.hpp \
+								../liblinear-1.93/linear.h
 zunda_CXXFLAGS = @INCLUDES@ -DMODELDIR=\"${MODELDIR}\" -DDICDIR=\"${DICDIR}\"
-zunda_LDADD = @LIBS@
+zunda_LDADD = -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @LIBS@
 
 zunda_train_SOURCES = modality-learn.cpp \
 											modality.hpp \
@@ -17,7 +18,8 @@ zunda_train_SOURCES = modality-learn.cpp \
 											sentence.cpp \
 											feature.cpp \
 											util.hpp \
-											eval.hpp
+											eval.hpp \
+											../liblinear-1.93/linear.h
 zunda_train_CXXFLAGS=@INCLUDES@ -DMODELDIR=\"${MODELDIR}\" -DDICDIR=\"${DICDIR}\"
-zunda_train_LDADD=@LIBS@
+zunda_train_LDADD= -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @LIBS@
 

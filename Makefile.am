@@ -1,2 +1,2 @@
-SUBDIRS = src dic model
+SUBDIRS = liblinear-1.8 dic model src
 

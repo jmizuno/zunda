@@ -66,14 +66,8 @@
 /* Define to 1 if you have the `kyotocabinet' library (-lkyotocabinet). */
 #undef HAVE_LIBKYOTOCABINET
 
-/* Define to 1 if you have the `linear' library (-llinear). */
-#undef HAVE_LIBLINEAR
-
 /* Define to 1 if you have the `tinyxml2' library (-ltinyxml2). */
 #undef HAVE_LIBTINYXML2
-
-/* Define to 1 if you have the <linear.h> header file. */
-#undef HAVE_LINEAR_H
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H

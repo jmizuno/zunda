@@ -13,7 +13,7 @@
 
 namespace linear {
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
-#include <linear.h>
+#include "../liblinear-1.8/linear.h"
 };
 
 #include "sentence.hpp"
