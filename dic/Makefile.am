@@ -1,5 +1,5 @@
 datadir = ${DICDIR}
-DICS = FAdic.kch ttjcore2seq.kch
+DICS = FAdic.cdb ttjcore2seq.cdb
 data_DATA = ${DICS}
 EXTRA_DIST = ${DICS}
 
