@@ -4,7 +4,7 @@
 AC_PREREQ([2.69])
 #AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
 AC_INIT([zunda], [1.0], [jmizuno@gmail.com])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/main.cpp])
 AC_CONFIG_HEADERS([config.h])
 
@@ -60,13 +60,13 @@ AC_CHECK_LIB(boost_program_options, main,,[AC_MSG_ERROR(boost_program_options li
 AC_CHECK_LIB(boost_filesystem, main,     ,[AC_MSG_ERROR(boost_filesystem library not found)])
 AC_CHECK_LIB(boost_system, main,         ,[AC_MSG_ERROR(boost_system library not found)])
 
-AC_ARG_WITH(
-						tinyxml2,
-						[AC_HELP_STRING([--with-tinyxml2=DIR], [tinyxml2 directory])],
-						[INCLUDES=${withval}/include ${INCLUDES}]
-						)
-AC_CHECK_HEADERS(tinyxml2.h,   ,[AC_MSG_ERROR(tinyxml2.h not found)])
-AC_CHECK_LIB(tinyxml2, main,   ,[AC_MSG_ERROR(tinyxml2 library not found)])
+#AC_ARG_WITH(
+#						tinyxml2,
+#						[AC_HELP_STRING([--with-tinyxml2=DIR], [tinyxml2 directory])],
+#						[INCLUDES=${withval}/include ${INCLUDES}]
+#						)
+#AC_CHECK_HEADERS(tinyxml2.h,   ,[AC_MSG_ERROR(tinyxml2.h not found)])
+#AC_CHECK_LIB(tinyxml2, main,   ,[AC_MSG_ERROR(tinyxml2 library not found)])
 
 AC_ARG_WITH(
 						cabocha,	
@@ -93,7 +93,7 @@ AC_SUBST(DICDIR)
 MODELDIR=${datarootdir}/${PACKAGE}/model
 AC_SUBST(MODELDIR)
 
-AC_CONFIG_FILES([Makefile src/Makefile dic/Makefile model/Makefile liblinear-1.8/Makefile liblinear-1.8/blas/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile dic/Makefile model/Makefile liblinear-1.8/Makefile liblinear-1.8/blas/Makefile cdbpp-1.0/Makefile tinyxml2/Makefile])
 AC_OUTPUT
 
 

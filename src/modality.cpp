@@ -11,11 +11,11 @@
 #include <boost/filesystem.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <sstream>
-#include <tinyxml2.h>
 #include <mecab.h>
 #include <cabocha.h>
 #include <iomanip>
 
+#include "../tinyxml2/tinyxml2.h"
 #include "sentence.hpp"
 #include "modality.hpp"
 

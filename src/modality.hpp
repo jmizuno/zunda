@@ -7,9 +7,9 @@
 #include <boost/filesystem.hpp>
 //#include <mecab.h>
 #include <cabocha.h>
-#include <tinyxml2.h>
 #include <kcpolydb.h>
-#include "cdbpp.h"
+#include "../tinyxml2/tinyxml2.h"
+#include "../cdbpp-1.0/cdbpp.h"
 
 namespace linear {
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))

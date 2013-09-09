@@ -66,9 +66,6 @@
 /* Define to 1 if you have the `kyotocabinet' library (-lkyotocabinet). */
 #undef HAVE_LIBKYOTOCABINET
 
-/* Define to 1 if you have the `tinyxml2' library (-ltinyxml2). */
-#undef HAVE_LIBTINYXML2
-
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -92,9 +89,6 @@
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
-
-/* Define to 1 if you have the <tinyxml2.h> header file. */
-#undef HAVE_TINYXML2_H
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H

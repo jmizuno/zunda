@@ -729,7 +729,6 @@ enable_option_checking
 enable_silent_rules
 enable_dependency_tracking
 with_boost
-with_tinyxml2
 with_cabocha
 with_kyotocabinet
 '
@@ -1371,7 +1370,6 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-boost=DIR        boost directory
-  --with-tinyxml2=DIR     tinyxml2 directory
   --with-cabocha=DIR      cabocha directory
   --with-kyotocabinet=DIR kyotocabinet directory
 
@@ -5470,68 +5468,13 @@ else
 fi
 
 
-
-# Check whether --with-tinyxml2 was given.
-if test "${with_tinyxml2+set}" = set; then :
-  withval=$with_tinyxml2; INCLUDES=${withval}/include ${INCLUDES}
-
-fi
-
-for ac_header in tinyxml2.h
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "tinyxml2.h" "ac_cv_header_tinyxml2_h" "$ac_includes_default"
-if test "x$ac_cv_header_tinyxml2_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_TINYXML2_H 1
-_ACEOF
-
-else
-  as_fn_error $? "tinyxml2.h not found" "$LINENO" 5
-fi
-
-done
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -ltinyxml2" >&5
-$as_echo_n "checking for main in -ltinyxml2... " >&6; }
-if ${ac_cv_lib_tinyxml2_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-ltinyxml2  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"; then :
-  ac_cv_lib_tinyxml2_main=yes
-else
-  ac_cv_lib_tinyxml2_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_tinyxml2_main" >&5
-$as_echo "$ac_cv_lib_tinyxml2_main" >&6; }
-if test "x$ac_cv_lib_tinyxml2_main" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBTINYXML2 1
-_ACEOF
-
-  LIBS="-ltinyxml2 $LIBS"
-
-else
-  as_fn_error $? "tinyxml2 library not found" "$LINENO" 5
-fi
-
+#AC_ARG_WITH(
+#						tinyxml2,
+#						[AC_HELP_STRING([--with-tinyxml2=DIR], [tinyxml2 directory])],
+#						[INCLUDES=${withval}/include ${INCLUDES}]
+#						)
+#AC_CHECK_HEADERS(tinyxml2.h,   ,[AC_MSG_ERROR(tinyxml2.h not found)])
+#AC_CHECK_LIB(tinyxml2, main,   ,[AC_MSG_ERROR(tinyxml2 library not found)])
 
 
 # Check whether --with-cabocha was given.
@@ -5668,7 +5611,7 @@ DICDIR=${datarootdir}/${PACKAGE}/dic
 MODELDIR=${datarootdir}/${PACKAGE}/model
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile dic/Makefile model/Makefile liblinear-1.8/Makefile liblinear-1.8/blas/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile dic/Makefile model/Makefile liblinear-1.8/Makefile liblinear-1.8/blas/Makefile cdbpp-1.0/Makefile tinyxml2/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6407,6 +6350,8 @@ do
     "model/Makefile") CONFIG_FILES="$CONFIG_FILES model/Makefile" ;;
     "liblinear-1.8/Makefile") CONFIG_FILES="$CONFIG_FILES liblinear-1.8/Makefile" ;;
     "liblinear-1.8/blas/Makefile") CONFIG_FILES="$CONFIG_FILES liblinear-1.8/blas/Makefile" ;;
+    "cdbpp-1.0/Makefile") CONFIG_FILES="$CONFIG_FILES cdbpp-1.0/Makefile" ;;
+    "tinyxml2/Makefile") CONFIG_FILES="$CONFIG_FILES tinyxml2/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
