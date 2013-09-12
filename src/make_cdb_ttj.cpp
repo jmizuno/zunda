@@ -20,8 +20,10 @@ int main( int argc, char *argv[] ) {
 
 	boost::filesystem::path infile_path(argv[1]);
 	boost::filesystem::path outdb_path(argv[2]);
+	boost::filesystem::path dump_path(std::string(argv[2]) + ".dump");
 	std::cerr << "infile: " << infile_path.string() << std::endl;
 	std::cerr << "outdb:  " << outdb_path.string() << std::endl;
+	std::cerr << "dumped  " << dump_path.string() << std::endl;
 
 	boost::system::error_code error;
 	bool res = boost::filesystem::exists(infile_path, error);
@@ -98,8 +100,11 @@ int main( int argc, char *argv[] ) {
 	std::ofstream ofs(outdb_path.string().c_str(), std::ios_base::binary);
 	cdbpp::builder dbw(ofs);
 
+	std::ofstream ofs_dump(dump_path.string().c_str());
 	boost::unordered_map< std::string, std::string >::iterator it_dic;
 	for (it_dic=dic.begin() ; it_dic!=dic.end() ; ++it_dic) {
 		dbw.put(it_dic->first.c_str(), it_dic->first.length(), it_dic->second.c_str(), it_dic->second.size());
+		ofs_dump << it_dic->first << "\t" << it_dic->second << std::endl;
 	}
+	ofs_dump.close();
 }

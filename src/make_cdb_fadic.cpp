@@ -59,8 +59,10 @@ int main( int argc, char *argv[] ) {
 
 	boost::filesystem::path infile_path(argv[1]);
 	boost::filesystem::path outdb_path(argv[2]);
+	boost::filesystem::path dump_path(std::string(argv[2]) + ".dump");
 	std::cerr << "infile: " << infile_path.string() << std::endl;
 	std::cerr << "outdb:  " << outdb_path.string() << std::endl;
+	std::cerr << "dumped  " << dump_path.string() << std::endl;
 
 	boost::system::error_code error;
 	bool res = boost::filesystem::exists(infile_path, error);
@@ -106,6 +108,8 @@ int main( int argc, char *argv[] ) {
 
 	std::string unk_str = "詳細不明";
 
+	std::ofstream ofs_dump(dump_path.string().c_str());
+
 	boost::unordered_map< std::string, boost::unordered_map< std::string, std::string > >::iterator it_cond;
 	boost::unordered_map< std::string, std::string >::iterator it_tag;
 	BOOST_FOREACH(Ent ent, dic) {
@@ -119,11 +123,13 @@ int main( int argc, char *argv[] ) {
 				if (val.compare(0, 1, "-") == 0 || val.compare(0, 1, "x") == 0 || val == "" || val.compare(0, unk_str.size(), unk_str) == 0) {
 				}
 				else {
-					std::cerr << key << "\t" << val << std::endl;
 					dbw.put(key.c_str(), key.length(), val.c_str(), val.length());
+					ofs_dump << key << "\t" << val << std::endl;
 				}
 			}
 		}
 	}
+
+	ofs_dump.close();
 }
 
