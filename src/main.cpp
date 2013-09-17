@@ -56,15 +56,19 @@ int main(int argc, char *argv[]) {
 		mod_parser.target_detection = argmap["target"].as<unsigned int>();
 	}
 
+#ifdef _MODEBUG
 	clock_t st;
 	clock_t et;
 	st = std::clock();
+#endif
 	if (!mod_parser.load_models()) {
 		std::cerr << "ERROR: load models failed" << std::endl;
 		return false;
 	}
+#ifdef _MODEBUG
 	et = std::clock();
 	std::cerr << "* load model done: " << (et-st) / (double)CLOCKS_PER_SEC << " sec" << std::endl;
+#endif
 
 	std::vector< std::string > sents;
 	std::string buf;
