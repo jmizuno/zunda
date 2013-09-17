@@ -8,7 +8,6 @@
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 #include <sstream>
-#include <kcpolydb.h>
 
 #include "sentence.hpp"
 #include "modality.hpp"

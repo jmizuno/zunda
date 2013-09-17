@@ -730,7 +730,6 @@ enable_silent_rules
 enable_dependency_tracking
 with_boost
 with_cabocha
-with_kyotocabinet
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1371,7 +1370,6 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-boost=DIR        boost directory
   --with-cabocha=DIR      cabocha directory
-  --with-kyotocabinet=DIR kyotocabinet directory
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -5161,6 +5159,20 @@ fi
 
 done
 
+for ac_header in string
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "string" "ac_cv_header_string" "$ac_includes_default"
+if test "x$ac_cv_header_string" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_STRING 1
+_ACEOF
+
+else
+  as_fn_error $? "string not found" "$LINENO" 5
+fi
+
+done
+
 for ac_header in iomanip
 do :
   ac_fn_cxx_check_header_mongrel "$LINENO" "iomanip" "ac_cv_header_iomanip" "$ac_includes_default"
@@ -5176,34 +5188,12 @@ fi
 done
 
 
-#AC_ARG_WITH(
-#						linear,
-#						[AC_HELP_STRING([--with-linear=DIR], [liblinear directory])],
-#						[INCLUDES=${withval}/include ${INCLUDES}]
-#						)
-#AC_CHECK_HEADERS(linear.h,,[AC_MSG_ERROR(linear.h not found)])
-#AC_CHECK_LIB(linear, main,   ,[AC_MSG_ERROR(boost/unordered_map.hpp not found)])
-
 
 # Check whether --with-boost was given.
 if test "${with_boost+set}" = set; then :
   withval=$with_boost; INCLUDES=${withval}/include ${INCLUDES}; LDFLAGS=${withval}/lib ${LDFLAGS}
 
 fi
-
-for ac_header in boost/unordered_map.hpp
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/unordered_map.hpp" "ac_cv_header_boost_unordered_map_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_unordered_map_hpp" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BOOST_UNORDERED_MAP_HPP 1
-_ACEOF
-
-else
-  as_fn_error $? "boost/unordered_map.hpp not found" "$LINENO" 5
-fi
-
-done
 
 for ac_header in boost/algorithm/string.hpp
 do :
@@ -5219,44 +5209,16 @@ fi
 
 done
 
-for ac_header in boost/format.hpp
+for ac_header in boost/date_time/posix_time/posix_time.hpp
 do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/format.hpp" "ac_cv_header_boost_format_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_format_hpp" = xyes; then :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/date_time/posix_time/posix_time.hpp" "ac_cv_header_boost_date_time_posix_time_posix_time_hpp" "$ac_includes_default"
+if test "x$ac_cv_header_boost_date_time_posix_time_posix_time_hpp" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_BOOST_FORMAT_HPP 1
+#define HAVE_BOOST_DATE_TIME_POSIX_TIME_POSIX_TIME_HPP 1
 _ACEOF
 
 else
-  as_fn_error $? "boost/format.hpp not found" "$LINENO" 5
-fi
-
-done
-
-for ac_header in boost/foreach.hpp
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/foreach.hpp" "ac_cv_header_boost_foreach_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_foreach_hpp" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BOOST_FOREACH_HPP 1
-_ACEOF
-
-else
-  as_fn_error $? "boost/foreach.hpp not found" "$LINENO" 5
-fi
-
-done
-
-for ac_header in boost/lexical_cast.hpp
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/lexical_cast.hpp" "ac_cv_header_boost_lexical_cast_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_lexical_cast_hpp" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BOOST_LEXICAL_CAST_HPP 1
-_ACEOF
-
-else
-  as_fn_error $? "boost/lexical_cast.hpp not found" "$LINENO" 5
+  as_fn_error $? "boost/date_time/posix_time/posix_time.hpp not found" "$LINENO" 5
 fi
 
 done
@@ -5275,6 +5237,48 @@ fi
 
 done
 
+for ac_header in boost/foreach.hpp
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/foreach.hpp" "ac_cv_header_boost_foreach_hpp" "$ac_includes_default"
+if test "x$ac_cv_header_boost_foreach_hpp" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_BOOST_FOREACH_HPP 1
+_ACEOF
+
+else
+  as_fn_error $? "boost/foreach.hpp not found" "$LINENO" 5
+fi
+
+done
+
+for ac_header in boost/format.hpp
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/format.hpp" "ac_cv_header_boost_format_hpp" "$ac_includes_default"
+if test "x$ac_cv_header_boost_format_hpp" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_BOOST_FORMAT_HPP 1
+_ACEOF
+
+else
+  as_fn_error $? "boost/format.hpp not found" "$LINENO" 5
+fi
+
+done
+
+for ac_header in boost/lexical_cast.hpp
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/lexical_cast.hpp" "ac_cv_header_boost_lexical_cast_hpp" "$ac_includes_default"
+if test "x$ac_cv_header_boost_lexical_cast_hpp" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_BOOST_LEXICAL_CAST_HPP 1
+_ACEOF
+
+else
+  as_fn_error $? "boost/lexical_cast.hpp not found" "$LINENO" 5
+fi
+
+done
+
 for ac_header in boost/program_options.hpp
 do :
   ac_fn_cxx_check_header_mongrel "$LINENO" "boost/program_options.hpp" "ac_cv_header_boost_program_options_hpp" "$ac_includes_default"
@@ -5289,16 +5293,30 @@ fi
 
 done
 
-for ac_header in boost/date_time/posix_time/posix_time.hpp
+for ac_header in boost/regex.hpp
 do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/date_time/posix_time/posix_time.hpp" "ac_cv_header_boost_date_time_posix_time_posix_time_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_date_time_posix_time_posix_time_hpp" = xyes; then :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/regex.hpp" "ac_cv_header_boost_regex_hpp" "$ac_includes_default"
+if test "x$ac_cv_header_boost_regex_hpp" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_BOOST_DATE_TIME_POSIX_TIME_POSIX_TIME_HPP 1
+#define HAVE_BOOST_REGEX_HPP 1
 _ACEOF
 
 else
-  as_fn_error $? "boost/date_time/posix_time/posix_time.hpp not found" "$LINENO" 5
+  as_fn_error $? "boost/regex.hpp not found" "$LINENO" 5
+fi
+
+done
+
+for ac_header in boost/unordered_map.hpp
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/unordered_map.hpp" "ac_cv_header_boost_unordered_map_hpp" "$ac_includes_default"
+if test "x$ac_cv_header_boost_unordered_map_hpp" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_BOOST_UNORDERED_MAP_HPP 1
+_ACEOF
+
+else
+  as_fn_error $? "boost/unordered_map.hpp not found" "$LINENO" 5
 fi
 
 done
@@ -5468,14 +5486,6 @@ else
 fi
 
 
-#AC_ARG_WITH(
-#						tinyxml2,
-#						[AC_HELP_STRING([--with-tinyxml2=DIR], [tinyxml2 directory])],
-#						[INCLUDES=${withval}/include ${INCLUDES}]
-#						)
-#AC_CHECK_HEADERS(tinyxml2.h,   ,[AC_MSG_ERROR(tinyxml2.h not found)])
-#AC_CHECK_LIB(tinyxml2, main,   ,[AC_MSG_ERROR(tinyxml2 library not found)])
-
 
 # Check whether --with-cabocha was given.
 if test "${with_cabocha+set}" = set; then :
@@ -5536,69 +5546,6 @@ _ACEOF
 
 else
   as_fn_error $? "cabocha library not found" "$LINENO" 5
-fi
-
-
-
-# Check whether --with-kyotocabinet was given.
-if test "${with_kyotocabinet+set}" = set; then :
-  withval=$with_kyotocabinet; INCLUDES=${withval}/include ${INCLUDES}; LDFALGS=${LDFALGS}
-
-fi
-
-for ac_header in kcpolydb.h
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "kcpolydb.h" "ac_cv_header_kcpolydb_h" "$ac_includes_default"
-if test "x$ac_cv_header_kcpolydb_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_KCPOLYDB_H 1
-_ACEOF
-
-else
-  as_fn_error $? "kcpolydb.h not found" "$LINENO" 5
-fi
-
-done
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lkyotocabinet" >&5
-$as_echo_n "checking for main in -lkyotocabinet... " >&6; }
-if ${ac_cv_lib_kyotocabinet_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lkyotocabinet  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"; then :
-  ac_cv_lib_kyotocabinet_main=yes
-else
-  ac_cv_lib_kyotocabinet_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_kyotocabinet_main" >&5
-$as_echo "$ac_cv_lib_kyotocabinet_main" >&6; }
-if test "x$ac_cv_lib_kyotocabinet_main" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBKYOTOCABINET 1
-_ACEOF
-
-  LIBS="-lkyotocabinet $LIBS"
-
-else
-  as_fn_error $? "kyotocabinet library not found" "$LINENO" 5
 fi
 
 

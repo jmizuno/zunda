@@ -91,14 +91,15 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_zunda_OBJECTS = zunda-main.$(OBJEXT) zunda-modality.$(OBJEXT) \
-	zunda-sentence.$(OBJEXT) zunda-feature.$(OBJEXT)
+	zunda-sentence.$(OBJEXT) zunda-feature.$(OBJEXT) \
+	zunda-tinyxml2.$(OBJEXT)
 zunda_OBJECTS = $(am_zunda_OBJECTS)
 zunda_DEPENDENCIES =
 zunda_LINK = $(CXXLD) $(zunda_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_zunda_train_OBJECTS = zunda_train-modality-learn.$(OBJEXT) \
 	zunda_train-modality.$(OBJEXT) zunda_train-sentence.$(OBJEXT) \
-	zunda_train-feature.$(OBJEXT)
+	zunda_train-feature.$(OBJEXT) zunda_train-tinyxml2.$(OBJEXT)
 zunda_train_OBJECTS = $(am_zunda_train_OBJECTS)
 zunda_train_DEPENDENCIES =
 zunda_train_LINK = $(CXXLD) $(zunda_train_CXXFLAGS) $(CXXFLAGS) \
@@ -280,7 +281,11 @@ zunda_SOURCES = main.cpp \
 								feature.cpp \
 								util.hpp \
 								eval.hpp \
-								../liblinear-1.8/linear.h
+								cdbmap.hpp \
+								../liblinear-1.8/linear.h \
+								../cdbpp-1.0/cdbpp.h \
+								../tinyxml2/tinyxml2.cpp \
+								../tinyxml2/tinyxml2.h
 
 zunda_CXXFLAGS = @INCLUDES@ -DMODELDIR=\"${MODELDIR}\" -DDICDIR=\"${DICDIR}\"
 zunda_LDADD = -L../tinyxml2 -ltinyxml2 -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @LIBS@
@@ -292,7 +297,11 @@ zunda_train_SOURCES = modality-learn.cpp \
 											feature.cpp \
 											util.hpp \
 											eval.hpp \
-											../liblinear-1.8/linear.h
+											cdbmap.hpp \
+											../liblinear-1.8/linear.h \
+											../cdbpp-1.0/cdbpp.h \
+											../tinyxml2/tinyxml2.cpp \
+											../tinyxml2/tinyxml2.h
 
 zunda_train_CXXFLAGS = @INCLUDES@ -DMODELDIR=\"${MODELDIR}\" -DDICDIR=\"${DICDIR}\"
 zunda_train_LDADD = -L../tinyxml2 -ltinyxml2 -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @LIBS@
@@ -391,10 +400,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zunda-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zunda-modality.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zunda-sentence.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zunda-tinyxml2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zunda_train-feature.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zunda_train-modality-learn.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zunda_train-modality.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zunda_train-sentence.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zunda_train-tinyxml2.Po@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -466,6 +477,20 @@ zunda-feature.obj: feature.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(zunda_CXXFLAGS) $(CXXFLAGS) -c -o zunda-feature.obj `if test -f 'feature.cpp'; then $(CYGPATH_W) 'feature.cpp'; else $(CYGPATH_W) '$(srcdir)/feature.cpp'; fi`
 
+zunda-tinyxml2.o: ../tinyxml2/tinyxml2.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(zunda_CXXFLAGS) $(CXXFLAGS) -MT zunda-tinyxml2.o -MD -MP -MF $(DEPDIR)/zunda-tinyxml2.Tpo -c -o zunda-tinyxml2.o `test -f '../tinyxml2/tinyxml2.cpp' || echo '$(srcdir)/'`../tinyxml2/tinyxml2.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/zunda-tinyxml2.Tpo $(DEPDIR)/zunda-tinyxml2.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../tinyxml2/tinyxml2.cpp' object='zunda-tinyxml2.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(zunda_CXXFLAGS) $(CXXFLAGS) -c -o zunda-tinyxml2.o `test -f '../tinyxml2/tinyxml2.cpp' || echo '$(srcdir)/'`../tinyxml2/tinyxml2.cpp
+
+zunda-tinyxml2.obj: ../tinyxml2/tinyxml2.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(zunda_CXXFLAGS) $(CXXFLAGS) -MT zunda-tinyxml2.obj -MD -MP -MF $(DEPDIR)/zunda-tinyxml2.Tpo -c -o zunda-tinyxml2.obj `if test -f '../tinyxml2/tinyxml2.cpp'; then $(CYGPATH_W) '../tinyxml2/tinyxml2.cpp'; else $(CYGPATH_W) '$(srcdir)/../tinyxml2/tinyxml2.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/zunda-tinyxml2.Tpo $(DEPDIR)/zunda-tinyxml2.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../tinyxml2/tinyxml2.cpp' object='zunda-tinyxml2.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(zunda_CXXFLAGS) $(CXXFLAGS) -c -o zunda-tinyxml2.obj `if test -f '../tinyxml2/tinyxml2.cpp'; then $(CYGPATH_W) '../tinyxml2/tinyxml2.cpp'; else $(CYGPATH_W) '$(srcdir)/../tinyxml2/tinyxml2.cpp'; fi`
+
 zunda_train-modality-learn.o: modality-learn.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(zunda_train_CXXFLAGS) $(CXXFLAGS) -MT zunda_train-modality-learn.o -MD -MP -MF $(DEPDIR)/zunda_train-modality-learn.Tpo -c -o zunda_train-modality-learn.o `test -f 'modality-learn.cpp' || echo '$(srcdir)/'`modality-learn.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/zunda_train-modality-learn.Tpo $(DEPDIR)/zunda_train-modality-learn.Po
@@ -521,6 +546,20 @@ zunda_train-feature.obj: feature.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='feature.cpp' object='zunda_train-feature.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(zunda_train_CXXFLAGS) $(CXXFLAGS) -c -o zunda_train-feature.obj `if test -f 'feature.cpp'; then $(CYGPATH_W) 'feature.cpp'; else $(CYGPATH_W) '$(srcdir)/feature.cpp'; fi`
+
+zunda_train-tinyxml2.o: ../tinyxml2/tinyxml2.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(zunda_train_CXXFLAGS) $(CXXFLAGS) -MT zunda_train-tinyxml2.o -MD -MP -MF $(DEPDIR)/zunda_train-tinyxml2.Tpo -c -o zunda_train-tinyxml2.o `test -f '../tinyxml2/tinyxml2.cpp' || echo '$(srcdir)/'`../tinyxml2/tinyxml2.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/zunda_train-tinyxml2.Tpo $(DEPDIR)/zunda_train-tinyxml2.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../tinyxml2/tinyxml2.cpp' object='zunda_train-tinyxml2.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(zunda_train_CXXFLAGS) $(CXXFLAGS) -c -o zunda_train-tinyxml2.o `test -f '../tinyxml2/tinyxml2.cpp' || echo '$(srcdir)/'`../tinyxml2/tinyxml2.cpp
+
+zunda_train-tinyxml2.obj: ../tinyxml2/tinyxml2.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(zunda_train_CXXFLAGS) $(CXXFLAGS) -MT zunda_train-tinyxml2.obj -MD -MP -MF $(DEPDIR)/zunda_train-tinyxml2.Tpo -c -o zunda_train-tinyxml2.obj `if test -f '../tinyxml2/tinyxml2.cpp'; then $(CYGPATH_W) '../tinyxml2/tinyxml2.cpp'; else $(CYGPATH_W) '$(srcdir)/../tinyxml2/tinyxml2.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/zunda_train-tinyxml2.Tpo $(DEPDIR)/zunda_train-tinyxml2.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../tinyxml2/tinyxml2.cpp' object='zunda_train-tinyxml2.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(zunda_train_CXXFLAGS) $(CXXFLAGS) -c -o zunda_train-tinyxml2.obj `if test -f '../tinyxml2/tinyxml2.cpp'; then $(CYGPATH_W) '../tinyxml2/tinyxml2.cpp'; else $(CYGPATH_W) '$(srcdir)/../tinyxml2/tinyxml2.cpp'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique

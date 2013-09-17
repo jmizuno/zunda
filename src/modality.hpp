@@ -7,7 +7,6 @@
 #include <boost/filesystem.hpp>
 //#include <mecab.h>
 #include <cabocha.h>
-#include <kcpolydb.h>
 #include "../tinyxml2/tinyxml2.h"
 #include "../cdbpp-1.0/cdbpp.h"
 
@@ -17,15 +16,17 @@ namespace linear {
 };
 
 #include "sentence.hpp"
+#include "cdbmap.hpp"
 
 #define MODALITY_VERSION 1.0
 #define LABEL_NUM 6
 
 #ifndef MODELDIR
-#define MODELDIR "model"
+#  define MODELDIR "model"
 #endif
+
 #ifndef DICDIR
-#define DICDIR "dic"
+#  define DICDIR "dic"
 #endif
 
 
@@ -79,14 +80,22 @@ namespace modality {
 			std::vector< nlp::sentence > learning_data;
 			unsigned int target_detection;
 			
-			kyotocabinet::HashDB l2iDB;
-			kyotocabinet::HashDB f2iDB;
-			boost::unordered_map< std::string, int > label2id;
-			boost::unordered_map< std::string, int > feat2id;
+//			boost::unordered_map< std::string, int > label2id;
+//			boost::unordered_map< std::string, int > feat2id;
 			boost::filesystem::path *model_path;
 			boost::filesystem::path *feat_path;
-			boost::filesystem::path f2i_path;
+
+			CdbMap<std::string, int> l2i;
 			boost::filesystem::path l2i_path;
+			boost::filesystem::path l2id_path;
+
+			CdbMap<int, std::string> i2l;
+			boost::filesystem::path i2l_path;
+			boost::filesystem::path i2ld_path;
+
+			CdbMap<std::string, int> f2i;
+			boost::filesystem::path f2i_path;
+			boost::filesystem::path f2id_path;
 
 			linear::model *models[LABEL_NUM];
 			std::vector<unsigned int> analyze_tags;
@@ -143,11 +152,12 @@ namespace modality {
 				cabocha = CaboCha::createParser("-f1");
 				
 				target_detection = DETECT_BY_POS;
-				openDB();
+				
+				open_f2i_cdb();
+				open_l2i_cdb();
 			}
 
 			~parser() {
-				closeDB();
 			}
 
 		public:
@@ -175,11 +185,12 @@ namespace modality {
 			std::vector<t_token> parse_bccwj_sent(tinyxml2::XMLElement *, int *);
 			void parse_modtag_for_sent(tinyxml2::XMLElement *, std::vector< t_token > *);
 
-			void save_hashDB();
-			void load_hashDB();
-			void openDB_writable();
-			void openDB();
-			void closeDB();
+			void open_f2i_cdb();
+			void open_l2i_cdb();
+			void open_i2l_cdb();
+			void save_f2i();
+			void save_l2i();
+			void save_i2l();
 	};
 
 

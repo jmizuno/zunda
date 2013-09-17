@@ -33,12 +33,13 @@ int main(int argc, char *argv[]) {
 
 	boost::program_options::options_description opt("Usage");
 	opt.add_options()
-		("data,d", boost::program_options::value< std::vector<std::string> >()->multitoken(), "directory path containing learning data (required)")
+		("path,p", boost::program_options::value< std::vector<std::string> >()->multitoken(), "directory path containing learning data (required)")
 		("input,i", boost::program_options::value<int>(), "format of learning data (optional)\n 0 - cabocha (default)\n 1 - XML")
 		("ext,e", boost::program_options::value<std::string>(), "extension of learning files (optional)\n 0 - .deppasmod (default)\n 1 - .xml")
 		("cross,x", "enable cross validation (optional): default off")
 		("split,g", boost::program_options::value<unsigned int>(), "number of groups for cross validation (optional): default 5")
 		("outdir,o", boost::program_options::value<std::string>(), "directory to store output files (optional)\n simple training -  stores model file and feature file to \"model (default)\"\n cross validation - stores model file, feature file and result file to \"output (default)\"")
+		("dic,d", boost::program_options::value<std::string>(), "dictionary directory (optional)")
 		("target,t", boost::program_options::value<unsigned int>(), "target detection method\n 0 - by part of speech [default]\n 1 - predicate output by PAS (syncha format)\n 2 - by machine learning (has not been implemented)\n 3 - by gold data")
 		("help,h", "Show help messages")
 		("version,v", "Show version informaion");
@@ -72,6 +73,11 @@ int main(int argc, char *argv[]) {
 	boost::filesystem::path outdir_path(outdir);
 	mkdir(outdir_path);
 
+	std::string dic_dir = DICDIR;
+	if (argmap.count("dic")) {
+		dic_dir = argmap["dic"].as<std::string>();
+	}
+
 	int input_layer = 0;
 	if (argmap.count("input")) {
 		input_layer = argmap["input"].as<int>();
@@ -97,13 +103,13 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (!argmap.count("data")) {
+	if (!argmap.count("path")) {
 		std::cerr << "ERROR: no data directory" << std::endl;
 		return false;
 	}
 
 	std::vector<std::string> files;
-	BOOST_FOREACH (std::string learn_data_dir, argmap["data"].as< std::vector<std::string> >() ) {
+	BOOST_FOREACH (std::string learn_data_dir, argmap["path"].as< std::vector<std::string> >() ) {
 		const boost::filesystem::path learn_data_path(learn_data_dir);
 		if (boost::filesystem::exists(learn_data_path)) {
 			BOOST_FOREACH ( const boost::filesystem::path& p, std::make_pair(boost::filesystem::recursive_directory_iterator(learn_data_dir), boost::filesystem::recursive_directory_iterator()) ) {
@@ -127,10 +133,7 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-	modality::parser mod_parser;
-	mod_parser.closeDB();
-	mod_parser.set_model_dir(outdir_path);
-	mod_parser.openDB_writable();
+	modality::parser mod_parser(outdir_path.string(), dic_dir);
 
 	if (argmap.count("target")) {
 		mod_parser.target_detection = argmap["target"].as<unsigned int>();
@@ -215,7 +218,7 @@ int main(int argc, char *argv[]) {
 			std::vector< nlp::sentence > test_data = split_data[step];
 			for (unsigned int set=0 ; set<test_data.size() ; ++set) {
 
-				std::vector<int> tagged_tok_ids;
+//				std::vector<int> tagged_tok_ids;
 
 				// when target detection is DETECT_BY_GOLD, only bool value of having modality is set to test data
 				if (mod_parser.target_detection == modality::DETECT_BY_GOLD) {
@@ -288,7 +291,9 @@ int main(int argc, char *argv[]) {
 		mod_parser.learn();
 	}
 
-	mod_parser.save_hashDB();
+	mod_parser.save_f2i();
+	mod_parser.save_l2i();
+	mod_parser.save_i2l();
 
 	return 1;
 }

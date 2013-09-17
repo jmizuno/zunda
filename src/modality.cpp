@@ -11,14 +11,13 @@
 #include <boost/filesystem.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <sstream>
-#include <mecab.h>
 #include <cabocha.h>
 #include <iomanip>
 
 #include "../tinyxml2/tinyxml2.h"
 #include "sentence.hpp"
 #include "modality.hpp"
-
+#include "cdbmap.hpp"
 
 namespace modality {
 	std::string parser::id2tag(unsigned int id) {
@@ -56,10 +55,24 @@ namespace modality {
 			feat_path[i] = dir_path / fp;
 		}
 		
-		boost::filesystem::path f2ip("feat2id.kch");
-		f2i_path = dir_path / f2ip;
-		boost::filesystem::path l2ip("label2id.kch");
+		boost::filesystem::path l2ip("label2id.cdb");
 		l2i_path = dir_path / l2ip;
+		boost::filesystem::path l2idp("label2id.cdb.dump");
+		l2id_path = dir_path / l2idp;
+		
+		boost::filesystem::path i2lp("id2label.cdb");
+		i2l_path = dir_path / i2lp;
+		boost::filesystem::path i2ldp("id2label.cdb.dump");
+		i2ld_path = dir_path / i2ldp;
+
+		boost::filesystem::path f2ip("feat2id.cdb");
+		f2i_path = dir_path / f2ip;
+		boost::filesystem::path f2idp("feat2id.cdb.dump");
+		f2id_path = dir_path / f2idp;
+
+		open_f2i_cdb();
+		open_l2i_cdb();
+		open_i2l_cdb();
 	}
 
 
@@ -157,24 +170,16 @@ namespace modality {
 		t_feat::iterator it_feat;
 		int feat_cnt = 0;
 		for (it_feat=feat.begin() ; it_feat!=feat.end() ; ++it_feat) {
-			int feat_id = -1;
-			if (read_only) {
-				std::string val;
-				if (f2iDB.get(it_feat->first, &val)) {
-					feat_id = boost::lexical_cast<int>(val);
-				}
-			}
-			else {
-				if (feat2id.find(it_feat->first) == feat2id.end()) {
-					feat2id[it_feat->first] = feat2id.size();
-				}
-				feat_id = feat2id[it_feat->first];
-			}
-			
-			if (feat_id != -1) {
+			int feat_id;
+			//std::cerr << it_feat->first;
+			if (f2i.get(it_feat->first, &feat_id)) {
+				//std::cerr << "\t" << feat_id << std::endl;
 				xx[feat_cnt].index = feat_id;
 				xx[feat_cnt].value = it_feat->second;
 				feat_cnt++;
+			}
+			else {
+				//std::cerr << " not found" << std::endl;
 			}
 		}
 		// sorted by feature ID
@@ -231,22 +236,15 @@ namespace modality {
 
 					
 						int predicted = linear::predict(models[i], xx);
-						boost::unordered_map<std::string, int>::iterator it;
 						std::string label;
-						for (it=label2id.begin() ; it!=label2id.end() ; ++it) {
-							if (predicted == it->second) {
-								label = it->first;
-								break;
-							}
+						if (i2l.get(predicted, &label)) {
+							rit_tok->mod.tag[id2tag(i)] = label;
 						}
-						if (label == "") {
+						else {
 							std::cerr << "ERORR: unknown predicted label: " << predicted << std::endl;
 							exit(-1);
 						}
-						else {
-							rit_tok->mod.tag[id2tag(i)] = label;
-						}
-						
+
 #ifdef _MODEBUG
 						std::string feat_str = fgen.compile_feat_str(use_feats[i]);
 						std::cerr << " " << id2tag(i) << ": " << feat_str << " -> " << label << "(" << predicted << ")" << std::endl;
@@ -395,10 +393,14 @@ namespace modality {
 					BOOST_FOREACH (nlp::token tok, chk.tokens) {
 						if (detect_target(tok) && tok.has_mod) {
 							std::string label = tok.mod.tag[id2tag(tag_id)];
-							if (label2id.find(label) == label2id.end()) {
-								label2id[label] = label2id.size();
+							if (!l2i.exists_on_map(label)) {
+								int lid = l2i.size()+1;
+								l2i.set(label, lid);
+								i2l.set(lid, label);
 							}
-							y[node_cnt] = label2id[label];
+							int label_id;
+							l2i.get(label, &label_id);
+							y[node_cnt] = label_id;
 
 							std::stringstream tok_id_full;
 							tok_id_full << sent.sent_id << "_" << chk.id << "_" << tok.id;
@@ -430,7 +432,15 @@ namespace modality {
 							
 							ofs << sent.sent_id << "(" << chk.id << "_" << tok.id << "): " << fgen.compile_feat_str(use_feats[tag_id]) << std::endl;
 
-							linear::feature_node* xx = pack_feat_linear(fgen.compile_feat(use_feats[tag_id]), false);
+							t_feat feat = fgen.compile_feat(use_feats[tag_id]);
+							t_feat::iterator it_feat;
+							for (it_feat=feat.begin() ; it_feat!=feat.end() ; ++it_feat) {
+								if (!f2i.exists_on_map(it_feat->first)) {
+									f2i.set(it_feat->first, f2i.size()+1);
+								}
+							}
+
+							linear::feature_node* xx = pack_feat_linear(feat, false);
 							x[node_cnt] = xx;
 							node_cnt++;
 						}
@@ -450,7 +460,7 @@ namespace modality {
 
 			linear::problem _prob;
 			_prob.l = num_node;
-			_prob.n = feat2id.size();
+			_prob.n = f2i.map.size()+1;
 			_prob.y = y;
 			_prob.x = x;
 			_prob.bias = -1;
@@ -737,109 +747,57 @@ namespace modality {
 	}
 
 
-	void parser::save_hashDB() {
-		f2iDB.close();
-		if (!f2iDB.open(f2i_path.string().c_str(), kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
-			std::cerr << "open error: feat2id: " << f2iDB.error().name() << std::endl;
+	template <typename K, typename V>
+	inline void open_cdb(boost::filesystem::path cdb_path, CdbMap< K, V > *cdbmap) {
+		boost::system::error_code error;
+		bool res = boost::filesystem::exists(cdb_path, error);
+		if (!res || error) {
 		}
-		f2iDB.clear();
-
-		l2iDB.close();
-		if (!l2iDB.open(l2i_path.string().c_str(), kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
-			std::cerr << "open error: label2id: " << l2iDB.error().name() << std::endl;
-		}
-		l2iDB.clear();
-
-		boost::unordered_map< std::string, int >::iterator it;
-		for (it=feat2id.begin() ; it!=feat2id.end() ; ++it) {
-			std::stringstream ss;
-			ss << it->second;
-			if (!f2iDB.set(it->first, ss.str())) {
-				std::cerr << "set error: " << f2iDB.error().name() << std::endl;
-			}
-		}
-		
-		for (it=label2id.begin() ; it!=label2id.end() ; ++it) {
-			std::stringstream ss;
-			ss << it->second;
-			if (!l2iDB.set(it->first, ss.str())) {
-				std::cerr << "set error: " << l2iDB.error().name() << std::endl;
-			}
+		else {
+			cdbmap->open_cdb(cdb_path.string().c_str());
 		}
 	}
 
+	void parser::open_f2i_cdb() {
+		open_cdb(f2i_path, &f2i);
+	}
 
-	void parser::load_hashDB() {
-		label2id.clear();
-		kyotocabinet::DB::Cursor *cur = l2iDB.cursor();
-		cur->jump();
-		std::string k, v;
-		while (cur->get(&k, &v, true)) {
-			label2id[k] = boost::lexical_cast<int>(v);
-		}
-		
-		/*
-		feat2id.clear();
-		cur = f2iDB.cursor();
-		cur->jump();
-		while (cur->get(&k, &v, true)) {
-			feat2id[k] = boost::lexical_cast<int>(v);
-		}
-		*/
+	void parser::open_l2i_cdb() {
+		open_cdb(l2i_path, &l2i);
+	}
+
+	void parser::open_i2l_cdb() {
+		open_cdb(i2l_path, &i2l);
 	}
 
 
-	void parser::openDB_writable() {
-		boost::filesystem::path dir_path[2];
-	 	dir_path[0] = l2i_path.parent_path();
-		dir_path[1] = f2i_path.parent_path();
-		for (unsigned int i=0 ; i<2 ; ++i) {
-			boost::system::error_code error;
-			const bool result = boost::filesystem::exists(dir_path[i], error);
-			if (!result) {
-				std::cerr << "mkdir " << dir_path[i].string() << std::endl;
-				const bool res = boost::filesystem::create_directories(dir_path[i], error);
-				if (!res || error) {
-					std::cerr << "ERROR: mkdir " << dir_path[i].string() << " failed" << std::endl;
-					exit(-1);
-				}
-			}
-			else if (error) {
-				std::cerr << "ERROR" << std::endl;
-				exit(-1);
-			}
+	template <typename K, typename V>
+	inline void save_cdb(boost::unordered_map< K, V > hash, boost::filesystem::path cdb_path, boost::filesystem::path dump_path) {
+		std::ofstream ofs_dump(dump_path.string().c_str());
+		std::ofstream ofs_cdb(cdb_path.string().c_str(), std::ios_base::binary);
+		cdbpp::builder dbw(ofs_cdb);
+		typename boost::unordered_map< K, V >::iterator it;
+		for (it=hash.begin() ; it!=hash.end() ; ++it) {
+			std::stringstream ss_key, ss_val;
+			ss_key << it->first;
+			ss_val << it->second;
+			dbw.put(ss_key.str().c_str(), ss_key.str().length(), ss_val.str().c_str(), ss_val.str().length());
+			ofs_dump << ss_key.str() << "\t" << ss_val.str() << std::endl;
 		}
-
-		if (!l2iDB.open(l2i_path.string().c_str(), kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
-			std::cerr << "open error: label2id: " << l2iDB.error().name() << std::endl;
-		}
-
-		if (!f2iDB.open(f2i_path.string().c_str(), kyotocabinet::HashDB::OCREATE | kyotocabinet::HashDB::OWRITER)) {
-			std::cerr << "open error: feat2id: " << f2iDB.error().name() << std::endl;
-		}
+		ofs_dump.close();
+	}
+			
+	void parser::save_f2i() {
+		save_cdb( f2i.map, f2i_path, f2id_path );
 	}
 
-
-	void parser::openDB() {
-		if (!l2iDB.open(l2i_path.string().c_str(), kyotocabinet::HashDB::OREADER)) {
-			std::cerr << "open error: label2id: " << l2iDB.error().name() << std::endl;
-		}
-
-		if (!f2iDB.open(f2i_path.string().c_str(), kyotocabinet::HashDB::OREADER)) {
-			std::cerr << "open error: feat2id: " << f2iDB.error().name() << std::endl;
-		}
+	void parser::save_l2i() {
+		save_cdb( l2i.map, l2i_path, l2id_path );
 	}
 
-
-	void parser::closeDB() {
-		if (!l2iDB.close()) {
-			std::cerr << "close error: label2id: " << l2iDB.error().name() << std::endl;
-		}
-		if (!f2iDB.close()) {
-			std::cerr << "close error: feat2id: " << f2iDB.error().name() << std::endl;
-		}
+	void parser::save_i2l() {
+		save_cdb( i2l.map, i2l_path, i2ld_path );
 	}
-
 
 };
 

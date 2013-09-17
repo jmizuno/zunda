@@ -22,6 +22,9 @@
 /* Define to 1 if you have the <boost/program_options.hpp> header file. */
 #undef HAVE_BOOST_PROGRAM_OPTIONS_HPP
 
+/* Define to 1 if you have the <boost/regex.hpp> header file. */
+#undef HAVE_BOOST_REGEX_HPP
+
 /* Define to 1 if you have the <boost/unordered_map.hpp> header file. */
 #undef HAVE_BOOST_UNORDERED_MAP_HPP
 
@@ -43,9 +46,6 @@
 /* Define to 1 if you have the <iostream> header file. */
 #undef HAVE_IOSTREAM
 
-/* Define to 1 if you have the <kcpolydb.h> header file. */
-#undef HAVE_KCPOLYDB_H
-
 /* Define to 1 if you have the `boost_filesystem' library
    (-lboost_filesystem). */
 #undef HAVE_LIBBOOST_FILESYSTEM
@@ -63,9 +63,6 @@
 /* Define to 1 if you have the `cabocha' library (-lcabocha). */
 #undef HAVE_LIBCABOCHA
 
-/* Define to 1 if you have the `kyotocabinet' library (-lkyotocabinet). */
-#undef HAVE_LIBKYOTOCABINET
-
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -77,6 +74,9 @@
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <string> header file. */
+#undef HAVE_STRING
 
 /* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H

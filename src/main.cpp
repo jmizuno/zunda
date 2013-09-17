@@ -51,7 +51,6 @@ int main(int argc, char *argv[]) {
 	}
 
 	modality::parser mod_parser(model_dir, dic_dir);
-	mod_parser.load_hashDB();
 
 	if (argmap.count("target")) {
 		mod_parser.target_detection = argmap["target"].as<unsigned int>();
