@@ -9,9 +9,7 @@ zunda_SOURCES = main.cpp \
 								eval.hpp \
 								cdbmap.hpp \
 								../liblinear-1.8/linear.h \
-								../cdbpp-1.0/cdbpp.h \
-								../tinyxml2/tinyxml2.cpp \
-								../tinyxml2/tinyxml2.h
+								../cdbpp-1.0/cdbpp.h
 zunda_CXXFLAGS = @INCLUDES@ -DMODELDIR=\"${MODELDIR}\" -DDICDIR=\"${DICDIR}\"
 zunda_LDADD = -L../tinyxml2 -ltinyxml2 -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @LIBS@
 
@@ -25,9 +23,7 @@ zunda_train_SOURCES = modality-learn.cpp \
 											eval.hpp \
 											cdbmap.hpp \
 											../liblinear-1.8/linear.h \
-											../cdbpp-1.0/cdbpp.h \
-											../tinyxml2/tinyxml2.cpp \
-											../tinyxml2/tinyxml2.h
+											../cdbpp-1.0/cdbpp.h
 zunda_train_CXXFLAGS = @INCLUDES@ -DMODELDIR=\"${MODELDIR}\" -DDICDIR=\"${DICDIR}\"
 zunda_train_LDADD = -L../tinyxml2 -ltinyxml2 -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @LIBS@
 

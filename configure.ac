@@ -62,6 +62,12 @@ AC_ARG_WITH(
 AC_CHECK_HEADERS(cabocha.h,   ,[AC_MSG_ERROR(cabocha.h not found)])
 AC_CHECK_LIB(cabocha, main,   ,[AC_MSG_ERROR(cabocha library not found)])
 
+AC_ARG_ENABLE(
+							[debug],
+							AC_HELP_STRING([--enable-debug], [debug mode (default is no)]),
+							[ CXXFLAGS="-D_MODEBUG -Werror -O0"; LDFLAGS="-fno-inline -g -pg ${LDFLAGS}";],
+							)
+
 AC_SUBST(INCLUDES)
 AC_SUBST(LDFALGS)
 
