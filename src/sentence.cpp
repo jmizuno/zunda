@@ -245,8 +245,6 @@ namespace nlp {
 				mod.parse(l);
 				mods.push_back(mod);
 			}
-			else if (l.compare(0, 1, "#") == 0) {
-			}
 			else if (boost::regex_search(l, m, chk_line)) {
 				chunk chk;
 				std::vector<std::string> v, v2;
