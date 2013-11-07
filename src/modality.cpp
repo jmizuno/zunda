@@ -183,7 +183,10 @@ namespace modality {
 			}
 		}
 		// sorted by feature ID
-		std::sort(xx, xx+feat_cnt-1, comp_xx);
+		// not run sort() when xx is empty
+		if (feat_cnt > 0) {
+			std::sort(xx, xx+feat_cnt-1, comp_xx);
+		}
 		xx[feat_cnt].index = -1;
 		
 		return xx;
