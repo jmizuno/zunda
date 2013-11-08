@@ -70,37 +70,38 @@ int main(int argc, char *argv[]) {
 	std::cerr << "* load model done: " << (et-st) / (double)CLOCKS_PER_SEC << " sec" << std::endl;
 #endif
 
-	std::vector< std::string > sents;
 	std::string buf;
-	std::string ct;
+	std::string sent;
+	bool run = false;
 	while( getline(std::cin, buf) ) {
 		switch (input_layer) {
 			case modality::raw_text:
-				sents.push_back(buf);
+				sent = buf;
+				run = true;
 				break;
 			case modality::cabocha_text:
-				ct += buf + "\n";
+				sent += buf + "\n";
 				if (buf.compare(0, 3, "EOS") == 0) {
-					sents.push_back(ct);
-					ct.clear();
+					run = true;
 				}
 				break;
 			case modality::chapas_text:
-				ct += buf + "\n";
+				sent += buf + "\n";
 				if (buf.compare(0, 3, "EOS") == 0) {
-					sents.push_back(ct);
-					ct.clear();
+					run = true;
 				}
 				break;
 			default:
 				std::cerr << "ERROR: no such input layer" << std::endl;
 				return -1;
 		}
-	}
-
-	BOOST_FOREACH ( std::string sent, sents ) {
-		nlp::sentence parsed_sent = mod_parser.analyze(sent, input_layer, true);
-		std::cout << parsed_sent.cabocha() << std::endl;
+		
+		if (run) {
+			nlp::sentence parsed_sent = mod_parser.analyze(sent, input_layer, true);
+			std::cout << parsed_sent.cabocha() << std::endl;
+			sent.clear();
+			run = false;
+		}
 	}
 
 	return 1;
