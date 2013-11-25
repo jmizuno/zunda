@@ -67,20 +67,32 @@ namespace nlp {
 			std::string surf;
 			std::string orig;
 			std::string pos;
+			int pos_id;
 			std::string pos1;
+			int pos1_id;
 			std::string pos2;
+			int pos2_id;
 			std::string pos3;
+			int pos3_id;
 			std::string type;
+			int type_id;
 			std::string form;
+			int form_id;
+			std::string form2;
+			int form2_id;
 			std::string read;
 			std::string pron;
 			std::string ne;
 			nlp::pas pas;
 			nlp::modality mod;
 			bool has_mod;
+			std::string sem_info;
 			
+			boost::regex juman_pos;
+
 			bool parse_chasen(std::string, int);
 			bool parse_mecab(std::string, int);
+			bool parse_juman(std::string, int);
 		public:
 			token() {
 				surf = "*";
@@ -95,6 +107,8 @@ namespace nlp {
 				pron = "*";
 				ne = "O";
 				has_mod = false;
+
+				juman_pos = ".*詞";
 			}
 	};
 
@@ -114,6 +128,8 @@ namespace nlp {
 			chunk() {
 				score = 0.0;
 				has_mod = false;
+				subj = 0;
+				func = 0;
 			}
 			bool add_token(token);
 			std::string str();
@@ -123,6 +139,7 @@ namespace nlp {
 
 	class sentence {
 		public:
+			std::string input_orig;
 			std::string doc_id;
 			std::string sent_id;
 			std::vector< chunk > chunks;
@@ -149,6 +166,8 @@ namespace nlp {
 			boost::regex chk_dst;
 			std::string dst_rep;
 			std::string type_rep;
+			boost::regex chk_line_knp;
+			boost::regex chk_basic_knp;
 		
 		public:
 			sentence() {
@@ -161,6 +180,8 @@ namespace nlp {
 				chk_dst = "^([0-9\\-]+)([A-Z])$";
 				dst_rep = "$1";
 				type_rep = "$2";
+				chk_line_knp = "^\\* [0-9-]+[A-Z] ";
+				chk_basic_knp = "^\\+ [0-9-]+[A-Z] ";
 				
 				ma_tool = ChaSen;
 				ma_dic = IPADic;
@@ -169,6 +190,8 @@ namespace nlp {
 			bool add_chunk(chunk);
 			bool parse_cabocha(std::string);
 			bool parse_cabocha(std::vector< std::string >);
+			bool parse_knp(std::string);
+			bool parse_knp(std::vector< std::string >);
 			bool pp();
 			chunk get_chunk(int);
 			chunk get_chunk_by_tokenID(int);

@@ -31,16 +31,16 @@ int main(int argc, char *argv[]) {
 
 	unsigned int split_num = 5;
 
-	boost::program_options::options_description opt("Usage");
+	boost::program_options::options_description opt("Usage", 200, 100);
 	opt.add_options()
 		("path,p", boost::program_options::value< std::vector<std::string> >()->multitoken(), "directory path containing learning data (required)")
-		("input,i", boost::program_options::value<int>(), "format of learning data (optional)\n 0 - cabocha (default)\n 1 - XML")
+		("input,i", boost::program_options::value<int>(), "input format\n 0 - BCCWJ-style XML tagged format re-parsed by CaboCha (IPA POS tag) [default]\n 1 - BCCWJ-style XML tagged format re-parsed by KNP (Juman POS tag)\n 2 - depndency parsed format by CaboCha (IPA POS tag)\n 3 - dependency parsed format by KNP (Juman POS tag)\n 4 - predicate-argument structure analyzed format by SynCha (IPA POS tag)\n 5 - predicate-argument structure analyzed format by KNP (Juman POS tag)")
 		("ext,e", boost::program_options::value<std::string>(), "extension of learning files (optional)\n 0 - .deppasmod (default)\n 1 - .xml")
 		("cross,x", "enable cross validation (optional): default off")
 		("split,g", boost::program_options::value<unsigned int>(), "number of groups for cross validation (optional): default 5")
 		("outdir,o", boost::program_options::value<std::string>(), "directory to store output files (optional)\n simple training -  stores model file and feature file to \"model (default)\"\n cross validation - stores model file, feature file and result file to \"output (default)\"")
 		("dic,d", boost::program_options::value<std::string>(), "dictionary directory (optional)")
-		("target,t", boost::program_options::value<unsigned int>(), "target detection method\n 0 - by part of speech [default]\n 1 - predicate output by PAS (syncha format)\n 2 - by machine learning (has not been implemented)\n 3 - by gold data")
+		("target,t", boost::program_options::value<unsigned int>(), "method of detecting token to be learned\n 0 - by part of speech [default]\n 1 - predicate detected by a predicate-argument structure analyzer (only SynCha format is supported)\n 2 - by machine learning (has not been implemented)\n 3 - by gold data")
 		("help,h", "Show help messages")
 		("version,v", "Show version informaion");
 
@@ -78,30 +78,57 @@ int main(int argc, char *argv[]) {
 		dic_dir = argmap["dic"].as<std::string>();
 	}
 
-	int input_layer = 0;
+	int input_format = modality::TF_XML_CAB;
+	int input_layer;
 	if (argmap.count("input")) {
-		input_layer = argmap["input"].as<int>();
+		input_format = argmap["input"].as<int>();
 	}
 	std::string ext;
-	switch (input_layer) {
-		case 0:
-			std::cout << "data format: cabocha" << std::endl;
-			ext = ".deppasmod";
-			break;
-		case 1:
-			std::cout << "data format: XML" << std::endl;
+	std::cout << "data format: ";
+	switch (input_format) {
+		case modality::TF_XML_CAB:
+			std::cout << "BCCWJ-style XML tagged by CaboCha (IPA POS tag)" << std::endl;
 			ext = ".xml";
+			input_layer = modality::CABOCHA;
+			break;
+		case modality::TF_XML_KNP:
+			std::cout << "BCCWJ-style XML tagged by KNP (Juman POS tag)";
+			ext = ".xml";
+			input_layer = modality::KNP_DEP;
+			break;
+		case modality::TF_DEP_CAB:
+			std::cout << "dependency parsed by CaboCha (IPA POS tag)";
+			ext = ".depmod";
+			input_layer = modality::CABOCHA;
+			break;
+		case modality::TF_DEP_KNP:
+			std::cout << "dependency parsed by KNP (Juman POS tag)";
+			ext = ".knp";
+			input_layer = modality::KNP_DEP;
+			break;
+		case modality::TF_PAS_SYN:
+			std::cout << "predicate-argument structure analyzed by SynCha (IPA POS tag)";
+			ext = ".deppasmod";
+			input_layer = modality::SYNCHA;
+			break;
+		case modality::TF_PAS_KNP:
+			std::cout << "predicate-argument structure analyzed by KNP (Juman POS tag)";
+			ext = ".knp";
+			input_layer = modality::KNP_PAS;
 			break;
 		default:
-			std::cerr << "ERROR: invalid data format type" << std::endl;
+			std::cerr << "ERROR: invalid input format" << std::endl;
 			return false;
 	}
+	std::cout << std::endl;
+
 	if (argmap.count("ext")) {
 		ext = argmap["ext"].as<std::string>();
 		if (ext.compare(0, 1, ".") != 0) {
 			ext = "." + ext;
 		}
 	}
+	std::cout << "ext: " << ext << std::endl;
 
 	if (!argmap.count("path")) {
 		std::cerr << "ERROR: no data directory" << std::endl;
@@ -133,21 +160,25 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-	modality::parser mod_parser(outdir_path.string(), dic_dir);
+	modality::parser mod_parser(input_layer, outdir_path.string(), dic_dir);
 
 	if (argmap.count("target")) {
 		mod_parser.target_detection = argmap["target"].as<unsigned int>();
 	}
 
-	switch (input_layer) {
-		case 0:
-			mod_parser.load_deppasmods(files);
+	switch (input_format) {
+		case modality::TF_XML_CAB:
+		case modality::TF_XML_KNP:
+			mod_parser.load_xmls(files, input_format);
 			break;
-		case 1:
-			mod_parser.load_xmls(files);
+		case modality::TF_DEP_CAB:
+		case modality::TF_DEP_KNP:
+		case modality::TF_PAS_SYN:
+		case modality::TF_PAS_KNP:
+			mod_parser.load_deppasmods(files, input_format);
 			break;
 		default:
-			std::cerr << "ERROR: invalid data format type" << std::endl;
+			std::cerr << "ERROR: invalid input format" << std::endl;
 			exit(-1);
 	}
 	std::cout << "load done: " << mod_parser.learning_data.size() << " sents" << std::endl;
@@ -250,7 +281,7 @@ int main(int argc, char *argv[]) {
 				*/
 
 				// tokens to be analyzed are detected by specified method in analyze() and gold data validation
-				nlp::sentence tagged_sent = mod_parser.analyze(test_data[set], false);
+				nlp::sentence tagged_sent = mod_parser.analyze(test_data[set]);
 
 				for (unsigned int chk_cnt=0 ; chk_cnt<tagged_sent.chunks.size() ; ++chk_cnt) {
 					for (unsigned int tok_cnt=0 ; tok_cnt<tagged_sent.chunks[chk_cnt].tokens.size() ; ++tok_cnt) {

@@ -625,7 +625,8 @@ ac_includes_default="\
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
-MODELDIR
+MODELDIR_JUMAN
+MODELDIR_IPA
 DICDIR
 LDFALGS
 INCLUDES
@@ -5663,10 +5664,12 @@ fi
 DICDIR=${datarootdir}/${PACKAGE}/dic
 
 
-MODELDIR=${datarootdir}/${PACKAGE}/model
+MODELDIR_IPA=${datarootdir}/${PACKAGE}/model_ipa
+MODELDIR_JUMAN=${datarootdir}/${PACKAGE}/model_juman
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile dic/Makefile model/Makefile liblinear-1.8/Makefile liblinear-1.8/blas/Makefile cdbpp-1.0/Makefile tinyxml2/Makefile"
+
+ac_config_files="$ac_config_files Makefile src/Makefile dic/Makefile model_ipa/Makefile model_juman/Makefile liblinear-1.8/Makefile liblinear-1.8/blas/Makefile cdbpp-1.0/Makefile tinyxml2/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6402,7 +6405,8 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "dic/Makefile") CONFIG_FILES="$CONFIG_FILES dic/Makefile" ;;
-    "model/Makefile") CONFIG_FILES="$CONFIG_FILES model/Makefile" ;;
+    "model_ipa/Makefile") CONFIG_FILES="$CONFIG_FILES model_ipa/Makefile" ;;
+    "model_juman/Makefile") CONFIG_FILES="$CONFIG_FILES model_juman/Makefile" ;;
     "liblinear-1.8/Makefile") CONFIG_FILES="$CONFIG_FILES liblinear-1.8/Makefile" ;;
     "liblinear-1.8/blas/Makefile") CONFIG_FILES="$CONFIG_FILES liblinear-1.8/blas/Makefile" ;;
     "cdbpp-1.0/Makefile") CONFIG_FILES="$CONFIG_FILES cdbpp-1.0/Makefile" ;;

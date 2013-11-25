@@ -74,10 +74,12 @@ AC_SUBST(LDFALGS)
 DICDIR=${datarootdir}/${PACKAGE}/dic
 AC_SUBST(DICDIR)
 
-MODELDIR=${datarootdir}/${PACKAGE}/model
-AC_SUBST(MODELDIR)
+MODELDIR_IPA=${datarootdir}/${PACKAGE}/model_ipa
+MODELDIR_JUMAN=${datarootdir}/${PACKAGE}/model_juman
+AC_SUBST(MODELDIR_IPA)
+AC_SUBST(MODELDIR_JUMAN)
 
-AC_CONFIG_FILES([Makefile src/Makefile dic/Makefile model/Makefile liblinear-1.8/Makefile liblinear-1.8/blas/Makefile cdbpp-1.0/Makefile tinyxml2/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile dic/Makefile model_ipa/Makefile model_juman/Makefile liblinear-1.8/Makefile liblinear-1.8/blas/Makefile cdbpp-1.0/Makefile tinyxml2/Makefile])
 AC_OUTPUT
 
 

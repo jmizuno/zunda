@@ -76,7 +76,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = zunda$(EXEEXT) zunda-train$(EXEEXT)
+bin_PROGRAMS = zunda$(EXEEXT) zunda-train$(EXEEXT) zunda-conv$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp
@@ -96,6 +96,10 @@ zunda_OBJECTS = $(am_zunda_OBJECTS)
 zunda_DEPENDENCIES =
 zunda_LINK = $(CXXLD) $(zunda_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am_zunda_conv_OBJECTS = xml2cab.$(OBJEXT) modality.$(OBJEXT) \
+	sentence.$(OBJEXT) feature.$(OBJEXT)
+zunda_conv_OBJECTS = $(am_zunda_conv_OBJECTS)
+zunda_conv_DEPENDENCIES =
 am_zunda_train_OBJECTS = zunda_train-modality-learn.$(OBJEXT) \
 	zunda_train-modality.$(OBJEXT) zunda_train-sentence.$(OBJEXT) \
 	zunda_train-feature.$(OBJEXT)
@@ -148,8 +152,10 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(zunda_SOURCES) $(zunda_train_SOURCES)
-DIST_SOURCES = $(zunda_SOURCES) $(zunda_train_SOURCES)
+SOURCES = $(zunda_SOURCES) $(zunda_conv_SOURCES) \
+	$(zunda_train_SOURCES)
+DIST_SOURCES = $(zunda_SOURCES) $(zunda_conv_SOURCES) \
+	$(zunda_train_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -214,7 +220,8 @@ LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
-MODELDIR = @MODELDIR@
+MODELDIR_IPA = @MODELDIR_IPA@
+MODELDIR_JUMAN = @MODELDIR_JUMAN@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -284,7 +291,7 @@ zunda_SOURCES = main.cpp \
 								../liblinear-1.8/linear.h \
 								../cdbpp-1.0/cdbpp.h
 
-zunda_CXXFLAGS = @INCLUDES@ -DMODELDIR=\"${MODELDIR}\" -DDICDIR=\"${DICDIR}\"
+zunda_CXXFLAGS = @INCLUDES@ -DMODELDIR_IPA=\"${MODELDIR_IPA}\" -DMODELDIR_JUMAN=\"${MODELDIR_JUMAN}\" -DDICDIR=\"${DICDIR}\"
 zunda_LDADD = -L../tinyxml2 -ltinyxml2 -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @LIBS@
 zunda_train_SOURCES = modality-learn.cpp \
 											modality.hpp \
@@ -298,8 +305,20 @@ zunda_train_SOURCES = modality-learn.cpp \
 											../liblinear-1.8/linear.h \
 											../cdbpp-1.0/cdbpp.h
 
-zunda_train_CXXFLAGS = @INCLUDES@ -DMODELDIR=\"${MODELDIR}\" -DDICDIR=\"${DICDIR}\"
+zunda_train_CXXFLAGS = @INCLUDES@ -DMODELDIR_IPA=\"${MODELDIR_IPA}\" -DMODELDIR_JUMAN=\"${MODELDIR_JUMAN}\" -DDICDIR=\"${DICDIR}\"
 zunda_train_LDADD = -L../tinyxml2 -ltinyxml2 -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @LIBS@
+zunda_conv_SOURCES = xml2cab.cpp \
+									modality.hpp \
+									modality.cpp \
+									sentence.hpp \
+									sentence.cpp \
+									feature.cpp \
+									util.hpp \
+									cdbmap.hpp \
+									../liblinear-1.8/linear.h \
+									../cdbpp-1.0/cdbpp.h
+
+zunda_conv_LDADD = -L../tinyxml2 -ltinyxml2 -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @LIBS@
 all: all-am
 
 .SUFFIXES:
@@ -381,6 +400,10 @@ zunda$(EXEEXT): $(zunda_OBJECTS) $(zunda_DEPENDENCIES) $(EXTRA_zunda_DEPENDENCIE
 	@rm -f zunda$(EXEEXT)
 	$(AM_V_CXXLD)$(zunda_LINK) $(zunda_OBJECTS) $(zunda_LDADD) $(LIBS)
 
+zunda-conv$(EXEEXT): $(zunda_conv_OBJECTS) $(zunda_conv_DEPENDENCIES) $(EXTRA_zunda_conv_DEPENDENCIES) 
+	@rm -f zunda-conv$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(zunda_conv_OBJECTS) $(zunda_conv_LDADD) $(LIBS)
+
 zunda-train$(EXEEXT): $(zunda_train_OBJECTS) $(zunda_train_DEPENDENCIES) $(EXTRA_zunda_train_DEPENDENCIES) 
 	@rm -f zunda-train$(EXEEXT)
 	$(AM_V_CXXLD)$(zunda_train_LINK) $(zunda_train_OBJECTS) $(zunda_train_LDADD) $(LIBS)
@@ -391,6 +414,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/feature.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/modality.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sentence.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xml2cab.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zunda-feature.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zunda-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zunda-modality.Po@am__quote@

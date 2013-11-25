@@ -155,6 +155,50 @@ namespace nlp {
 
 		return true;
 	}
+
+
+	bool token::parse_juman(std::string line, int tok_id) {
+		std::vector<std::string> l;
+		boost::algorithm::split(l, line, boost::is_any_of(" "));
+		
+		id = tok_id;
+		surf = l[0];
+		read = l[1];
+		orig = l[2];
+
+		pos = l[3];
+		pos_id = boost::lexical_cast<int>(l[4]);
+		/* when pos token */
+		if (boost::regex_match(pos, juman_pos)) {
+			pos1 = l[5];
+			pos1_id = boost::lexical_cast<int>(l[6]);
+			pos2 = l[7];
+			pos2_id = boost::lexical_cast<int>(l[8]);
+			pos3 = l[9];
+			pos3_id = boost::lexical_cast<int>(l[10]);
+		}
+		else {
+			form = l[5];
+			form_id = boost::lexical_cast<int>(l[6]);
+			type = l[7];
+			type_id = boost::lexical_cast<int>(l[8]);
+			form2 = l[9];
+			form2_id = boost::lexical_cast<int>(l[10]);
+		}
+		
+		if (l[11] == "NIL") {
+			sem_info = l[11];
+		}
+		else {
+			std::vector<std::string> sems;
+			for (unsigned int i=11 ; i<l.size() ; ++i) {
+				sems.push_back(l[i]);
+			}
+			join(sem_info, sems, " ");
+		}
+
+		return true;
+	}
 }
 
 
@@ -226,11 +270,82 @@ namespace nlp {
 		return true;
 	}
 	
+	bool sentence::parse_knp(std::string str) {
+		std::vector< std::string > buf;
+		boost::algorithm::split(buf, str, boost::algorithm::is_any_of("\n") );
+		return parse_knp(buf);
+	}
+
+	bool sentence::parse_knp(std::vector< std::string > lines) {
+		boost::smatch m;
+		int tok_cnt = 0;
+		int chk_cnt = 0;
+
+		std::vector< modality > mods;
+
+		BOOST_FOREACH( std::string l, lines) {
+			input_orig += l + "\n";
+
+			if (l.compare(0, 6, "#EVENT") == 0) {
+				modality mod;
+				mod.parse(l);
+				mods.push_back(mod);
+			}
+			else if (l.compare(0, 6, "# S-ID") == 0) {
+			}
+			else if (boost::regex_search(l, m, chk_line_knp)) {
+				chunk chk;
+				std::vector< std::string > v;
+				boost::algorithm::split(v, l, boost::algorithm::is_any_of(" "));
+				chk.id = chk_cnt;
+				chk_cnt++;
+				std::string dst_str = boost::regex_replace(v[1], chk_dst, dst_rep);
+				chk.dst = boost::lexical_cast<int>(dst_str);
+				chk.type = boost::regex_replace(v[1], chk_dst, type_rep);
+				
+				chunks.push_back(chk);
+			}
+			else if (boost::regex_search(l, m, chk_basic_knp)) {
+			}
+			else if (l.compare(0, 3, "EOS") == 0) {
+				break;
+			}
+			else {
+				token tok;
+				tok.parse_juman(l, tok_cnt);
+				t2c[tok.id] = chunks[chunks.size()-1].id;
+				chunks[chunks.size()-1].add_token(tok);
+
+				tok_cnt++;
+			}
+		}
+
+		tid_min = 0;
+		tid_max = tok_cnt-1;
+		cid_min = 0;
+		cid_max = chunks.size()-1;
+		
+		std::vector<chunk>::iterator it_chk;
+		std::vector<token>::iterator it_tok;
+		for (it_chk = chunks.begin() ; it_chk != chunks.end() ; ++it_chk) {
+			for (it_tok = it_chk->tokens.begin() ; it_tok != it_chk->tokens.end() ; ++it_tok) {
+				BOOST_FOREACH (modality mod, mods) {
+					if ( find(mod.tids.begin(), mod.tids.end(), it_tok->id) != mod.tids.end() ) {
+						it_tok->mod = mod;
+						it_tok->has_mod = true;
+						it_chk->has_mod = true;
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+
 	bool sentence::parse_cabocha(std::string str) {
 		std::vector< std::string > buf;
 		boost::algorithm::split(buf, str, boost::algorithm::is_any_of("\n") );
-		parse_cabocha(buf);
-		return true;
+		return parse_cabocha(buf);
 	}
 
 	bool sentence::parse_cabocha(std::vector< std::string > lines) {
@@ -240,6 +355,8 @@ namespace nlp {
 		std::vector< modality > mods;
 
 		BOOST_FOREACH( std::string l, lines ) {
+			input_orig += l + "\n";
+
 			if (l.compare(0, 6, "#EVENT") == 0 ) {
 				modality mod;
 				mod.parse(l);
@@ -257,9 +374,8 @@ namespace nlp {
 				}
 				
 				std::string dst_str = boost::regex_replace(v[2], chk_dst, dst_rep);
-				std::string type_str = boost::regex_replace(v[2], chk_dst, type_rep);
 				chk.dst = boost::lexical_cast<int>(dst_str);
-				chk.type = boost::lexical_cast<std::string>(type_str);
+				chk.type = boost::regex_replace(v[2], chk_dst, type_rep);
 
 				if (v.size() > 3) {
 					boost::algorithm::split(v2, v[3], boost::is_any_of("/"));

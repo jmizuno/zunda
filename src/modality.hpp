@@ -21,33 +21,49 @@ namespace linear {
 #define MODALITY_VERSION 1.0
 #define LABEL_NUM 6
 
-#ifndef MODELDIR
-#  define MODELDIR "model"
+#ifndef MODELDIR_IPA
+#  define MODELDIR_IPA "model_ipa"
+#endif
+#ifndef MODELDIR_JUMAN
+#  define MODELDIR_JUMAN "model_juman"
 #endif
 
 #ifndef DICDIR
 #  define DICDIR "dic"
 #endif
 
+const boost::filesystem::path TMP_DIR("/tmp");
 
 namespace modality {
 	typedef boost::unordered_map< std::string, boost::unordered_map< std::string, double > > t_feat_cat;
 	typedef boost::unordered_map< std::string, double > t_feat;
 
 	enum {
-		raw_text = 0,
-		cabocha_text = 1,
-		chapas_text = 2,
+		RAW = 0,
+		CABOCHA = 1,
+		KNP_DEP = 2,
+		SYNCHA = 3,
+		KNP_PAS = 4,
 	};
 
 	enum {
-		SOURCE = 0,  // $BBVEYI=L@<T(B
-		TENSE = 1,  // $B;~@)(B
-		ASSUMPTIONAL = 2,  // $B2>A[(B
-		TYPE = 3,  // $BBVEY(B
-		AUTHENTICITY = 4,  // $B??56H=CG(B
-		SENTIMENT = 5,  // $BI>2A6K@-(B
+		TF_XML_CAB = 0,
+		TF_XML_KNP = 1,
+		TF_DEP_CAB = 2,
+		TF_DEP_KNP = 3,
+		TF_PAS_SYN = 4,
+		TF_PAS_KNP = 5,
 	};
+
+	enum {
+		SOURCE = 0,  // 態度表明者
+		TENSE = 1,  // 時制
+		ASSUMPTIONAL = 2,  // 仮想
+		TYPE = 3,  // 態度
+		AUTHENTICITY = 4,  // 真偽判断
+		SENTIMENT = 5,  // 評価極性
+	};
+
 
 	enum {
 		DETECT_BY_POS = 0,
@@ -103,13 +119,35 @@ namespace modality {
 			std::string use_feats_str[LABEL_NUM];
 			std::vector<std::string> use_feats[LABEL_NUM];
 			
-			parser(std::string model_dir = MODELDIR, std::string dic_dir = DICDIR) {
+			std::vector<std::string> target_pos;
+			std::string test_pos;
+			
+			parser(int input_layer = RAW, std::string model_dir = MODELDIR_IPA, std::string dic_dir = DICDIR) {
 				analyze_tags.push_back(TYPE);
 				analyze_tags.push_back(TENSE);
 				analyze_tags.push_back(ASSUMPTIONAL);
 				analyze_tags.push_back(AUTHENTICITY);
 				analyze_tags.push_back(SENTIMENT);
 				
+				switch (input_layer) {
+					case RAW:
+					case CABOCHA:
+					case SYNCHA:
+						target_pos.clear();
+						target_pos.push_back("動詞\t自立");
+						target_pos.push_back("形容詞\t自立");
+						target_pos.push_back("名詞\tサ変接続");
+						target_pos.push_back("名詞\t形容動詞語幹");
+						break;
+					case KNP_DEP:
+					case KNP_PAS:
+						target_pos.clear();
+						target_pos.push_back("動詞\t*");
+						target_pos.push_back("形容詞\t*");
+						target_pos.push_back("名詞\tサ変名詞");
+						break;
+				}
+
 				std::string use_feats_common_str = "func_surf,tok,chunk,func_sem";
 				use_feats_str[TENSE] = use_feats_common_str + ",mod_type";
 				use_feats_str[TYPE] = use_feats_common_str + ",fadic_worth";
@@ -164,20 +202,24 @@ namespace modality {
 			std::string id2tag(unsigned int);
 			void set_model_dir(std::string);
 			void set_model_dir(boost::filesystem::path);
+			unsigned int detect_format(std::string);
+			unsigned int detect_format(std::vector<std::string>);
 			bool detect_target(nlp::token);
 
 			bool load_models(boost::filesystem::path *);
 			bool load_models();
-			nlp::sentence analyze(std::string, int, bool);
-			nlp::sentence analyze(nlp::sentence, bool);
-			linear::feature_node* pack_feat_linear(t_feat, bool);
+			nlp::sentence analyze(std::string, int);
+			nlp::sentence analyze(nlp::sentence);
+			std::string analyzeToString(std::string, int);
+			std::string analyzeToString(nlp::sentence);
+			linear::feature_node* pack_feat_linear(t_feat);
 //			bool parse(std::string);
-			void load_xmls(std::vector< std::string >);
-			void load_deppasmods(std::vector< std::string >);
+			void load_xmls(std::vector< std::string >, int);
+			void load_deppasmods(std::vector< std::string >, int);
 			void learn(boost::filesystem::path *, boost::filesystem::path *);
 			void learn();
 
-			nlp::sentence make_tagged_ipasents( std::vector< t_token > );
+			nlp::sentence make_tagged_ipasents( std::vector< t_token >, int );
 
 			std::vector< std::vector< t_token > > parse_OC(std::string);
 			std::vector< std::vector< t_token > > parse_OW_PB_PN(std::string);

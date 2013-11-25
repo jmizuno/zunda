@@ -8,14 +8,14 @@
 
 
 int main(int argc, char *argv[]) {
-	boost::program_options::options_description opt("Usage");
+	boost::program_options::options_description opt("Usage", 200, 100);
 	opt.add_options()
-		("input,i", boost::program_options::value<int>(), "input layer\n 0 - raw text [default]\n 1 - cabocha parsed text\n 2 - chapas parsed text")
-		("target,t", boost::program_options::value<unsigned int>(), "target detection method\n 0 - by part of speech [default]\n 1 - predicate output by PAS (syncha format)\n 2 - by machine learning (has not been implemented)")
+		("input,i", boost::program_options::value<int>(), "input layer\n 0 - raw text layer [default]\n 1 - dependency parsed layer by CaboCha (IPA POS tag)\n 2 - dependency parsed layer by KNP (Juman POS tag)\n 3 - predicate-argument structure analyzed layer by SynCha (IPA POS tag)\n 4 - predicate-argument structure analyzed layer by KNP (Juman POS tag)")
+		("target,t", boost::program_options::value<unsigned int>(), "method of detecting token to be analyzed\n 0 - by part of speech [default]\n 1 - predicate detected by a predicate-argument structure analyzer (only SynCha format is supported)\n 2 - by machine learning (has not been implemented)")
 		("model,m", boost::program_options::value<std::string>(), "model directory (optional)")
 		("dic,d", boost::program_options::value<std::string>(), "dictionary directory (optional)")
 		("help,h", "Show help messages")
-		("version,v", "Show version informaion");
+		("version,v", "Show version information");
 
 	boost::program_options::variables_map argmap;
 	boost::program_options::store(parse_command_line(argc, argv, opt), argmap);
@@ -24,13 +24,28 @@ int main(int argc, char *argv[]) {
 	int input_layer = 0;
 	if (argmap.count("input")) {
 		input_layer = argmap["input"].as<int>();
-		if (input_layer < 0 || input_layer > 2) {
+		if (input_layer < modality::RAW || input_layer > modality::KNP_PAS) {
 			std::cerr << "invalid input layer" << std::endl;
 			exit(-1);
 		}
 	}
 
-	std::string model_dir = MODELDIR;
+	std::string model_dir;
+	switch (input_layer) {
+		case modality::RAW:
+		case modality::CABOCHA:
+		case modality::SYNCHA:
+			model_dir = MODELDIR_IPA;
+			break;
+		case modality::KNP_DEP:
+		case modality::KNP_PAS:
+			model_dir = MODELDIR_JUMAN;
+			break;
+		default:
+			std::cerr << "ERROR: no such input layer" << std::endl;
+			return -1;
+	}
+
 	if (argmap.count("model")) {
 		model_dir = argmap["model"].as<std::string>();
 	}
@@ -50,7 +65,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	modality::parser mod_parser(model_dir, dic_dir);
+	modality::parser mod_parser(input_layer, model_dir, dic_dir);
 
 	if (argmap.count("target")) {
 		mod_parser.target_detection = argmap["target"].as<unsigned int>();
@@ -75,18 +90,15 @@ int main(int argc, char *argv[]) {
 	bool run = false;
 	while( getline(std::cin, buf) ) {
 		switch (input_layer) {
-			case modality::raw_text:
+			case modality::RAW:
 				sent = buf;
 				run = true;
 				break;
-			case modality::cabocha_text:
-				sent += buf + "\n";
-				if (buf.compare(0, 3, "EOS") == 0) {
-					run = true;
-				}
-				break;
-			case modality::chapas_text:
-				sent += buf + "\n";
+			case modality::CABOCHA:
+			case modality::SYNCHA:
+			case modality::KNP_DEP:
+			case modality::KNP_PAS:
+				sent += buf +"\n";
 				if (buf.compare(0, 3, "EOS") == 0) {
 					run = true;
 				}
@@ -97,8 +109,8 @@ int main(int argc, char *argv[]) {
 		}
 		
 		if (run) {
-			nlp::sentence parsed_sent = mod_parser.analyze(sent, input_layer, true);
-			std::cout << parsed_sent.cabocha() << std::endl;
+			std::string parsed_sent = mod_parser.analyzeToString(sent, input_layer);
+			std::cout << parsed_sent << std::endl;
 			sent.clear();
 			run = false;
 		}

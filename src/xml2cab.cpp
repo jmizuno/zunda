@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <boost/program_options.hpp>
@@ -10,7 +11,7 @@
 
 int main(int argc, char *argv[]) {
 
-	boost::program_options::options_description opt("Usage");
+	boost::program_options::options_description opt("Usage", 200, 100);
 	opt.add_options()
 		("file,f", boost::program_options::value<std::string>(), "input xml file (required)")
 		("outdir,o", boost::program_options::value<std::string>(), "output directory (optional): default same as input xml file")
@@ -21,6 +22,16 @@ int main(int argc, char *argv[]) {
 	boost::program_options::variables_map argmap;
 	boost::program_options::store(parse_command_line(argc, argv, opt), argmap);
 	boost::program_options::notify(argmap);
+	
+	if (argmap.count("help")) {
+		std::cout << opt << std::endl;
+		return 1;
+	}
+
+	if (argmap.count("version")) {
+		std::cout << MODALITY_VERSION << std::endl;
+		return 1;
+	}
 
 	std::string xml;
 	if (argmap.count("file")) {
@@ -55,7 +66,7 @@ int main(int argc, char *argv[]) {
 
 	int cnt = 0;
 	BOOST_FOREACH ( std::vector< modality::t_token > sent, sents ) {
-		nlp::sentence mod_ipa_sent = mod_parser.make_tagged_ipasents( sent );
+		nlp::sentence mod_ipa_sent = mod_parser.make_tagged_ipasents( sent, modality::TF_DEP_CAB );
 
 		std::stringstream ss;
 		ss << (outdir_path / xml_path.stem()).string() << "_" << std::setw(3) << std::setfill('0') << cnt << ".depmod";
