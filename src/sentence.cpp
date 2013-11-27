@@ -282,9 +282,10 @@ namespace nlp {
 		int chk_cnt = 0;
 
 		std::vector< modality > mods;
+		std::vector< std::string > input_origs;
 
 		BOOST_FOREACH( std::string l, lines) {
-			input_orig += l + "\n";
+			input_origs.push_back(l);
 
 			if (l.compare(0, 6, "#EVENT") == 0) {
 				modality mod;
@@ -320,6 +321,9 @@ namespace nlp {
 			}
 		}
 
+		input_orig.clear();
+		join(input_orig, input_origs, "\n");
+
 		tid_min = 0;
 		tid_max = tok_cnt-1;
 		cid_min = 0;
@@ -353,9 +357,10 @@ namespace nlp {
 		int tok_cnt = 0;
 
 		std::vector< modality > mods;
+		std::vector< std::string > input_origs;
 
 		BOOST_FOREACH( std::string l, lines ) {
-			input_orig += l + "\n";
+			input_origs.push_back(l);
 
 			if (l.compare(0, 6, "#EVENT") == 0 ) {
 				modality mod;
@@ -414,6 +419,9 @@ namespace nlp {
 				tok_cnt++;
 			}
 		}
+		
+		input_orig.clear();
+		join(input_orig, input_origs, "\n");
 
 		tid_min = 0;
 		tid_max = tok_cnt-1;
