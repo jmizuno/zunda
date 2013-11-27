@@ -1,8 +1,10 @@
 Zunda: Japanese Enhanced Modality Analyzer
 Version 1.0
 
+
 * INTRODUCTION
-Zunda is an enhanced modality analyzer for Japanese.
+Zunda is an extended modality analyzer for Japanese.
+https://code.google.com/p/zunda/
 
 
 * COPYRIGHT AND LICENSING INFORMATION
@@ -11,95 +13,28 @@ This program is distributed under the modified BSD license. Refer to
 COPYING file for the precise description of the license.
 
 
-
-
-Portions of this software are based on CDB++ (cdbpp-1.0).
-
-The MIT License
-
+Portions of this software are based on CDB++ (cdbpp-1.1).
 Copyright (c) 2008,2009, Naoaki Okazaki (http://www.chokkan.org/software/cdbpp/index.html).
 All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of the authors nor the names of its contributors may
-      be used to endorse or promote products derived from this software
-      without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
-OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+Refer to cdbpp-1.1/COPYING file for the precise description of the license.
 
 
 Portions of this software are based on liblinear (liblinear-1.8).
-
 Copyright (c) 2007-2011 The LIBLINEAR Project (http://www.csie.ntu.edu.tw/~cjlin/liblinear/).
 All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-
-1. Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
-
-3. Neither name of copyright holders nor the names of its contributors
-may be used to endorse or promote products derived from this software
-without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR
-CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+Refer to liblinear-1.8/COPYING file for the precise description of the license.
 
 
 Portions of this software are based on TinyXML-2 (tinyxml2).
-
 Copyright (c) 2000-2006 Lee Thomason (www.grinninglizard.com)
 All rights reserved.
+Refer to tinexml2/COPYING file for the precise description of the license.
 
-TinyXML-2 is released under the zlib license:
 
-This software is provided 'as-is', without any express or implied 
-warranty. In no event will the authors be held liable for any 
-damages arising from the use of this software.
-
-Permission is granted to anyone to use this software for any 
-purpose, including commercial applications, and to alter it and 
-redistribute it freely, subject to the following restrictions:
-
-1. The origin of this software must not be misrepresented; you must 
-not claim that you wrote the original software. If you use this 
-software in a product, an acknowledgment in the product documentation 
-would be appreciated but is not required.
-2. Altered source versions must be plainly marked as such, and 
-must not be misrepresented as being the original software.
-3. This notice may not be removed or altered from any source 
-distribution.
-
+* References
+水野淳太, 成田和弥, 乾健太郎, 大竹清敬, 鳥澤健太郎. 拡張モダリティ解析器の試作と課題分析. ALAGIN & NLP若手の会 合同シンポジウム, September 2013.
+松吉俊, 佐尾ちとせ, 乾健太郎 (東北大/NAIST), 松本裕治. 拡張モダリティタグ付与コーパスの設計と構築. 言語処理学会第17回年次大会論文集, pp.147-150, March 10, 2011.
+松吉俊, 佐尾ちとせ, 乾健太郎, 松本裕治. 拡張モダリティタグ付与コーパス作成の作業基準. February 4, 2011. http://cl.naist.jp/nltools/modality/manual.pdf
+松吉俊, 江口萌, 佐尾ちとせ, 村上浩司, 乾健太郎, 松本裕治. テキスト情報分析のための判断情報アノテーション. 電子情報通信学会論文誌, Vol.J93-D, No.6, pp.705-713, June 2010.
+Suguru Matsuyoshi, Megumi Eguchi, Chitose Sao, Koji Murakami, Kentaro Inui and Yuji Matsumoto. Annotating event mentions in text with modality, focus, and source information. In Proceedings of the Seventh International Conference on Language Resources and Evaluation (LREC), pp.1456-1463, May 2010.
+江口萌, 松吉俊, 佐尾ちとせ, 乾健太郎, 松本裕治．モダリティ、真偽情報、価値情報を統合した拡張モダリティ解析．言語処理学会第16回年次大会論文集, pp.852-855, March 2010.
