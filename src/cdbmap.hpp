@@ -7,7 +7,7 @@
 #include <sstream>
 #include <boost/unordered_map.hpp>
 #include <boost/lexical_cast.hpp>
-#include "../cdbpp-1.0/cdbpp.h"
+#include "../cdbpp-1.1/include/cdbpp.h"
 
 template <typename K, typename V>
 class CdbMap {

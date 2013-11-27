@@ -9,7 +9,7 @@
 #include <sstream>
 
 #include "util.hpp"
-#include "../cdbpp-1.0/cdbpp.h"
+#include "../cdbpp-1.1/include/cdbpp.h"
 
 
 int main( int argc, char *argv[] ) {

@@ -5669,7 +5669,7 @@ MODELDIR_JUMAN=${datarootdir}/${PACKAGE}/model_juman
 
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile dic/Makefile model_ipa/Makefile model_juman/Makefile liblinear-1.8/Makefile liblinear-1.8/blas/Makefile cdbpp-1.0/Makefile tinyxml2/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile dic/Makefile model_ipa/Makefile model_juman/Makefile liblinear-1.8/Makefile liblinear-1.8/blas/Makefile cdbpp-1.1/Makefile cdbpp-1.1/include/Makefile tinyxml2/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6409,7 +6409,8 @@ do
     "model_juman/Makefile") CONFIG_FILES="$CONFIG_FILES model_juman/Makefile" ;;
     "liblinear-1.8/Makefile") CONFIG_FILES="$CONFIG_FILES liblinear-1.8/Makefile" ;;
     "liblinear-1.8/blas/Makefile") CONFIG_FILES="$CONFIG_FILES liblinear-1.8/blas/Makefile" ;;
-    "cdbpp-1.0/Makefile") CONFIG_FILES="$CONFIG_FILES cdbpp-1.0/Makefile" ;;
+    "cdbpp-1.1/Makefile") CONFIG_FILES="$CONFIG_FILES cdbpp-1.1/Makefile" ;;
+    "cdbpp-1.1/include/Makefile") CONFIG_FILES="$CONFIG_FILES cdbpp-1.1/include/Makefile" ;;
     "tinyxml2/Makefile") CONFIG_FILES="$CONFIG_FILES tinyxml2/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;

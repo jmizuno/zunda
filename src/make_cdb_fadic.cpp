@@ -8,7 +8,7 @@
 #include <cabocha.h>
 
 #include "util.hpp"
-#include "../cdbpp-1.0/cdbpp.h"
+#include "../cdbpp-1.1/include/cdbpp.h"
 
 
 class Ent {
