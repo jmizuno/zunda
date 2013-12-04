@@ -8,7 +8,7 @@
 
 
 int main(int argc, char *argv[]) {
-	boost::program_options::options_description opt("Usage", 200, 100);
+	boost::program_options::options_description opt("Usage", 200);
 	opt.add_options()
 		("input,i", boost::program_options::value<int>(), "input layer\n 0 - raw text layer [default]\n 1 - dependency parsed layer by CaboCha (IPA POS tag)\n 2 - dependency parsed layer by KNP (Juman POS tag)\n 3 - predicate-argument structure analyzed layer by SynCha (IPA POS tag)\n 4 - predicate-argument structure analyzed layer by KNP (Juman POS tag)")
 		("target,t", boost::program_options::value<unsigned int>(), "method of detecting token to be analyzed\n 0 - by part of speech [default]\n 1 - predicate detected by a predicate-argument structure analyzer (only SynCha format is supported)\n 2 - by machine learning (has not been implemented)")

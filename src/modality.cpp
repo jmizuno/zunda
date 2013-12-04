@@ -112,10 +112,8 @@ namespace modality {
 
 
 	bool parser::load_models() {
-		boost::system::error_code error;
 		BOOST_FOREACH (unsigned int i, analyze_tags) {
-			const bool res = boost::filesystem::exists(model_path[i], error);
-			if (!res || error) {
+			if (!boost::filesystem::exists(model_path[i].string())) {
 				std::cerr << "ERROR: " << model_path[i].string() << " not found" << std::endl;
 				return false;
 			}
@@ -361,7 +359,11 @@ namespace modality {
 		BOOST_FOREACH ( std::string deppasmod, deppasmods ) {
 			std::cout << deppasmod << std::endl;
 			boost::filesystem::path p(deppasmod);
+#if BOOST_VERSION >= 104600
 			std::string sent_id = p.stem().string();
+#elif BOOST_VERSION >= 103600
+			std::string sent_id = p.stem();
+#endif
 
 			nlp::sentence sent;
 			sent.sent_id = sent_id;
@@ -398,7 +400,11 @@ namespace modality {
 		BOOST_FOREACH ( std::string xml_path, xmls ) {
 			std::cout << xml_path << std::endl;
 			boost::filesystem::path p(xml_path);
+#if BOOST_VERSION >= 104600
 			std::string doc_id = p.stem().string();
+#elif BOOST_VERSION >= 103600
+			std::string doc_id = p.stem();
+#endif
 			
 			std::vector< std::vector< t_token > > oc_sents = parse_OC(xml_path);
 			std::vector< nlp::sentence > parsed_sents;
@@ -837,11 +843,7 @@ namespace modality {
 
 	template <typename K, typename V>
 	inline void open_cdb(boost::filesystem::path cdb_path, CdbMap< K, V > *cdbmap) {
-		boost::system::error_code error;
-		bool res = boost::filesystem::exists(cdb_path, error);
-		if (!res || error) {
-		}
-		else {
+		if (boost::filesystem::exists(cdb_path.string())) {
 			cdbmap->open_cdb(cdb_path.string().c_str());
 		}
 	}

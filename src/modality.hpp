@@ -2,6 +2,7 @@
 #define __MODALITY_HPP__
 
 #include <iostream>
+#include <boost/version.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>

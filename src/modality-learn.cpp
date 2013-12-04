@@ -9,19 +9,14 @@
 
 
 bool mkdir(boost::filesystem::path dir_path) {
-	boost::system::error_code error;
-	const bool result = boost::filesystem::exists(dir_path, error);
-	if (!result) {
+	if (!boost::filesystem::exists(dir_path.string())) {
+		std::cerr << "ERROR" << std::endl;
+		return false;
 		std::cerr << "mkdir " << dir_path.string() << std::endl;
-		const bool res = boost::filesystem::create_directories(dir_path, error);
-		if (!res || error) {
+		if (!boost::filesystem::create_directories(dir_path)) {
 			std::cerr << "ERROR: mkdir " << dir_path.string() << " failed" << std::endl;
 			return false;
 		}
-	}
-	else if (error) {
-		std::cerr << "ERROR" << std::endl;
-		return false;
 	}
 	return true;
 }
@@ -31,7 +26,7 @@ int main(int argc, char *argv[]) {
 
 	unsigned int split_num = 5;
 
-	boost::program_options::options_description opt("Usage", 200, 100);
+	boost::program_options::options_description opt("Usage", 200);
 	opt.add_options()
 		("path,p", boost::program_options::value< std::vector<std::string> >()->multitoken(), "directory path containing learning data (required)")
 		("input,i", boost::program_options::value<int>(), "input format\n 0 - BCCWJ-style XML tagged format re-parsed by CaboCha (IPA POS tag) [default]\n 1 - BCCWJ-style XML tagged format re-parsed by KNP (Juman POS tag)\n 2 - depndency parsed format by CaboCha (IPA POS tag)\n 3 - dependency parsed format by KNP (Juman POS tag)\n 4 - predicate-argument structure analyzed format by SynCha (IPA POS tag)\n 5 - predicate-argument structure analyzed format by KNP (Juman POS tag)")
@@ -243,7 +238,7 @@ int main(int argc, char *argv[]) {
 
 			std::ofstream *os = new std::ofstream[LABEL_NUM];
 			BOOST_FOREACH (unsigned int i, mod_parser.analyze_tags) {
-				os[i].open(result_path[i].c_str());
+				os[i].open(result_path[i].string().c_str());
 			}
 
 			std::vector< nlp::sentence > test_data = split_data[step];

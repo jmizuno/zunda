@@ -11,7 +11,7 @@
 
 int main(int argc, char *argv[]) {
 
-	boost::program_options::options_description opt("Usage", 200, 100);
+	boost::program_options::options_description opt("Usage", 200);
 	opt.add_options()
 		("file,f", boost::program_options::value<std::string>(), "input xml file (required)")
 		("outdir,o", boost::program_options::value<std::string>(), "output directory (optional): default same as input xml file")
