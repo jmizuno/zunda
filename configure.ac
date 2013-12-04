@@ -38,46 +38,45 @@ AC_CHECK_HEADERS(iomanip, ,[AC_MSG_ERROR(iomanip not found)])
 AC_ARG_WITH(
 						boost,
 						[AC_HELP_STRING([--with-boost=DIR],[boost directory])],
-						[INCLUDES=${withval}/include ${INCLUDES}; LDFLAGS=${withval}/lib ${LDFLAGS}]
+						[AM_CPPFLAGS="-I${withval}/include ${AM_CPPFLAGS}"; AM_LDFLAGS="-L${withval}/lib ${AM_LDFLAGS}"]
 						)
-AC_CHECK_HEADERS(boost/algorithm/string.hpp,,[AC_MSG_ERROR(boost/algorithm/string.hpp not found)])
-AC_CHECK_HEADERS(boost/date_time/posix_time/posix_time.hpp,   ,[AC_MSG_ERROR(boost/date_time/posix_time/posix_time.hpp not found)])
-AC_CHECK_HEADERS(boost/filesystem.hpp,      ,[AC_MSG_ERROR(boost/filesystem.hpp not found)])
-AC_CHECK_HEADERS(boost/foreach.hpp,         ,[AC_MSG_ERROR(boost/foreach.hpp not found)])
-AC_CHECK_HEADERS(boost/format.hpp,          ,[AC_MSG_ERROR(boost/format.hpp not found)])
-AC_CHECK_HEADERS(boost/lexical_cast.hpp,    ,[AC_MSG_ERROR(boost/lexical_cast.hpp not found)])
-AC_CHECK_HEADERS(boost/program_options.hpp, ,[AC_MSG_ERROR(boost/program_options.hpp not found)])
-AC_CHECK_HEADERS(boost/regex.hpp,           ,[AC_MSG_ERROR(boost/regex.hpp not found)])
-AC_CHECK_HEADERS(boost/unordered_map.hpp,   ,[AC_MSG_ERROR(boost/unordered_map.hpp not found)])
-AC_CHECK_LIB(boost_regex, main,          ,[AC_MSG_ERROR(boost_regex library not found)])
-AC_CHECK_LIB(boost_program_options, main,,[AC_MSG_ERROR(boost_program_options library not found)])
-AC_CHECK_LIB(boost_filesystem, main,     ,[AC_MSG_ERROR(boost_filesystem library not found)])
-AC_CHECK_LIB(boost_system, main,         ,[AC_MSG_ERROR(boost_system library not found)])
+AC_CHECK_HEADERS([boost/algorithm/string.hpp],,[AC_MSG_ERROR(boost/algorithm/string.hpp not found)])
+AC_CHECK_HEADERS([boost/date_time/posix_time/posix_time.hpp],   ,[AC_MSG_ERROR(boost/date_time/posix_time/posix_time.hpp not found)])
+AC_CHECK_HEADERS([boost/filesystem.hpp],      ,[AC_MSG_ERROR(boost/filesystem.hpp not found)])
+AC_CHECK_HEADERS([boost/foreach.hpp],         ,[AC_MSG_ERROR(boost/foreach.hpp not found)])
+AC_CHECK_HEADERS([boost/format.hpp],          ,[AC_MSG_ERROR(boost/format.hpp not found)])
+AC_CHECK_HEADERS([boost/lexical_cast.hpp],    ,[AC_MSG_ERROR(boost/lexical_cast.hpp not found)])
+AC_CHECK_HEADERS([boost/program_options.hpp], ,[AC_MSG_ERROR(boost/program_options.hpp not found)])
+AC_CHECK_HEADERS([boost/regex.hpp],           ,[AC_MSG_ERROR(boost/regex.hpp not found)])
+AC_CHECK_HEADERS([boost/unordered_map.hpp],   ,[AC_MSG_ERROR(boost/unordered_map.hpp not found)])
+AC_CHECK_LIB([boost_regex], main,          ,[AC_MSG_ERROR(boost_regex library not found)])
+AC_CHECK_LIB([boost_program_options], main,,[AC_MSG_ERROR(boost_program_options library not found)])
+AC_CHECK_LIB([boost_filesystem], main,     ,[AC_MSG_ERROR(boost_filesystem library not found)])
+AC_CHECK_LIB([boost_system], main,         ,[AC_MSG_ERROR(boost_system library not found)])
 
 AC_ARG_WITH(
 						cabocha,	
 						[AC_HELP_STRING([--with-cabocha=DIR], [cabocha directory])],
-						[INCLUDES=${withval}/include ${INCLUDES}; LDFALGS=${LDFALGS}]
+						[AM_CPPFLAGS="-I${withval}/include ${AM_CPPFLAGS}"; AM_LDFLAGS="-L${withval}/lib ${AM_LDFLAGS}"]
 						)
-AC_CHECK_HEADERS(cabocha.h,   ,[AC_MSG_ERROR(cabocha.h not found)])
-AC_CHECK_LIB(cabocha, main,   ,[AC_MSG_ERROR(cabocha library not found)])
+CPPFLAGS=${AM_CPPFLAGS}
+LDFLAGS=${AM_LDFLAGS}
+AC_CHECK_HEADER([cabocha.h], [break]  ,[AC_MSG_ERROR(cabocha.h not found)])
+AC_CHECK_LIB([cabocha], main,   ,[AC_MSG_ERROR(cabocha library not found)])
 
 AC_ARG_ENABLE(
 							[debug],
 							AC_HELP_STRING([--enable-debug], [debug mode (default is no)]),
-							[ CXXFLAGS="-D_MODEBUG -Werror -O0"; LDFLAGS="-fno-inline -g -pg ${LDFLAGS}";],
+							[ AM_CXXFLAGS="-D_MODEBUG -Werror -O0 -fno-inline -g -pg ${AM_LDFLAGS} ${AM_CXXFLAGS}"],
 							)
 
-AC_SUBST(INCLUDES)
-AC_SUBST(LDFALGS)
-
 DICDIR=${datarootdir}/${PACKAGE}/dic
-AC_SUBST(DICDIR)
-
 MODELDIR_IPA=${datarootdir}/${PACKAGE}/model_ipa
 MODELDIR_JUMAN=${datarootdir}/${PACKAGE}/model_juman
-AC_SUBST(MODELDIR_IPA)
-AC_SUBST(MODELDIR_JUMAN)
+AM_CXXFLAGS="-DMODELDIR_IPA=\\\"${MODELDIR_IPA}\\\" -DMODELDIR_JUMAN=\\\"${MODELDIR_JUMAN}\\\" -DDICDIR=\\\"${DICDIR}\\\" ${AM_CXXFLAGS}"
+AC_SUBST(AM_CPPFLAGS)
+AC_SUBST(AM_LDFLAGS)
+AC_SUBST(AM_CXXFLAGS)
 
 AC_CONFIG_FILES([Makefile src/Makefile dic/Makefile model_ipa/Makefile model_juman/Makefile liblinear-1.8/Makefile liblinear-1.8/blas/Makefile cdbpp-1.1/Makefile cdbpp-1.1/include/Makefile tinyxml2/Makefile])
 AC_OUTPUT

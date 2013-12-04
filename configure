@@ -625,11 +625,9 @@ ac_includes_default="\
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
-MODELDIR_JUMAN
-MODELDIR_IPA
-DICDIR
-LDFALGS
-INCLUDES
+AM_CXXFLAGS
+AM_LDFLAGS
+AM_CPPFLAGS
 CXXCPP
 LIBOBJS
 EGREP
@@ -5294,7 +5292,7 @@ done
 
 # Check whether --with-boost was given.
 if test "${with_boost+set}" = set; then :
-  withval=$with_boost; INCLUDES=${withval}/include ${INCLUDES}; LDFLAGS=${withval}/lib ${LDFLAGS}
+  withval=$with_boost; AM_CPPFLAGS="-I${withval}/include ${AM_CPPFLAGS}"; AM_LDFLAGS="-L${withval}/lib ${AM_LDFLAGS}"
 
 fi
 
@@ -5592,23 +5590,19 @@ fi
 
 # Check whether --with-cabocha was given.
 if test "${with_cabocha+set}" = set; then :
-  withval=$with_cabocha; INCLUDES=${withval}/include ${INCLUDES}; LDFALGS=${LDFALGS}
+  withval=$with_cabocha; AM_CPPFLAGS="-I${withval}/include ${AM_CPPFLAGS}"; AM_LDFLAGS="-L${withval}/lib ${AM_LDFLAGS}"
 
 fi
 
-for ac_header in cabocha.h
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "cabocha.h" "ac_cv_header_cabocha_h" "$ac_includes_default"
+CPPFLAGS=${AM_CPPFLAGS}
+LDFLAGS=${AM_LDFLAGS}
+ac_fn_cxx_check_header_mongrel "$LINENO" "cabocha.h" "ac_cv_header_cabocha_h" "$ac_includes_default"
 if test "x$ac_cv_header_cabocha_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_CABOCHA_H 1
-_ACEOF
-
+  break
 else
   as_fn_error $? "cabocha.h not found" "$LINENO" 5
 fi
 
-done
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lcabocha" >&5
 $as_echo_n "checking for main in -lcabocha... " >&6; }
@@ -5654,18 +5648,15 @@ fi
 
 # Check whether --enable-debug was given.
 if test "${enable_debug+set}" = set; then :
-  enableval=$enable_debug;  CXXFLAGS="-D_MODEBUG -Werror -O0"; LDFLAGS="-fno-inline -g -pg ${LDFLAGS}";
+  enableval=$enable_debug;  AM_CXXFLAGS="-D_MODEBUG -Werror -O0 -fno-inline -g -pg ${AM_LDFLAGS} ${AM_CXXFLAGS}"
 fi
 
 
-
-
-
 DICDIR=${datarootdir}/${PACKAGE}/dic
-
-
 MODELDIR_IPA=${datarootdir}/${PACKAGE}/model_ipa
 MODELDIR_JUMAN=${datarootdir}/${PACKAGE}/model_juman
+AM_CXXFLAGS="-DMODELDIR_IPA=\\\"${MODELDIR_IPA}\\\" -DMODELDIR_JUMAN=\\\"${MODELDIR_JUMAN}\\\" -DDICDIR=\\\"${DICDIR}\\\" ${AM_CXXFLAGS}"
+
 
 
 

@@ -28,9 +28,6 @@
 /* Define to 1 if you have the <boost/unordered_map.hpp> header file. */
 #undef HAVE_BOOST_UNORDERED_MAP_HPP
 
-/* Define to 1 if you have the <cabocha.h> header file. */
-#undef HAVE_CABOCHA_H
-
 /* Define to 1 if you have the <cstdlib> header file. */
 #undef HAVE_CSTDLIB
 
