@@ -1,33 +1,5 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Define to 1 if you have the <boost/algorithm/string.hpp> header file. */
-#undef HAVE_BOOST_ALGORITHM_STRING_HPP
-
-/* Define to 1 if you have the <boost/date_time/posix_time/posix_time.hpp>
-   header file. */
-#undef HAVE_BOOST_DATE_TIME_POSIX_TIME_POSIX_TIME_HPP
-
-/* Define to 1 if you have the <boost/filesystem.hpp> header file. */
-#undef HAVE_BOOST_FILESYSTEM_HPP
-
-/* Define to 1 if you have the <boost/foreach.hpp> header file. */
-#undef HAVE_BOOST_FOREACH_HPP
-
-/* Define to 1 if you have the <boost/format.hpp> header file. */
-#undef HAVE_BOOST_FORMAT_HPP
-
-/* Define to 1 if you have the <boost/lexical_cast.hpp> header file. */
-#undef HAVE_BOOST_LEXICAL_CAST_HPP
-
-/* Define to 1 if you have the <boost/program_options.hpp> header file. */
-#undef HAVE_BOOST_PROGRAM_OPTIONS_HPP
-
-/* Define to 1 if you have the <boost/regex.hpp> header file. */
-#undef HAVE_BOOST_REGEX_HPP
-
-/* Define to 1 if you have the <boost/unordered_map.hpp> header file. */
-#undef HAVE_BOOST_UNORDERED_MAP_HPP
-
 /* Define to 1 if you have the <cstdlib> header file. */
 #undef HAVE_CSTDLIB
 
@@ -42,20 +14,6 @@
 
 /* Define to 1 if you have the <iostream> header file. */
 #undef HAVE_IOSTREAM
-
-/* Define to 1 if you have the `boost_filesystem' library
-   (-lboost_filesystem). */
-#undef HAVE_LIBBOOST_FILESYSTEM
-
-/* Define to 1 if you have the `boost_program_options' library
-   (-lboost_program_options). */
-#undef HAVE_LIBBOOST_PROGRAM_OPTIONS
-
-/* Define to 1 if you have the `boost_regex' library (-lboost_regex). */
-#undef HAVE_LIBBOOST_REGEX
-
-/* Define to 1 if you have the `boost_system' library (-lboost_system). */
-#undef HAVE_LIBBOOST_SYSTEM
 
 /* Define to 1 if you have the `cabocha' library (-lcabocha). */
 #undef HAVE_LIBCABOCHA

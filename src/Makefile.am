@@ -10,7 +10,7 @@ zunda_SOURCES = main.cpp \
 								cdbmap.hpp \
 								../liblinear-1.8/linear.h \
 								../cdbpp-1.1/include/cdbpp.h
-zunda_LDADD = -L../tinyxml2 -ltinyxml2 -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @AM_LDFLAGS@ -lcabocha
+zunda_LDADD = -L../tinyxml2 -ltinyxml2 -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @AM_LDFLAGS@ @BOOST_LIBS@
 
 zunda_train_SOURCES = modality-learn.cpp \
 											modality.hpp \
@@ -23,7 +23,7 @@ zunda_train_SOURCES = modality-learn.cpp \
 											cdbmap.hpp \
 											../liblinear-1.8/linear.h \
 											../cdbpp-1.1/include/cdbpp.h
-zunda_train_LDADD = -L../tinyxml2 -ltinyxml2 -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @AM_LDFLAGS@ -lcabocha
+zunda_train_LDADD = -L../tinyxml2 -ltinyxml2 -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @AM_LDFLAGS@ @BOOST_LIBS@
 
 zunda_conv_SOURCES = xml2cab.cpp \
 										 modality.hpp \
@@ -35,5 +35,5 @@ zunda_conv_SOURCES = xml2cab.cpp \
 										 cdbmap.hpp \
 										 ../liblinear-1.8/linear.h \
 										 ../cdbpp-1.1/include/cdbpp.h
-zunda_conv_LDADD = -L../tinyxml2 -ltinyxml2 -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @AM_LDFLAGS@ -lcabocha
+zunda_conv_LDADD = -L../tinyxml2 -ltinyxml2 -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @AM_LDFLAGS@ @BOOST_LIBS@
 

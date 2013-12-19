@@ -628,6 +628,7 @@ LTLIBOBJS
 AM_CXXFLAGS
 AM_LDFLAGS
 AM_CPPFLAGS
+BOOST_LIBS
 CXXCPP
 LIBOBJS
 EGREP
@@ -727,7 +728,8 @@ ac_user_opts='
 enable_option_checking
 enable_silent_rules
 enable_dependency_tracking
-with_boost
+with_boost_include
+with_boost_lib
 with_cabocha
 enable_debug
 '
@@ -1369,7 +1371,9 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-boost=DIR        boost directory
+  --with-boost-include=DIR
+                          boost include directory
+  --with-boost-lib=DIR    boost library directory
   --with-cabocha=DIR      cabocha directory
 
 Some influential environment variables:
@@ -5290,302 +5294,41 @@ done
 
 
 
-# Check whether --with-boost was given.
-if test "${with_boost+set}" = set; then :
-  withval=$with_boost; AM_CPPFLAGS="-I${withval}/include ${AM_CPPFLAGS}"; AM_LDFLAGS="-L${withval}/lib ${AM_LDFLAGS}"
+# Check whether --with-boost-include was given.
+if test "${with_boost_include+set}" = set; then :
+  withval=$with_boost_include; AM_CPPFLAGS="-I${withval} ${AM_CPPFLAGS}"
 
 fi
 
-for ac_header in boost/algorithm/string.hpp
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/algorithm/string.hpp" "ac_cv_header_boost_algorithm_string_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_algorithm_string_hpp" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BOOST_ALGORITHM_STRING_HPP 1
-_ACEOF
 
-else
-  as_fn_error $? "boost/algorithm/string.hpp not found" "$LINENO" 5
+# Check whether --with-boost-lib was given.
+if test "${with_boost_lib+set}" = set; then :
+  withval=$with_boost_lib; AM_LDFLAGS="-L${withval} ${AM_LDFLAGS}"
+
 fi
 
-done
+BOOST_LIBS="-lboost_system -lboost_filesystem -lboost_program_options -lboost_regex"
 
-for ac_header in boost/date_time/posix_time/posix_time.hpp
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/date_time/posix_time/posix_time.hpp" "ac_cv_header_boost_date_time_posix_time_posix_time_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_date_time_posix_time_posix_time_hpp" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BOOST_DATE_TIME_POSIX_TIME_POSIX_TIME_HPP 1
-_ACEOF
-
-else
-  as_fn_error $? "boost/date_time/posix_time/posix_time.hpp not found" "$LINENO" 5
-fi
-
-done
-
-for ac_header in boost/filesystem.hpp
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/filesystem.hpp" "ac_cv_header_boost_filesystem_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_filesystem_hpp" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BOOST_FILESYSTEM_HPP 1
-_ACEOF
-
-else
-  as_fn_error $? "boost/filesystem.hpp not found" "$LINENO" 5
-fi
-
-done
-
-for ac_header in boost/foreach.hpp
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/foreach.hpp" "ac_cv_header_boost_foreach_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_foreach_hpp" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BOOST_FOREACH_HPP 1
-_ACEOF
-
-else
-  as_fn_error $? "boost/foreach.hpp not found" "$LINENO" 5
-fi
-
-done
-
-for ac_header in boost/format.hpp
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/format.hpp" "ac_cv_header_boost_format_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_format_hpp" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BOOST_FORMAT_HPP 1
-_ACEOF
-
-else
-  as_fn_error $? "boost/format.hpp not found" "$LINENO" 5
-fi
-
-done
-
-for ac_header in boost/lexical_cast.hpp
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/lexical_cast.hpp" "ac_cv_header_boost_lexical_cast_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_lexical_cast_hpp" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BOOST_LEXICAL_CAST_HPP 1
-_ACEOF
-
-else
-  as_fn_error $? "boost/lexical_cast.hpp not found" "$LINENO" 5
-fi
-
-done
-
-for ac_header in boost/program_options.hpp
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/program_options.hpp" "ac_cv_header_boost_program_options_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_program_options_hpp" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BOOST_PROGRAM_OPTIONS_HPP 1
-_ACEOF
-
-else
-  as_fn_error $? "boost/program_options.hpp not found" "$LINENO" 5
-fi
-
-done
-
-for ac_header in boost/regex.hpp
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/regex.hpp" "ac_cv_header_boost_regex_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_regex_hpp" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BOOST_REGEX_HPP 1
-_ACEOF
-
-else
-  as_fn_error $? "boost/regex.hpp not found" "$LINENO" 5
-fi
-
-done
-
-for ac_header in boost/unordered_map.hpp
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "boost/unordered_map.hpp" "ac_cv_header_boost_unordered_map_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_boost_unordered_map_hpp" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BOOST_UNORDERED_MAP_HPP 1
-_ACEOF
-
-else
-  as_fn_error $? "boost/unordered_map.hpp not found" "$LINENO" 5
-fi
-
-done
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lboost_regex" >&5
-$as_echo_n "checking for main in -lboost_regex... " >&6; }
-if ${ac_cv_lib_boost_regex_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lboost_regex  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"; then :
-  ac_cv_lib_boost_regex_main=yes
-else
-  ac_cv_lib_boost_regex_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_boost_regex_main" >&5
-$as_echo "$ac_cv_lib_boost_regex_main" >&6; }
-if test "x$ac_cv_lib_boost_regex_main" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBBOOST_REGEX 1
-_ACEOF
-
-  LIBS="-lboost_regex $LIBS"
-
-else
-  as_fn_error $? "boost_regex library not found" "$LINENO" 5
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lboost_program_options" >&5
-$as_echo_n "checking for main in -lboost_program_options... " >&6; }
-if ${ac_cv_lib_boost_program_options_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lboost_program_options  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"; then :
-  ac_cv_lib_boost_program_options_main=yes
-else
-  ac_cv_lib_boost_program_options_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_boost_program_options_main" >&5
-$as_echo "$ac_cv_lib_boost_program_options_main" >&6; }
-if test "x$ac_cv_lib_boost_program_options_main" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBBOOST_PROGRAM_OPTIONS 1
-_ACEOF
-
-  LIBS="-lboost_program_options $LIBS"
-
-else
-  as_fn_error $? "boost_program_options library not found" "$LINENO" 5
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lboost_filesystem" >&5
-$as_echo_n "checking for main in -lboost_filesystem... " >&6; }
-if ${ac_cv_lib_boost_filesystem_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lboost_filesystem  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"; then :
-  ac_cv_lib_boost_filesystem_main=yes
-else
-  ac_cv_lib_boost_filesystem_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_boost_filesystem_main" >&5
-$as_echo "$ac_cv_lib_boost_filesystem_main" >&6; }
-if test "x$ac_cv_lib_boost_filesystem_main" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBBOOST_FILESYSTEM 1
-_ACEOF
-
-  LIBS="-lboost_filesystem $LIBS"
-
-else
-  as_fn_error $? "boost_filesystem library not found" "$LINENO" 5
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lboost_system" >&5
-$as_echo_n "checking for main in -lboost_system... " >&6; }
-if ${ac_cv_lib_boost_system_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lboost_system  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"; then :
-  ac_cv_lib_boost_system_main=yes
-else
-  ac_cv_lib_boost_system_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_boost_system_main" >&5
-$as_echo "$ac_cv_lib_boost_system_main" >&6; }
-if test "x$ac_cv_lib_boost_system_main" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBBOOST_SYSTEM 1
-_ACEOF
-
-  LIBS="-lboost_system $LIBS"
-
-else
-  as_fn_error $? "boost_system library not found" "$LINENO" 5
-fi
-
+#old_CPPFLAGS=${CPPFLAGS}
+#old_LDFLAGS=${LDFLAGS}
+#CPPFLAGS=${AM_CPPFLAGS}
+#LDFLAGS=${AM_LDFLAGS}
+#AC_CHECK_HEADERS([boost/algorithm/string.hpp],,[AC_MSG_ERROR(boost/algorithm/string.hpp not found)])
+#AC_CHECK_HEADERS([boost/date_time/posix_time/posix_time.hpp],   ,[AC_MSG_ERROR(boost/date_time/posix_time/posix_time.hpp not found)])
+#AC_CHECK_HEADERS([boost/filesystem.hpp],      ,[AC_MSG_ERROR(boost/filesystem.hpp not found)])
+#AC_CHECK_HEADERS([boost/foreach.hpp],         ,[AC_MSG_ERROR(boost/foreach.hpp not found)])
+#AC_CHECK_HEADERS([boost/format.hpp],          ,[AC_MSG_ERROR(boost/format.hpp not found)])
+#AC_CHECK_HEADERS([boost/lexical_cast.hpp],    ,[AC_MSG_ERROR(boost/lexical_cast.hpp not found)])
+#AC_CHECK_HEADERS([boost/program_options.hpp], ,[AC_MSG_ERROR(boost/program_options.hpp not found)])
+#AC_CHECK_HEADERS([boost/regex.hpp],           ,[AC_MSG_ERROR(boost/regex.hpp not found)])
+#AC_CHECK_HEADERS([boost/unordered_map.hpp],   ,[AC_MSG_ERROR(boost/unordered_map.hpp not found)])
+#AC_CHECK_LIB([boost_regex], main,          ,[AC_MSG_ERROR(boost_regex library not found)])
+#AC_CHECK_LIB([boost_program_options], main,,[AC_MSG_ERROR(boost_program_options library not found)])
+#AC_CHECK_LIB([boost_system], main,         ,[AC_MSG_ERROR(boost_system library not found)])
+#LDFLAGS="-lboost_system ${AM_LDFLAGS}"
+#AC_CHECK_LIB([boost_filesystem], main,     ,[AC_MSG_ERROR(boost_filesystem library not found)])
+#CPPFLAGS=${old_CPPFLAGS}
+#LDFLAGS=${old_LDFLAGS}
 
 
 # Check whether --with-cabocha was given.

@@ -36,23 +36,37 @@ AC_CHECK_HEADERS(string,  ,[AC_MSG_ERROR(string not found)])
 AC_CHECK_HEADERS(iomanip, ,[AC_MSG_ERROR(iomanip not found)])
 
 AC_ARG_WITH(
-						boost,
-						[AC_HELP_STRING([--with-boost=DIR],[boost directory])],
-						[AM_CPPFLAGS="-I${withval}/include ${AM_CPPFLAGS}"; AM_LDFLAGS="-L${withval}/lib ${AM_LDFLAGS}"]
+						[boost-include],
+						[AC_HELP_STRING([--with-boost-include=DIR], [boost include directory])],
+						[AM_CPPFLAGS="-I${withval} ${AM_CPPFLAGS}"]
 						)
-AC_CHECK_HEADERS([boost/algorithm/string.hpp],,[AC_MSG_ERROR(boost/algorithm/string.hpp not found)])
-AC_CHECK_HEADERS([boost/date_time/posix_time/posix_time.hpp],   ,[AC_MSG_ERROR(boost/date_time/posix_time/posix_time.hpp not found)])
-AC_CHECK_HEADERS([boost/filesystem.hpp],      ,[AC_MSG_ERROR(boost/filesystem.hpp not found)])
-AC_CHECK_HEADERS([boost/foreach.hpp],         ,[AC_MSG_ERROR(boost/foreach.hpp not found)])
-AC_CHECK_HEADERS([boost/format.hpp],          ,[AC_MSG_ERROR(boost/format.hpp not found)])
-AC_CHECK_HEADERS([boost/lexical_cast.hpp],    ,[AC_MSG_ERROR(boost/lexical_cast.hpp not found)])
-AC_CHECK_HEADERS([boost/program_options.hpp], ,[AC_MSG_ERROR(boost/program_options.hpp not found)])
-AC_CHECK_HEADERS([boost/regex.hpp],           ,[AC_MSG_ERROR(boost/regex.hpp not found)])
-AC_CHECK_HEADERS([boost/unordered_map.hpp],   ,[AC_MSG_ERROR(boost/unordered_map.hpp not found)])
-AC_CHECK_LIB([boost_regex], main,          ,[AC_MSG_ERROR(boost_regex library not found)])
-AC_CHECK_LIB([boost_program_options], main,,[AC_MSG_ERROR(boost_program_options library not found)])
-AC_CHECK_LIB([boost_filesystem], main,     ,[AC_MSG_ERROR(boost_filesystem library not found)])
-AC_CHECK_LIB([boost_system], main,         ,[AC_MSG_ERROR(boost_system library not found)])
+AC_ARG_WITH(
+						[boost-lib],
+						[AC_HELP_STRING([--with-boost-lib=DIR], [boost library directory])],
+						[AM_LDFLAGS="-L${withval} ${AM_LDFLAGS}"]
+						)
+BOOST_LIBS="-lboost_system -lboost_filesystem -lboost_program_options -lboost_regex"
+AC_SUBST(BOOST_LIBS)
+#old_CPPFLAGS=${CPPFLAGS}
+#old_LDFLAGS=${LDFLAGS}
+#CPPFLAGS=${AM_CPPFLAGS}
+#LDFLAGS=${AM_LDFLAGS}
+#AC_CHECK_HEADERS([boost/algorithm/string.hpp],,[AC_MSG_ERROR(boost/algorithm/string.hpp not found)])
+#AC_CHECK_HEADERS([boost/date_time/posix_time/posix_time.hpp],   ,[AC_MSG_ERROR(boost/date_time/posix_time/posix_time.hpp not found)])
+#AC_CHECK_HEADERS([boost/filesystem.hpp],      ,[AC_MSG_ERROR(boost/filesystem.hpp not found)])
+#AC_CHECK_HEADERS([boost/foreach.hpp],         ,[AC_MSG_ERROR(boost/foreach.hpp not found)])
+#AC_CHECK_HEADERS([boost/format.hpp],          ,[AC_MSG_ERROR(boost/format.hpp not found)])
+#AC_CHECK_HEADERS([boost/lexical_cast.hpp],    ,[AC_MSG_ERROR(boost/lexical_cast.hpp not found)])
+#AC_CHECK_HEADERS([boost/program_options.hpp], ,[AC_MSG_ERROR(boost/program_options.hpp not found)])
+#AC_CHECK_HEADERS([boost/regex.hpp],           ,[AC_MSG_ERROR(boost/regex.hpp not found)])
+#AC_CHECK_HEADERS([boost/unordered_map.hpp],   ,[AC_MSG_ERROR(boost/unordered_map.hpp not found)])
+#AC_CHECK_LIB([boost_regex], main,          ,[AC_MSG_ERROR(boost_regex library not found)])
+#AC_CHECK_LIB([boost_program_options], main,,[AC_MSG_ERROR(boost_program_options library not found)])
+#AC_CHECK_LIB([boost_system], main,         ,[AC_MSG_ERROR(boost_system library not found)])
+#LDFLAGS="-lboost_system ${AM_LDFLAGS}"
+#AC_CHECK_LIB([boost_filesystem], main,     ,[AC_MSG_ERROR(boost_filesystem library not found)])
+#CPPFLAGS=${old_CPPFLAGS}
+#LDFLAGS=${old_LDFLAGS}
 
 AC_ARG_WITH(
 						cabocha,	
