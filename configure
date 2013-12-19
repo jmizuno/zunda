@@ -5594,6 +5594,8 @@ if test "${with_cabocha+set}" = set; then :
 
 fi
 
+old_CPPFLAGS=${CPPFLAGS}
+old_LDFLAGS=${LDFLAGS}
 CPPFLAGS=${AM_CPPFLAGS}
 LDFLAGS=${AM_LDFLAGS}
 ac_fn_cxx_check_header_mongrel "$LINENO" "cabocha.h" "ac_cv_header_cabocha_h" "$ac_includes_default"
@@ -5644,6 +5646,9 @@ _ACEOF
 else
   as_fn_error $? "cabocha library not found" "$LINENO" 5
 fi
+
+CPPFLAGS=${old_CPPFLAGS}
+LDFLAGS=${old_LDFLAGS}
 
 
 # Check whether --enable-debug was given.
