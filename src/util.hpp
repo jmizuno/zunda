@@ -3,9 +3,10 @@
 
 #include <string>
 #include <sstream>
+#include <vector>
 
 template< typename Tattr, typename Tspl >
-static void join( std::string &str, std::vector< Tattr > vec, Tspl splitter ) {
+static void join( std::string &str, const std::vector< Tattr > &vec, const Tspl &splitter ) {
 	std::stringstream ss;
 	if (vec.size() != 0) {
 		ss << vec[0];
