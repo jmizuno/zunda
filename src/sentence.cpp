@@ -5,7 +5,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/foreach.hpp>
-#include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iomanip>
 
@@ -13,15 +12,13 @@
 #include "util.hpp"
 
 
-std::string rm_quote(std::string str) {
+void rm_quote(std::string &str) {
 	str.replace(0, 1, "");
 	str.replace(str.size()-1, 1, "");
-
-	return str;
 }
 
 namespace nlp {
-	void modality::parse(std::string mod_line) {
+	void modality::parse(const std::string &mod_line) {
 		std::vector< std::string > l;
 		boost::algorithm::split(l, mod_line, boost::algorithm::is_any_of("\t"));
 
@@ -45,16 +42,13 @@ namespace nlp {
 		}
 	}
 
-	std::string modality::str() {
-		std::string str;
+	void modality::str(std::string &str) {
 		std::string tid_str;
 		join(tid_str, tids, ",");
-		
-		str = tid_str + "\t" + tag["source"] + "\t" + tag["tense"] + "\t" + tag["assumptional"] + "\t" + tag["type"] + "\t" + tag["authenticity"] + "\t" + tag["sentiment"] + "\t" + tag["focus"];
 
-		return str;
+		str = tid_str + "\t" + tag["source"] + "\t" + tag["tense"] + "\t" + tag["assumptional"] + "\t" + tag["type"] + "\t" + tag["authenticity"] + "\t" + tag["sentiment"] + "\t" + tag["focus"];
 	}
-}
+};
 
 
 namespace nlp {
@@ -74,54 +68,28 @@ namespace nlp {
 		BOOST_FOREACH(std::string pas_info, pas_infos) {
 			std::vector<std::string> v;
 			boost::algorithm::split(v, pas_info, boost::algorithm::is_any_of("=") );
-			
+
 			if (v.size() == 2) {
+				rm_quote(v[1]);
 				if (v[0] == "type") {
-					pas->pred_type = rm_quote(v[1]);
+					pas->pred_type = v[1];
 				}
 				else if (v[0] == "ID") {
-					pas->arg_id = boost::lexical_cast<int>(rm_quote(v[1]));
+					pas->arg_id = boost::lexical_cast<int>(v[1]);
 				}
 				else {
-					pas->arg_type[v[0]] = boost::lexical_cast<int>(rm_quote(v[1]));
+					pas->arg_type[v[0]] = boost::lexical_cast<int>(v[1]);
 				}
 			}
-				
+
 		}
-		
+
 		return true;
 	}
-}
+};
 
 namespace nlp {
-	bool token::parse_chasen(std::string line, int tok_id) {
-		std::vector<std::string> tok_infos;
-		boost::algorithm::split(tok_infos, line, boost::algorithm::is_any_of("\t") );
-
-		id = tok_id;
-		surf = tok_infos[0];
-		read = tok_infos[1];
-		orig = tok_infos[2];
-		pos1 = tok_infos[3];
-		pos2 = tok_infos[4];
-		pos3 = tok_infos[5];
-
-		std::vector<std::string> pos_infos;
-		boost::algorithm::split(pos_infos, tok_infos[3], boost::is_any_of("-"));
-		pos = pos_infos[0];
-		
-		if (tok_infos.size() > 6) {
-			ne = tok_infos[6];
-		}
-
-		if (tok_infos.size() > 7) {
-			pas.parse(tok_infos[7], &pas);
-		}
-
-		return true;
-	}
-
-	bool token::parse_mecab(std::string line, int tok_id) {
+	bool token::parse_mecab(const std::string &line, const int tok_id) {
 		std::vector<std::string> tok_infos;
 		boost::algorithm::split(tok_infos, line, boost::algorithm::is_any_of("\t") );
 
@@ -144,11 +112,11 @@ namespace nlp {
 		else {
 			read = tok_infos[0];
 		}
-		
+
 		if (tok_infos.size() > 2) {
 			ne = tok_infos[2];
 		}
-		
+
 		if (tok_infos.size() > 3) {
 			pas.parse(tok_infos[3], &pas);
 		}
@@ -157,10 +125,37 @@ namespace nlp {
 	}
 
 
-	bool token::parse_juman(std::string line, int tok_id) {
+	bool token::parse_mecab_juman(const std::string &line, const int tok_id) {
+		std::vector<std::string> tok_infos;
+		boost::algorithm::split(tok_infos, line, boost::algorithm::is_any_of("\t") );
+
+		std::vector<std::string> v;
+		boost::algorithm::split(v, tok_infos[1], boost::is_any_of(","));
+
+		id = tok_id;
+		surf = tok_infos[0];
+
+		pos = v[0];
+		orig = v[4];
+		read = v[5];
+		if (pos.compare(pos.size()-judge_pos_juman.size(), pos.size(), judge_pos_juman) == 0) {
+			pos1 = v[1];
+			pos2 = v[2];
+			pos3 = v[3];
+		}
+		else {
+			form = v[1];
+			type = v[2];
+			form2 = v[3];
+		}
+		return true;
+	}
+
+
+	bool token::parse_juman(const std::string &line, const int tok_id) {
 		std::vector<std::string> l;
 		boost::algorithm::split(l, line, boost::is_any_of(" "));
-		
+
 		id = tok_id;
 		surf = l[0];
 		read = l[1];
@@ -169,7 +164,7 @@ namespace nlp {
 		pos = l[3];
 		pos_id = boost::lexical_cast<int>(l[4]);
 		/* when pos token */
-		if (boost::regex_match(pos, juman_pos)) {
+		if (pos.compare(pos.size()-judge_pos_juman.size(), pos.size(), judge_pos_juman) == 0) {
 			pos1 = l[5];
 			pos1_id = boost::lexical_cast<int>(l[6]);
 			pos2 = l[7];
@@ -185,150 +180,133 @@ namespace nlp {
 			form2 = l[9];
 			form2_id = boost::lexical_cast<int>(l[10]);
 		}
-		
-		if (l[11] == "NIL") {
-			sem_info = l[11];
-		}
-		else {
-			std::vector<std::string> sems;
-			for (unsigned int i=11 ; i<l.size() ; ++i) {
-				sems.push_back(l[i]);
+
+		/* Daihyo Hyoki */
+		if (l.size() > 11) {
+			if (l[11] == "NIL") {
+				sem_info = l[11];
 			}
-			join(sem_info, sems, " ");
+			else {
+				std::vector<std::string> sems;
+				for (unsigned int i=11 ; i<l.size() ; ++i) {
+					sems.push_back(l[i]);
+				}
+				join(sem_info, sems, " ");
+			}
 		}
 
 		return true;
 	}
-}
-
-
-namespace nlp {
-	bool chunk::add_token(token _tok) {
-		tokens.push_back(_tok);
-		return true;
-	}
-
-
-	std::string chunk::str() {
-		std::string chk_str = "";
-		BOOST_FOREACH(token tok, tokens) {
-			chk_str += tok.surf;
-		}
-		return chk_str;
-	}
-
-
-	std::string chunk::str_orig() {
-		std::string chk_str = "";
-		BOOST_FOREACH(token tok, tokens) {
-			chk_str += tok.orig;
-		}
-		return chk_str;
-	}
-
-
-	token chunk::get_token_has_mod() {
-		std::vector<nlp::token>::reverse_iterator rit_tok;
-		for (rit_tok=tokens.rbegin() ; rit_tok!=tokens.rend() ; ++rit_tok) {
-			if (rit_tok->has_mod) {
-				return *rit_tok;
-			}
-		}
-		token tok;
-		return tok;
-	}
-	
 };
 
 
 namespace nlp {
-	std::string sentence::str(std::string delimiter) {
-		std::vector<std::string> chks;
-		BOOST_FOREACH(chunk chk, chunks) {
-			chks.push_back(chk.str());
+	void chunk::str(std::string &chk_str) {
+		chk_str.clear();
+		BOOST_FOREACH(token tok, tokens) {
+			chk_str += tok.surf;
 		}
-		
+	}
+
+
+	void chunk::str_orig(std::string &chk_str) {
+		chk_str.clear();
+		BOOST_FOREACH(token tok, tokens) {
+			chk_str += tok.orig;
+		}
+	}
+
+
+	token* chunk::get_token_has_mod() {
+		std::vector<token>::reverse_iterator rit_tok;
+		for (rit_tok=tokens.rbegin() ; rit_tok!=tokens.rend() ; ++rit_tok) {
+			if (rit_tok->has_mod) {
+				return &(*rit_tok);
+			}
+		}
+		return NULL;
+	}
+};
+
+
+namespace nlp {
+	void sentence::str(std::string &str_res, const std::string &delimiter) {
 		std::string chk_str;
-		join(chk_str, chks, delimiter);
-		
-		return chk_str;
-	}
-
-	std::string sentence::str() {
-		return str("");
-	}
-
-	bool sentence::add_chunk(chunk chk) {
-		chunks.push_back(chk);
-		return true;
-	}
-
-	bool sentence::test(std::vector< std::string > lines) {
-		BOOST_FOREACH(std::string l, lines) {
-			std::cout << l << std::endl;
+		std::stringstream ss;
+		bool first_flag = true;
+		BOOST_FOREACH (chunk chk, chunks) {
+			if (first_flag) {
+				first_flag = false;
+			}
+			else {
+				ss << delimiter;
+			}
+			chk.str(chk_str);
+			ss << chk_str;
 		}
-		return true;
+		str_res = ss.str();
 	}
-	
-	bool sentence::parse_knp(std::string str) {
+
+
+	void sentence::str(std::string &str_res) {
+		str(str_res, "");
+	}
+
+
+	bool sentence::parse(const std::string &str) {
 		std::vector< std::string > buf;
 		boost::algorithm::split(buf, str, boost::algorithm::is_any_of("\n") );
-		return parse_knp(buf);
+		return parse(buf);
 	}
 
-	bool sentence::parse_knp(std::vector< std::string > lines) {
-		boost::smatch m;
-		int tok_cnt = 0;
-		int chk_cnt = 0;
+
+	bool sentence::parse(const std::vector< std::string > &lines) {
+		input_orig_lines = lines;
+		input_orig.clear();
+		join(input_orig, lines, "\n");  // stored original parsed sentence
 
 		std::vector< modality > mods;
-		std::vector< std::string > input_origs;
 
-		BOOST_FOREACH( std::string l, lines) {
-			input_origs.push_back(l);
-
-			if (l.compare(0, 6, "#EVENT") == 0) {
+		BOOST_FOREACH (std::string l, lines) {
+			if (l.compare(0, 6, "# S-ID") == 0) {
+				std::vector<std::string> buf;
+				boost::algorithm::split(buf, l, boost::algorithm::is_any_of(" "));
+				if (buf[2].substr(buf[2].size()-1, buf[2].size()) == ";") {
+					sent_id = buf[2].substr(0, buf[2].size()-1);
+				}
+				else {
+					sent_id = buf[2];
+				}
+			}
+			else if (l.compare(0, 6, "#EVENT") == 0) {
 				modality mod;
 				mod.parse(l);
 				mods.push_back(mod);
 			}
-			else if (l.compare(0, 6, "# S-ID") == 0) {
-			}
-			else if (boost::regex_search(l, m, chk_line_knp)) {
-				chunk chk;
-				std::vector< std::string > v;
-				boost::algorithm::split(v, l, boost::algorithm::is_any_of(" "));
-				chk.id = chk_cnt;
-				chk_cnt++;
-				std::string dst_str = boost::regex_replace(v[1], chk_dst, dst_rep);
-				chk.dst = boost::lexical_cast<int>(dst_str);
-				chk.type = boost::regex_replace(v[1], chk_dst, type_rep);
-				
-				chunks.push_back(chk);
-			}
-			else if (boost::regex_search(l, m, chk_basic_knp)) {
-			}
-			else if (l.compare(0, 3, "EOS") == 0) {
-				break;
+			else if (l.compare(0, 1, "#") == 0) {
 			}
 			else {
-				token tok;
-				tok.parse_juman(l, tok_cnt);
-				t2c[tok.id] = chunks[chunks.size()-1].id;
-				chunks[chunks.size()-1].add_token(tok);
-
-				tok_cnt++;
+				break;
 			}
 		}
 
-		input_orig.clear();
-		join(input_orig, input_origs, "\n");
+		switch (da_tool) {
+			case CaboCha:
+			case JDepP:
+				if (!parse_cabocha(lines)) {
+					return false;
+				}
+				break;
+			case KNP:
+				if (!parse_knp(lines)) {
+					return false;
+				}
+				break;
+			default:
+				std::cerr << "ERROR: invalid dependency parsing tool" << std::endl;
+				return false;
+		}
 
-		tid_min = 0;
-		tid_max = tok_cnt-1;
-		cid_min = 0;
-		cid_max = chunks.size()-1;
-		
 		std::vector<chunk>::iterator it_chk;
 		std::vector<token>::iterator it_tok;
 		for (it_chk = chunks.begin() ; it_chk != chunks.end() ; ++it_chk) {
@@ -346,82 +324,100 @@ namespace nlp {
 	}
 
 
-	bool sentence::parse_cabocha(std::string str) {
-		std::vector< std::string > buf;
-		boost::algorithm::split(buf, str, boost::algorithm::is_any_of("\n") );
-		return parse_cabocha(buf);
+	bool sentence::parse_knp(const std::vector< std::string > &lines) {
+		int tok_cnt = 0;
+		int chk_cnt = 0;
+		bool comment_flag = true;
+		std::string line;
+
+		BOOST_FOREACH( line, lines) {
+			if (comment_flag && line.compare(0, 1, "#") == 0) {
+			}
+			else if (line.compare(0, 2, "* ") == 0) {
+				comment_flag = false;
+				chunk chk;
+				char type;
+				sscanf(line.c_str(), "* %d%s", &chk.dst, &type);
+				chk.id = chk_cnt;
+				chk.type = type;
+				chk_cnt++;
+
+				chunks.push_back(chk);
+			}
+			else if (line.compare(0, 2, "+ ") == 0 ) {
+			}
+			else if (line.compare(0, 3, "EOS") == 0) {
+				break;
+			}
+			else {
+				token *tok;
+				tok_addr.push_back(tok);
+				tok->parse_juman(line, tok_cnt);
+				t2c[tok->id] = chunks[chunks.size()-1].id;
+				chunks[chunks.size()-1].tokens.push_back(*tok);
+
+				tok_cnt++;
+			}
+		}
+
+		tid_min = 0;
+		tid_max = tok_cnt-1;
+		cid_min = 0;
+		cid_max = chunks.size()-1;
+
+		return true;
 	}
 
-	bool sentence::parse_cabocha(std::vector< std::string > lines) {
-		boost::smatch m;
+
+	bool sentence::parse_cabocha(const std::vector< std::string > &lines) {
 		int tok_cnt = 0;
+		bool comment_flag = true;
+		std::string line;
 
-		std::vector< modality > mods;
-		std::vector< std::string > input_origs;
-
-		BOOST_FOREACH( std::string l, lines ) {
-			input_origs.push_back(l);
-
-			if (l.compare(0, 6, "#EVENT") == 0 ) {
-				modality mod;
-				mod.parse(l);
-				mods.push_back(mod);
+		BOOST_FOREACH( line, lines) {
+			if (comment_flag && line.compare(0, 1, "#") == 0) {
 			}
-			else if (boost::regex_search(l, m, chk_line)) {
+			else if (line.compare(0, 2, "* ") == 0) {
+				comment_flag = false;
 				chunk chk;
-				std::vector<std::string> v, v2;
-				boost::algorithm::split(v, l, boost::algorithm::is_any_of(" ") );
-				chk.id = boost::lexical_cast<int>(v[1]);
+				char type;
+				sscanf(line.c_str(), "* %d %d%s", &chk.id, &chk.dst, &type);
+				chk.type = type;
 
 				if (chk.id != (int)chunks.size()) {
 					std::cerr << "error: chunk id is not in order" << std::endl;
 					return false;
 				}
-				
-				std::string dst_str = boost::regex_replace(v[2], chk_dst, dst_rep);
-				chk.dst = boost::lexical_cast<int>(dst_str);
-				chk.type = boost::regex_replace(v[2], chk_dst, type_rep);
-
-				if (v.size() > 3) {
-					boost::algorithm::split(v2, v[3], boost::is_any_of("/"));
-					chk.subj = boost::lexical_cast<int>(v2[0]);
-					chk.func = boost::lexical_cast<int>(v2[1]);
-
-					chk.score = boost::lexical_cast<double>(v[4]);
-				}
 
 				chunks.push_back(chk);
 			}
-			else if (l.compare(0, 3, "EOS") == 0) {
+			else if (line.compare(0, 3, "EOS") == 0) {
 				break;
 			}
 			else {
-				token tok;
-				
-				switch(ma_tool) {
-					case ChaSen:
-						tok.parse_chasen(l, tok_cnt);
+				token *tok = new token;
+				switch (ma_dic) {
+					case IPADic:
+						tok->parse_mecab(line, tok_cnt);
 						break;
-					case MeCab:
-						tok.parse_mecab(l, tok_cnt);
+					case JumanDic:
+						tok->parse_mecab_juman(line, tok_cnt);
 						break;
+					case UniDic:
+						std::cerr << "ERROR: it has not been implemented" << std::endl;
+						return false;
 					default:
 						std::cerr << "Error: unknown Morphological Analysis tool" << std::endl;
-						exit(1);
-						break;
+						return false;
 				}
-				
-// ToDo parse v[7] as pas
 
-				t2c[tok.id] = chunks[chunks.size()-1].id;
-				chunks[chunks.size()-1].add_token(tok);
-				
+				tok_addr.push_back(tok);
+				t2c[tok->id] = chunks[chunks.size()-1].id;
+				chunks[chunks.size()-1].tokens.push_back(*tok);
+
 				tok_cnt++;
 			}
 		}
-		
-		input_orig.clear();
-		join(input_orig, input_origs, "\n");
 
 		tid_min = 0;
 		tid_max = tok_cnt-1;
@@ -432,148 +428,88 @@ namespace nlp {
 		std::vector<token>::iterator it_tok;
 		for (it_chk = chunks.begin() ; it_chk != chunks.end() ; ++it_chk) {
 			for (it_tok = it_chk->tokens.begin() ; it_tok != it_chk->tokens.end() ; ++it_tok) {
-				BOOST_FOREACH (modality mod, mods) {
-					if ( find(mod.tids.begin(), mod.tids.end(), it_tok->id) != mod.tids.end() ) {
-						it_tok->mod = mod;
-						it_tok->has_mod = true;
-						it_chk->has_mod = true;
-					}
-
-					boost::unordered_map<std::string, int>::iterator it;
-					for (it = it_tok->pas.arg_type.begin() ; it != it_tok->pas.arg_type.end() ; ++it) {
-						BOOST_FOREACH(chunk chk, chunks) {
-							BOOST_FOREACH(token tok, chk.tokens) {
-								if (it->second == tok.pas.arg_id) {
-									it_tok->pas.args[it->first] = tok.id;
-								}
+				boost::unordered_map<std::string, int>::iterator it;
+				for (it = it_tok->pas.arg_type.begin() ; it != it_tok->pas.arg_type.end() ; ++it) {
+					BOOST_FOREACH(chunk chk, chunks) {
+						BOOST_FOREACH(token tok, chk.tokens) {
+							if (it->second == tok.pas.arg_id) {
+								it_tok->pas.args[it->first] = tok.id;
 							}
 						}
 					}
 				}
 			}
 		}
-		
-		return true;
-	}
 
-	chunk sentence::get_chunk(int id) {
-		if (cid_min <= id && id <= cid_max) {
-			return chunks[id];
-		}
-		else {
-			std::cerr << "error: invalid chunkd id" << std::endl;
-			exit(-1);
-		}
-	}
-
-	chunk sentence::get_chunk_by_tokenID(int id) {
-		int cid = t2c[id];
-		return get_chunk(cid);
-	}
-
-
-	token sentence::get_token(int id) {
-		int cid = t2c[id];
-		chunk chk = get_chunk(cid);
-		if (tid_min <= id && id <= tid_max) {
-			BOOST_FOREACH(token tok, chk.tokens) {
-				if (tok.id == id) {
-					return tok;
-				}
-			}
-			std::cerr << "ERROR: invalid token id" << std::endl;
-			exit(-1);
-		}
-		else {
-			std::cerr << "error: invalid token id" << std::endl;
-			exit(-1);
-		}
-	}
-
-
-	bool sentence::get_chunk_has_mod(chunk &chk, int cid) {
-		chunk chk_core = get_chunk(cid);
-		if (chk_core.dst == -1) {
-			return false;
-		}
-		
-		chk = get_chunk(chk_core.dst);
-		while (chk.has_mod == false) {
-			if (chk.dst == -1) {
-				return false;
-			}
-			chk = get_chunk(chk.dst);
-		}
-		
 		return true;
 	}
 
 
-	bool sentence::get_dep_chunk(chunk *chk_dep, int cid, int depth) {
-		chunk chk_core = get_chunk(cid);
-		return get_dep_chunk(chk_dep, chk_core, depth);
+	chunk* sentence::get_chunk(const int cid) {
+		if (cid_min <= cid && cid <= cid_max) {
+			return &chunks[cid];
+		}
+		else {
+			return NULL;
+		}
 	}
 
 
-	bool sentence::get_dep_chunk(chunk *chk_dep, chunk chk, int depth) {
-		for (int i=0 ; i<depth ; i++) {
-			if (get_dep_chunk(chk_dep, chk)) {
-				chk = *chk_dep;
+	chunk* sentence::get_chunk_by_tokenID(const int tid) {
+		if (t2c.find(tid) != t2c.end() ) {
+			int cid = t2c[tid];
+			return get_chunk(cid);
+		}
+		else {
+			return NULL;
+		}
+	}
+
+
+	token* sentence::get_token(const int tid) {
+		if (tid_min <= tid && tid <= tid_max) {
+			return tok_addr[tid];
+		}
+		return NULL;
+	}
+
+
+	chunk* sentence::get_dst_chunk(const chunk &chk_core) {
+		if (chk_core.dst != -1 && cid_min <= chk_core.dst && chk_core.dst <= cid_max) {
+			return get_chunk(chk_core.dst);
+		}
+		return NULL;
+	}
+
+
+	chunk* sentence::get_dst_chunk(const chunk &chk_core, const unsigned int depth) {
+		int cid_dst = chk_core.dst;
+		if (cid_dst == -1) {
+			return NULL;
+		}
+		chunk *chk;
+		for (unsigned int i=0 ; i<depth ; ++i) {
+			chk = get_chunk(cid_dst);
+			if (chk != NULL) {
+				cid_dst = chk->dst;
 			}
 			else {
-				return false;
+				return chk;
 			}
 		}
-		return true;
+		return chk;
 	}
 
 
-	bool sentence::get_dep_chunk(chunk *chk_dep, int cid) {
-		chunk chk_core = get_chunk(cid);
-		return get_dep_chunk(chk_dep, chk_core);
-	}
-		
-
-	bool sentence::get_dep_chunk(chunk *chk_dep, chunk chk) {
-		if (chk.dst == -1) {
-			return false;
-		}
-		else {
-			*chk_dep = get_chunk(chk.dst);
-			return true;
-		}
-		return false;
-	}
-
-
-	bool sentence::get_chunks_src(std::vector< nlp::chunk > *chks_src, nlp::chunk chk_core) {
-		BOOST_FOREACH (nlp::chunk chk, chunks) {
-			if (chk.dst == chk.id) {
-				chks_src->push_back(chk);
-			}
-		}
-		if (chks_src->size() == 0) {
-			return false;
-		}
-		else {
-			return true;
-		}
-	}
-
-
-	bool sentence::get_chunks_src(std::vector< nlp::chunk > *chks_src, int cid) {
-		nlp::chunk chk_core = get_chunk(cid);
-		return get_chunks_src(chks_src, chk_core);
-	}
-
-		
-	std::string sentence::cabocha() {
+	void sentence::cabocha(std::string &str_res) {
 		std::stringstream cabocha_ss;
 		int eve_id = 0;
 		BOOST_FOREACH ( chunk chk, chunks ) {
 			BOOST_FOREACH ( token tok, chk.tokens) {
 				if (tok.has_mod) {
-					cabocha_ss << "#EVENT" << eve_id << "\t" << tok.mod.str() << "\n";
+					std::string mod_str;
+					tok.mod.str(mod_str);
+					cabocha_ss << "#EVENT" << eve_id << "\t" << mod_str << "\n";
 					eve_id++;
 				}
 			}
@@ -583,7 +519,7 @@ namespace nlp {
 			cabocha_ss << "* " << chk.id << " " << chk.dst << chk.type << " " << chk.subj << "/" << chk.func << " " << std::showpoint << std::setprecision(7) << chk.score << "\n";
 			BOOST_FOREACH ( token tok, chk.tokens ) {
 				cabocha_ss << tok.surf << "\t" << tok.pos << "," << tok.pos1 << "," << tok.pos2 << "," << tok.pos3 << "," << tok.type << "," << tok.form << "," << tok.orig << "," << tok.read << "," << tok.pron << "\t" << tok.ne;
-				
+
 				if (tok.pas.is_pred() || tok.pas.arg_id != -1) {
 					std::vector< std::string > pas_info;
 					if (tok.pas.is_pred()) {
@@ -600,7 +536,7 @@ namespace nlp {
 						ss << it_arg_type->first << "=\"" << it_arg_type->second << "\"";
 						pas_info.push_back(ss.str());
 					}
-					
+
 					std::string pas_info_str;
 					join(pas_info_str, pas_info, " ");
 					cabocha_ss << "\t" << pas_info_str;
@@ -609,8 +545,8 @@ namespace nlp {
 			}
 		}
 		cabocha_ss << "EOS";
-		
-		return cabocha_ss.str();
+
+		str_res = cabocha_ss.str();
 	}
 
 

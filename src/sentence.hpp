@@ -7,7 +7,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/foreach.hpp>
-#include <boost/regex.hpp>
 
 
 std::string join(std::vector<std::string>, std::string);
@@ -55,8 +54,8 @@ namespace nlp {
 			~modality() {
 			}
 		public:
-			void parse(std::string);
-			std::string str();
+			void parse(const std::string &);
+			void str(std::string &);
 			bool negation();
 			bool negation_strict();
 	};
@@ -88,11 +87,11 @@ namespace nlp {
 			bool has_mod;
 			std::string sem_info;
 			
-			boost::regex juman_pos;
+			std::string judge_pos_juman;
 
-			bool parse_chasen(std::string, int);
-			bool parse_mecab(std::string, int);
-			bool parse_juman(std::string, int);
+			bool parse_mecab(const std::string &, const int);
+			bool parse_mecab_juman(const std::string &, const int);
+			bool parse_juman(const std::string &, const int);
 		public:
 			token() {
 				surf = "*";
@@ -108,7 +107,7 @@ namespace nlp {
 				ne = "O";
 				has_mod = false;
 
-				juman_pos = ".*詞";
+				judge_pos_juman = "詞";
 			}
 	};
 
@@ -131,44 +130,43 @@ namespace nlp {
 				subj = 0;
 				func = 0;
 			}
-			bool add_token(token);
-			std::string str();
-			std::string str_orig();
-			token get_token_has_mod();
+			void str(std::string &);
+			void str_orig(std::string &);
+			token* get_token_has_mod();
 	};
 
 	class sentence {
 		public:
 			std::string input_orig;
+			std::vector< std::string > input_orig_lines;
 			std::string doc_id;
 			std::string sent_id;
 			std::vector< chunk > chunks;
 			int cid_min, cid_max, tid_min, tid_max;
 			boost::unordered_map< int, int > t2c;
-			
-			enum{
-				MeCab = 0,
-				ChaSen = 1,
-			};
-			int ma_tool;
+			std::vector<token *> tok_addr;
 			
 			enum {
 				IPADic = 0,
-				UniDic = 1,
+				JumanDic = 1,
+				UniDic = 2,
 			};
 			int ma_dic;
-			
-		private:
-//			boost::regex chk_line("^\\* [0-9][0-9]* ");
-//			boost::regex chk_dst("^([0-9\\-]+)[A-Z]$");
-//			std::string dst_rep = "$1";
-			boost::regex chk_line;
-			boost::regex chk_dst;
-			std::string dst_rep;
-			std::string type_rep;
-			boost::regex chk_line_knp;
-			boost::regex chk_basic_knp;
-		
+
+			enum {
+				CaboCha = 0,
+				KNP = 1,
+				JDepP = 2,
+			};
+			int da_tool;
+
+/*			enum {
+				SynCha = 0,
+				KNP = 1,
+			};
+			int pas_tool;
+			*/
+
 		public:
 			sentence() {
 				doc_id = "";
@@ -176,36 +174,28 @@ namespace nlp {
 				cid_min = 0;
 				tid_min = 0;
 				
-				chk_line = "^\\* [0-9][0-9]* ";
-				chk_dst = "^([0-9\\-]+)([A-Z])$";
-				dst_rep = "$1";
-				type_rep = "$2";
-				chk_line_knp = "^\\* [0-9-]+[A-Z] ";
-				chk_basic_knp = "^\\+ [0-9-]+[A-Z] ";
-				
-				ma_tool = ChaSen;
 				ma_dic = IPADic;
+				da_tool = CaboCha;
+//				pas_tool = SynCha;
 			}
-			bool test(std::vector< std::string >);
-			bool add_chunk(chunk);
-			bool parse_cabocha(std::string);
-			bool parse_cabocha(std::vector< std::string >);
-			bool parse_knp(std::string);
-			bool parse_knp(std::vector< std::string >);
+			~sentence() {
+				BOOST_FOREACH (token *tok, tok_addr) {
+					delete tok;
+				}
+			}
+			bool parse(const std::string &);
+			bool parse(const std::vector< std::string > &);
+			bool parse_cabocha(const std::vector< std::string > &);
+			bool parse_knp(const std::vector< std::string > &);
 			bool pp();
-			chunk get_chunk(int);
-			chunk get_chunk_by_tokenID(int);
-			bool get_dep_chunk(chunk*, chunk);
-			bool get_dep_chunk(chunk*, int);
-			bool get_dep_chunk(chunk*, chunk, int);
-			bool get_dep_chunk(chunk*, int, int);
-			bool get_chunks_src(std::vector< nlp::chunk > *, nlp::chunk);
-			bool get_chunks_src(std::vector< nlp::chunk > *, int);
-			token get_token(int);
-			bool get_chunk_has_mod(chunk&, int);
-			std::string str(std::string);
-			std::string str();
-			std::string cabocha();
+			chunk* get_chunk(const int);
+			chunk* get_chunk_by_tokenID(const int);
+			token* get_token(const int);
+			chunk* get_dst_chunk(const chunk &);
+			chunk* get_dst_chunk(const chunk &, const unsigned int);
+			void str(std::string &, const std::string &);
+			void str(std::string &);
+			void cabocha(std::string &);
 			void clear_mod();
 	};
 };
