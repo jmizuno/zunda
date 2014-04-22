@@ -34,6 +34,7 @@ class CdbMap {
 
 		bool set(const K key, const V val) {
 			map[key] = val;
+			return true;
 		}
 		
 		bool exists_on_map(const K key) {
