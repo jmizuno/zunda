@@ -523,7 +523,7 @@ public:
         // Read the chunk header.
         uint32_t csize = read_uint32(p);
         p += sizeof(uint32_t);
-        uint32_t version = read_uint32(p);
+//        uint32_t version = read_uint32(p);
         p += sizeof(uint32_t);
         uint32_t byteorder = read_uint32(p);
         p += sizeof(uint32_t);
