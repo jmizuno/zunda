@@ -66,15 +66,20 @@ int main(int argc, char *argv[]) {
 
 	int cnt = 0;
 	BOOST_FOREACH ( std::vector< modality::t_token > sent, sents ) {
-		nlp::sentence mod_ipa_sent = mod_parser.make_tagged_ipasents( sent, modality::TF_DEP_CAB );
+		nlp::sentence *mod_ipa_sent = new nlp::sentence;
+		mod_parser.make_tagged_ipasents(sent, modality::IN_DEP_CAB, *mod_ipa_sent);
 
 		std::stringstream ss;
 		ss << (outdir_path / xml_path.stem()).string() << "_" << std::setw(3) << std::setfill('0') << cnt << ".depmod";
 		std::cerr << "output: " << ss.str() << std::endl;
 		std::ofstream os(ss.str().c_str());
-		os << mod_ipa_sent.cabocha() << std::endl;
+		std::string cabocha_str;
+		mod_ipa_sent->cabocha(cabocha_str);
+		os << cabocha_str << std::endl;
 		os.close();
 		cnt++;
+
+		delete mod_ipa_sent;
 	}
 
 	return true;

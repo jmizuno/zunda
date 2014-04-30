@@ -123,6 +123,8 @@ namespace nlp {
 			int func;
 			std::vector< token > tokens;
 			bool has_mod;
+			// map global token ID to local token ID
+			boost::unordered_map< int, int > tok_g2l;
 		public:
 			chunk() {
 				score = 0.0;
@@ -143,8 +145,8 @@ namespace nlp {
 			std::string sent_id;
 			std::vector< chunk > chunks;
 			int cid_min, cid_max, tid_min, tid_max;
+			// map token ID to chunk ID which the token belongs
 			boost::unordered_map< int, int > t2c;
-			std::vector<token *> tok_addr;
 			
 			enum {
 				IPADic = 0,
@@ -179,9 +181,6 @@ namespace nlp {
 //				pas_tool = SynCha;
 			}
 			~sentence() {
-				BOOST_FOREACH (token *tok, tok_addr) {
-					delete tok;
-				}
 			}
 			bool parse(const std::string &);
 			bool parse(const std::vector< std::string > &);

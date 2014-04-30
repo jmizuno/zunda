@@ -76,7 +76,7 @@ namespace modality {
 	}
 
 
-	bool parser::detect_target(nlp::token tok) {
+	bool parser::detect_target(nlp::token &tok) {
 		std::string pos_set = tok.pos + "\t" + tok.pos1;
 		switch (target_detection) {
 			case DETECT_BY_POS:
@@ -125,37 +125,48 @@ namespace modality {
 			}
 		}
 
+		model_loaded = true;
+
 		return true;
 	}
 
 
-	nlp::sentence parser::analyze(std::string text, int input_layer) {
-		nlp::sentence sent;
-		sent.ma_tool = nlp::sentence::MeCab;
+	bool parser::analyze(const std::string &str, const int input_layer, nlp::sentence &sent) {
+		switch (pos_tag) {
+			case POS_IPA:
+				sent.ma_dic = sent.IPADic;
+				break;
+			case POS_JUMAN:
+				sent.ma_dic = sent.JumanDic;
+				break;
+			case POS_UNI:
+				sent.ma_dic = sent.UniDic;
+				break;
+		}
+
 		std::string parsed_text;
 		switch (input_layer) {
-			case RAW:
-				parsed_text = cabocha->parseToString( text.c_str() );
-				sent.parse_cabocha(parsed_text);
+			case IN_RAW:
+				sent.da_tool = sent.CaboCha;
+				parsed_text = cabocha->parseToString( str.c_str() );
 				break;
-			case CABOCHA:
-			case SYNCHA:
-				parsed_text = text;
-				sent.parse_cabocha(parsed_text);
+			case IN_DEP_CAB:
+			case IN_PAS_SYN:
+				parsed_text = str;
+				sent.da_tool = sent.CaboCha;
 				break;
-			case KNP_DEP:
-			case KNP_PAS:
-				parsed_text = text;
-				sent.parse_knp(parsed_text);
+			case IN_DEP_KNP:
+			case IN_PAS_KNP:
+				parsed_text = str;
+				sent.da_tool = sent.KNP;
 				break;
 			default:
 				std::cerr << "invalid input layer" << std::endl;
 				break;
 		}
+		sent.parse(parsed_text);
 
-		nlp::sentence parsed_sent = analyze(sent);
-
-		return parsed_sent;
+		return analyze(sent);
 	}
 
 
@@ -163,97 +174,93 @@ namespace modality {
 		return xx1.index < xx2.index;
 	}
 
-	linear::feature_node* parser::pack_feat_linear(t_feat feat) {
-		linear::feature_node* xx = new linear::feature_node[feat.size()+1];
-		t_feat::iterator it_feat;
+
+	void parser::pack_feat_linear(t_feat &feat, linear::feature_node *xx) {
 		int feat_cnt = 0;
-		for (it_feat=feat.begin() ; it_feat!=feat.end() ; ++it_feat) {
-			int feat_id;
-			//std::cerr << it_feat->first;
-			if (f2i.get(it_feat->first, &feat_id)) {
-				//std::cerr << "\t" << feat_id << std::endl;
+		int feat_id;
+		BOOST_FOREACH (t_feat::value_type& f, feat) {
+			if (f2i.get(f.first, &feat_id)) {
 				xx[feat_cnt].index = feat_id;
-				xx[feat_cnt].value = it_feat->second;
-				feat_cnt++;
+				xx[feat_cnt].value = f.second;
+				++feat_cnt;
 			}
 			else {
-				//std::cerr << " not found" << std::endl;
 			}
 		}
-		// sorted by feature ID
-		// not run sort() when xx is empty
+
 		if (feat_cnt > 0) {
 			std::sort(xx, xx+feat_cnt-1, comp_xx);
 		}
 		xx[feat_cnt].index = -1;
-		
-		return xx;
 	}
 
 
-	std::string parser::analyzeToString(std::string text, int input_layer) {
-		nlp::sentence parsed_sent = analyze(text, input_layer);
+	inline void sentToString(const nlp::sentence &parsed_sent, std::string &parsed_str) {
 		std::stringstream cabocha_ss;
 
 		int eve_id = 0;
 		BOOST_FOREACH ( nlp::chunk chk, parsed_sent.chunks ) {
 			BOOST_FOREACH ( nlp::token tok, chk.tokens) {
 				if (tok.has_mod) {
-					cabocha_ss << "#EVENT" << eve_id << "\t" << tok.mod.str() << "\n";
+					std::string mod_str;
+					tok.mod.str(mod_str);
+					cabocha_ss << "#EVENT" << eve_id << "\t" << mod_str << "\n";
 					eve_id++;
 				}
 			}
 		}
-		
 		cabocha_ss << parsed_sent.input_orig;
-		
-		return cabocha_ss.str();
+		parsed_str = cabocha_ss.str();
 	}
 
 
-	std::string parser::analyzeToString(nlp::sentence sent) {
-		nlp::sentence parsed_sent = analyze(sent);
-		std::stringstream cabocha_ss;
-
-		int eve_id = 0;
-		BOOST_FOREACH ( nlp::chunk chk, parsed_sent.chunks ) {
-			BOOST_FOREACH ( nlp::token tok, chk.tokens) {
-				if (tok.has_mod) {
-					cabocha_ss << "#EVENT" << eve_id << "\t" << tok.mod.str() << "\n";
-					eve_id++;
-				}
-			}
+	bool parser::analyzeToString( const std::string &str, const int input_layer, std::string &parsed_str) {
+		nlp::sentence sent;
+		if (analyze(str, input_layer, sent)) {
+			sentToString(sent, parsed_str);
+			return true;
 		}
-		
-		cabocha_ss << parsed_sent.input_orig;
-		
-		return cabocha_ss.str();
+		return false;
 	}
 
 
-	nlp::sentence parser::analyze(nlp::sentence sent) {
+	bool parser::analyzeToString( nlp::sentence &sent, std::string &parsed_str ) {
+		if (analyze(sent)) {
+			sentToString(sent, parsed_str);
+			return true;
+		}
+		return false;
+	}
+
+	bool parser::analyze(nlp::sentence &sent) {
 		std::vector<nlp::chunk>::reverse_iterator rit_chk;
 		std::vector<nlp::token>::reverse_iterator rit_tok;
-		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sent.chunks.rend() ; ++rit_chk) {
-			for (rit_tok=(rit_chk->tokens).rbegin() ; rit_tok!=(rit_chk->tokens).rend() ; ++rit_tok) {
+		std::vector<nlp::chunk>::reverse_iterator sc_end = sent.chunks.rend();
+		std::vector<nlp::token>::reverse_iterator st_end;
+
+		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sc_end ; ++rit_chk) {
+			st_end = rit_chk->tokens.rend();
+			for(rit_tok=rit_chk->tokens.rbegin() ; rit_tok!=st_end ; ++rit_tok) {
 				if (detect_target(*rit_tok)) {
 #ifdef _MODEBUG
-					std::cerr << "* " << rit_tok->orig << " - " << rit_chk->str() << std::endl;
+					std::string chk_str;
+					rit_chk->str(chk_str);
+					std::cerr << "* " << rit_tok->orig << " - " << chk_str << std::endl;
 #endif
 					rit_tok->mod.tids.push_back(rit_tok->id);
 					rit_tok->has_mod = true;
 					rit_chk->has_mod = true;
 
-					feature_generator fgen(sent, rit_tok->id);
+					feature_generator2 fgen(&sent, &(*rit_chk), &(*rit_tok));
 					fgen.gen_feature_basic(3);
 					fgen.gen_feature_function();
 					fgen.gen_feature_dst_chunks();
 					fgen.gen_feature_ttj(&dbr_ttj);
 
+
 					t_feat::iterator it_feat;
 
 					BOOST_FOREACH (unsigned int i, analyze_tags) {
-						fgen.update(sent);
 						switch (i) {
 							case TENSE:
 								break;
@@ -272,11 +279,14 @@ namespace modality {
 								break;
 						}
 
-						t_feat compiled_feat = fgen.compile_feat(use_feats[i]);
-						linear::feature_node* xx = pack_feat_linear(compiled_feat);
+						t_feat compiled_feat;
+						fgen.compile_feat( use_feats[i], compiled_feat );
+						linear::feature_node* xx;
+						xx = new linear::feature_node[compiled_feat.size()+1];
+						pack_feat_linear(compiled_feat, xx);
 
-					
 						int predicted = linear::predict(models[i], xx);
+						delete [] xx;
 						std::string label;
 						if (i2l.get(predicted, &label)) {
 							rit_tok->mod.tag[id2tag(i)] = label;
@@ -287,73 +297,19 @@ namespace modality {
 						}
 
 #ifdef _MODEBUG
-						std::string feat_str = fgen.compile_feat_str(use_feats[i]);
+						std::string feat_str;
+						fgen.compile_feat_str(use_feats[i], feat_str);
 						std::cerr << " " << id2tag(i) << ": " << feat_str << " -> " << label << "(" << predicted << ")" << std::endl;
 #endif
 					}
 				}
 			}
 		}
-					
-/*
-					t_feat *feat;
-					feat = new t_feat;
-					gen_feature( sent, rit_tok->id, *feat );
-					t_feat::iterator it_feat;
-
-					linear::feature_node* xx = pack_feat_linear(feat, read_only);
-
-#ifdef _MODEBUG
-					std::string feat_str = "";
-					for (it_feat=feat->begin() ; it_feat!=feat->end() ; ++it_feat) {
-						std::stringstream ss;
-						ss << it_feat->first;
-						ss << ":";
-						ss << it_feat->second;
-						ss << " ";
-						feat_str += ss.str();
-					}
-
-					std::cout << feat_str << std::endl;
-#endif
-
-#ifdef _MODEBUG
-					std::cout << " ->";
-#endif
-					std::string labels[LABEL_NUM];
-					BOOST_FOREACH (unsigned int i, analyze_tags) {
-						int predicted = linear::predict(models[i], xx);
-						boost::unordered_map< std::string, int >::iterator it;
-						for (it=label2id.begin() ; it!=label2id.end() ; ++it) {
-							if (predicted == it->second) {
-								labels[i] = it->first;
-								rit_tok->mod.tag[id2tag(i)] = labels[i];
-								break;
-							}
-						}
-						if (labels[i] == "") {
-							std::cerr << "ERORR: unknown predicted label: " << predicted << std::endl;
-							exit(-1);
-						}
-#ifdef _MODEBUG
-						std::cout << " " << labels[i] << "(" << predicted << ")";
-#endif
-					}
-#ifdef _MODEBUG
-					std::cout << std::endl;
-#endif
-
-					BOOST_FOREACH (unsigned int i, analyze_tags) {
-						rit_tok->mod.tag[id2tag(i)] = labels[i];
-				}
-			}
-		}
-		*/
-		return sent;
+		return true;
 	}
 
 
-	void parser::load_deppasmods(std::vector< std::string > deppasmods, int input_format) {
+	void parser::load_deppasmods(std::vector< std::string > deppasmods, int input_layer) {
 		learning_data.clear();
 		
 		BOOST_FOREACH ( std::string deppasmod, deppasmods ) {
@@ -367,6 +323,30 @@ namespace modality {
 
 			nlp::sentence sent;
 			sent.sent_id = sent_id;
+			switch (pos_tag) {
+				case POS_IPA:
+					sent.ma_dic = nlp::sentence::IPADic;
+					break;
+				case POS_JUMAN:
+					sent.ma_dic = nlp::sentence::JumanDic;
+					break;
+				case POS_UNI:
+					sent.ma_dic = nlp::sentence::UniDic;
+					break;
+			}
+			switch (input_layer) {
+				case IN_DEP_CAB:
+				case IN_PAS_SYN:
+					sent.da_tool = nlp::sentence::CaboCha;
+					break;
+				case IN_DEP_KNP:
+				case IN_PAS_KNP:
+					sent.da_tool = nlp::sentence::KNP;
+					break;
+				default:
+					std::cerr << "invalid input layer" << std::endl;
+					break;
+			}
 
 			std::ifstream ifs(deppasmod.c_str());
 			std::string buf, str;
@@ -374,29 +354,13 @@ namespace modality {
 			while ( getline(ifs, buf) ) {
 				lines.push_back(buf);
 			}
+			sent.parse(lines);
 
-			switch (input_format) {
-				case TF_DEP_CAB:
-				case TF_PAS_SYN:
-					sent.ma_tool = sent.MeCab;
-					sent.parse_cabocha(lines);
-					break;
-				case TF_DEP_KNP:
-				case TF_PAS_KNP:
-					sent.parse_knp(lines);
-					break;
-				default:
-					std::cerr << "ERROR: invalid input format" << std::endl;
-					exit(-1);
-			}
 			learning_data.push_back(sent);
 		}
 	}
 	
-
 	void parser::load_xmls(std::vector< std::string > xmls, int input_format) {
-		learning_data.clear();
-
 		BOOST_FOREACH ( std::string xml_path, xmls ) {
 			std::cout << xml_path << std::endl;
 			boost::filesystem::path p(xml_path);
@@ -410,7 +374,8 @@ namespace modality {
 			std::vector< nlp::sentence > parsed_sents;
 			unsigned int sent_cnt = 0;
 			BOOST_FOREACH ( std::vector< t_token > oc_sent, oc_sents ) {
-				nlp::sentence mod_ipa_sent = make_tagged_ipasents( oc_sent, input_format );
+				nlp::sentence mod_ipa_sent;
+				make_tagged_ipasents( oc_sent, input_format, mod_ipa_sent );
 				mod_ipa_sent.doc_id = doc_id;
 				std::stringstream sent_id;
 				sent_id << doc_id << "_" << std::setw(3) << std::setfill('0') << sent_cnt;
@@ -442,6 +407,7 @@ namespace modality {
 				}
 			}
 		}
+		std::cout << num_node << " nodes for liblinear" << std::endl;
 
 		BOOST_FOREACH (unsigned int tag_id, analyze_tags) {
 			linear::feature_node **x = new linear::feature_node*[num_node+1];
@@ -461,14 +427,14 @@ namespace modality {
 								l2i.set(label, lid);
 								i2l.set(lid, label);
 							}
-							int label_id;
+							static int label_id;
 							l2i.get(label, &label_id);
 							y[node_cnt] = label_id;
 
 							std::stringstream tok_id_full;
 							tok_id_full << sent.sent_id << "_" << chk.id << "_" << tok.id;
 
-							feature_generator fgen(sent, tok.id);
+							feature_generator2 fgen(&sent, &chk, &tok);
 							fgen.gen_feature_basic(3);
 							fgen.gen_feature_function();
 							fgen.gen_feature_dst_chunks();
@@ -493,17 +459,22 @@ namespace modality {
 									break;
 							}
 							
-							ofs << sent.sent_id << "(" << chk.id << "_" << tok.id << "): " << fgen.compile_feat_str(use_feats[tag_id]) << std::endl;
+							std::string feat_str;
+							fgen.compile_feat_str(use_feats[tag_id], feat_str);
+							ofs << sent.sent_id << "(" << chk.id << "_" << tok.id << "): " << feat_str << std::endl;
 
-							t_feat feat = fgen.compile_feat(use_feats[tag_id]);
+							t_feat compiled_feat;
+							fgen.compile_feat( use_feats[tag_id], compiled_feat );
 							t_feat::iterator it_feat;
-							for (it_feat=feat.begin() ; it_feat!=feat.end() ; ++it_feat) {
+							for (it_feat=compiled_feat.begin() ; it_feat!=compiled_feat.end() ; ++it_feat) {
 								if (!f2i.exists_on_map(it_feat->first)) {
 									f2i.set(it_feat->first, f2i.size()+1);
 								}
 							}
 
-							linear::feature_node* xx = pack_feat_linear(feat);
+							linear::feature_node* xx;
+							xx = new linear::feature_node[compiled_feat.size()+1];
+							pack_feat_linear(compiled_feat, xx);
 							x[node_cnt] = xx;
 							node_cnt++;
 						}
@@ -531,30 +502,31 @@ namespace modality {
 			linear::model *model;
 			model = linear::train(&_prob, &_param);
 			linear::save_model(model_path[tag_id].string().c_str(), model);
+
+			delete [] x;
 		}
 	}
 
 
-	nlp::sentence parser::make_tagged_ipasents( std::vector< t_token > sent_orig, int input_format ) {
-		nlp::sentence sent;
-
+	bool parser::make_tagged_ipasents( std::vector< t_token > sent_orig, int input_layer, nlp::sentence &sent ) {
 		std::string text = "";
 		BOOST_FOREACH ( t_token tok, sent_orig ) {
 			text += tok.orthToken;
 		}
 		
 		std::string parsed_text;
-		switch (input_format) {
-			case TF_XML_CAB:
-			case TF_DEP_CAB:
-			case TF_PAS_SYN:
+		switch (input_layer) {
+			case IN_XML_CAB:
+			case IN_DEP_CAB:
+			case IN_PAS_SYN:
 				parsed_text = cabocha->parseToString( text.c_str() );
-				sent.ma_tool = nlp::sentence::MeCab;
-				sent.parse_cabocha(parsed_text);
+				sent.ma_dic = sent.IPADic;
+				sent.da_tool = sent.CaboCha;
+				sent.parse(parsed_text);
 				break;
-			case TF_XML_KNP:
-			case TF_DEP_KNP:
-			case TF_PAS_KNP:
+			case IN_XML_KNP:
+			case IN_DEP_KNP:
+			case IN_PAS_KNP:
 				{
 					boost::filesystem::path tmp_knp("temp.knp");
 					tmp_knp = TMP_DIR / tmp_knp;
@@ -575,7 +547,9 @@ namespace modality {
 						std::cerr << "ERROR: cannot remove " << tmp_knp.string() << std::endl;
 						exit(-1);
 					}
-					sent.parse_knp(lines);
+
+					sent.da_tool = sent.KNP;
+					sent.parse(lines);
 
 					break;
 				}
@@ -659,7 +633,7 @@ namespace modality {
 		}
 #endif
 		
-		return sent;
+		return true;
 	}
 
 

@@ -8,10 +8,9 @@
 #include "eval.hpp"
 
 
-bool mkdir(boost::filesystem::path dir_path) {
-	if (!boost::filesystem::exists(dir_path.string())) {
-		std::cerr << "ERROR" << std::endl;
-		return false;
+bool mkdir(const boost::filesystem::path &dir_path) {
+	std::cerr << dir_path.string() << std::endl;
+	if (!boost::filesystem::exists(dir_path)) {
 		std::cerr << "mkdir " << dir_path.string() << std::endl;
 		if (!boost::filesystem::create_directories(dir_path)) {
 			std::cerr << "ERROR: mkdir " << dir_path.string() << " failed" << std::endl;
@@ -28,9 +27,10 @@ int main(int argc, char *argv[]) {
 
 	boost::program_options::options_description opt("Usage", 200);
 	opt.add_options()
-		("path,p", boost::program_options::value< std::vector<std::string> >()->multitoken(), "directory path containing learning data (required)")
-		("input,i", boost::program_options::value<int>(), "input format\n 0 - BCCWJ-style XML tagged format re-parsed by CaboCha (IPA POS tag) [default]\n 1 - BCCWJ-style XML tagged format re-parsed by KNP (Juman POS tag)\n 2 - depndency parsed format by CaboCha (IPA POS tag)\n 3 - dependency parsed format by KNP (Juman POS tag)\n 4 - predicate-argument structure analyzed format by SynCha (IPA POS tag)\n 5 - predicate-argument structure analyzed format by KNP (Juman POS tag)")
-		("ext,e", boost::program_options::value<std::string>(), "extension of learning files (optional)\n 0 - .deppasmod (default)\n 1 - .xml")
+		("path,p", boost::program_options::value< std::vector<std::string> >()->multitoken(), "input data to learn (required)")
+		("list,l", boost::program_options::value< std::vector<std::string> >()->multitoken(), "list files of input data")
+		("input,i", boost::program_options::value<int>(), "input format\n 0 - BCCWJ-style XML tagged format re-parsed by CaboCha [default]\n 1 - BCCWJ-style XML tagged format re-parsed by KNP\n 2 - depndency parsed format by CaboCha/J.DepP\n 3 - dependency parsed format by KNP\n 4 - predicate-argument structure analyzed format by SynCha/ChaPAS\n 5 - predicate-argument structure analyzed format by KNP")
+		("pos", boost::program_options::value<int>(), "POS tag for CaboCha/J.DepP (optional)\n 0 - IPA/Naist-jdic [default]\n 1 - JumanDic\n 2 - UniDic")
 		("cross,x", "enable cross validation (optional): default off")
 		("split,g", boost::program_options::value<unsigned int>(), "number of groups for cross validation (optional): default 5")
 		("outdir,o", boost::program_options::value<std::string>(), "directory to store output files (optional)\n simple training -  stores model file and feature file to \"model (default)\"\n cross validation - stores model file, feature file and result file to \"output (default)\"")
@@ -73,76 +73,34 @@ int main(int argc, char *argv[]) {
 		dic_dir = argmap["dic"].as<std::string>();
 	}
 
-	int input_format = modality::TF_XML_CAB;
 	int input_layer;
 	if (argmap.count("input")) {
-		input_format = argmap["input"].as<int>();
+		input_layer = argmap["input"].as<int>();
 	}
-	std::string ext;
-	std::cout << "data format: ";
-	switch (input_format) {
-		case modality::TF_XML_CAB:
-			std::cout << "BCCWJ-style XML tagged by CaboCha (IPA POS tag)" << std::endl;
-			ext = ".xml";
-			input_layer = modality::CABOCHA;
-			break;
-		case modality::TF_XML_KNP:
-			std::cout << "BCCWJ-style XML tagged by KNP (Juman POS tag)";
-			ext = ".xml";
-			input_layer = modality::KNP_DEP;
-			break;
-		case modality::TF_DEP_CAB:
-			std::cout << "dependency parsed by CaboCha (IPA POS tag)";
-			ext = ".depmod";
-			input_layer = modality::CABOCHA;
-			break;
-		case modality::TF_DEP_KNP:
-			std::cout << "dependency parsed by KNP (Juman POS tag)";
-			ext = ".knp";
-			input_layer = modality::KNP_DEP;
-			break;
-		case modality::TF_PAS_SYN:
-			std::cout << "predicate-argument structure analyzed by SynCha (IPA POS tag)";
-			ext = ".deppasmod";
-			input_layer = modality::SYNCHA;
-			break;
-		case modality::TF_PAS_KNP:
-			std::cout << "predicate-argument structure analyzed by KNP (Juman POS tag)";
-			ext = ".knp";
-			input_layer = modality::KNP_PAS;
-			break;
-		default:
-			std::cerr << "ERROR: invalid input format" << std::endl;
-			return false;
-	}
-	std::cout << std::endl;
 
-	if (argmap.count("ext")) {
-		ext = argmap["ext"].as<std::string>();
-		if (ext.compare(0, 1, ".") != 0) {
-			ext = "." + ext;
-		}
+	int pos_tag = modality::POS_IPA;
+	if (argmap.count("pos")) {
+		pos_tag = argmap["pos"].as<int>();
 	}
-	std::cout << "ext: " << ext << std::endl;
 
-	if (!argmap.count("path")) {
-		std::cerr << "ERROR: no data directory" << std::endl;
+	if (!argmap.count("path") && !argmap.count("list")) {
+		std::cerr << "ERROR: no input data" << std::endl;
 		return false;
 	}
-
 	std::vector<std::string> files;
-	BOOST_FOREACH (std::string learn_data_dir, argmap["path"].as< std::vector<std::string> >() ) {
-		const boost::filesystem::path learn_data_path(learn_data_dir);
-		if (boost::filesystem::exists(learn_data_path)) {
-			BOOST_FOREACH ( const boost::filesystem::path& p, std::make_pair(boost::filesystem::recursive_directory_iterator(learn_data_dir), boost::filesystem::recursive_directory_iterator()) ) {
-				if (p.extension() == ext) {
-					files.push_back(p.string());
-				}
-			}
+	if (argmap.count("path")) {
+		BOOST_FOREACH (std::string file, argmap["path"].as< std::vector<std::string> >() ) {
+			files.push_back(file);
 		}
-		else {
-			std::cerr << "ERROR: no such directory: " << learn_data_dir << std::endl;
-			return false;
+	}
+	if (argmap.count("list")) {
+		BOOST_FOREACH (std::string list_file, argmap["list"].as< std::vector<std::string> >() ) {
+			std::ifstream ifs(list_file.c_str());
+			std::string buf;
+			while (getline(ifs, buf)) {
+				boost::algorithm::trim_right(buf);
+				files.push_back(buf);
+			}
 		}
 	}
 
@@ -155,28 +113,43 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-	modality::parser mod_parser(input_layer, outdir_path.string(), dic_dir);
+	modality::parser mod_parser(outdir_path.string(), dic_dir);
+	mod_parser.set_pos_tag(pos_tag);
 
 	if (argmap.count("target")) {
 		mod_parser.target_detection = argmap["target"].as<unsigned int>();
 	}
 
-	switch (input_format) {
-		case modality::TF_XML_CAB:
-		case modality::TF_XML_KNP:
-			mod_parser.load_xmls(files, input_format);
+	switch (input_layer) {
+		case modality::IN_DEP_CAB:
+		case modality::IN_DEP_KNP:
+		case modality::IN_PAS_SYN:
+		case modality::IN_PAS_KNP:
+			mod_parser.load_deppasmods(files, input_layer);
 			break;
-		case modality::TF_DEP_CAB:
-		case modality::TF_DEP_KNP:
-		case modality::TF_PAS_SYN:
-		case modality::TF_PAS_KNP:
-			mod_parser.load_deppasmods(files, input_format);
+		case modality::IN_XML_CAB:
+		case modality::IN_XML_KNP:
+			mod_parser.load_xmls(files, input_layer);
 			break;
 		default:
 			std::cerr << "ERROR: invalid input format" << std::endl;
 			exit(-1);
 	}
-	std::cout << "load done: " << mod_parser.learning_data.size() << " sents" << std::endl;
+
+	unsigned int cnt_inst = 0;
+	BOOST_FOREACH (nlp::sentence sent, mod_parser.learning_data) {
+		BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
+			BOOST_FOREACH (nlp::token tok, chk.tokens) {
+				if (tok.has_mod) {
+					cnt_inst++;
+				}
+			}
+		}
+	}
+	std::cout << "load done" << std::endl;
+ 	std::cout << "   " << mod_parser.learning_data.size() << " sents" << std::endl;
+ 	std::cout << "   " << cnt_inst << " instances" << std::endl;
+	std::cout << std::endl;
 
 
 	if (argmap.count("cross")) {
@@ -190,14 +163,17 @@ int main(int argc, char *argv[]) {
 
 		for (unsigned int i=0 ; i<split_num ; ++i) {
 			std::vector< nlp::sentence > grp;
+			// last group = rest of learning data
 			if (i+1 == split_num) {
 				std::copy(mod_parser.learning_data.begin() + i*grp_size, mod_parser.learning_data.end(), std::back_inserter(grp));
 			}
+			// divided data by split_num
 			else {
 				std::copy(mod_parser.learning_data.begin() + i*grp_size, mod_parser.learning_data.begin() + (i+1)*grp_size, std::back_inserter(grp));
 			}
 			split_data.push_back(grp);
 		}
+		// split_data contains split_num data sets
 
 		unsigned int cnt = 0;
 		BOOST_FOREACH (std::vector<nlp::sentence> grp, split_data) {
@@ -227,6 +203,7 @@ int main(int argc, char *argv[]) {
 			
 			for (unsigned int i=0 ; i<split_num ; ++i) {
 				if (i != step) {
+					// set learning data. used No.step data set as test data
 					mod_parser.learning_data.insert(mod_parser.learning_data.end(), split_data[i].begin(), split_data[i].end());
 				}
 			}
@@ -241,50 +218,62 @@ int main(int argc, char *argv[]) {
 				os[i].open(result_path[i].string().c_str());
 			}
 
-			std::vector< nlp::sentence > test_data = split_data[step];
-			for (unsigned int set=0 ; set<test_data.size() ; ++set) {
+			std::vector< nlp::sentence > test_data;
+			BOOST_FOREACH (nlp::sentence sent, split_data[step]) {
+				test_data.push_back(sent);
+			}
 
-//				std::vector<int> tagged_tok_ids;
+			for (unsigned int test_cnt=0 ; test_cnt<test_data.size() ; ++test_cnt) {
+#ifdef _MODEBUG
+				std::cout << "before " << test_data[test_cnt].sent_id << ": ";
+				BOOST_FOREACH (nlp::chunk chk, test_data[test_cnt].chunks) {
+					BOOST_FOREACH (nlp::token tok, chk.tokens) {
+						if (tok.has_mod) {
+							std::string mod_str;
+							tok.mod.str(mod_str);
+							std::cout << "  " << mod_str << std::endl;
+						}
+					}
+				}
+#endif
 
 				// when target detection is DETECT_BY_GOLD, only bool value of having modality is set to test data
 				if (mod_parser.target_detection == modality::DETECT_BY_GOLD) {
-					BOOST_FOREACH (nlp::chunk chk, test_data[set].chunks) {
+					BOOST_FOREACH (nlp::chunk chk, test_data[test_cnt].chunks) {
 						BOOST_FOREACH (nlp::token tok, chk.tokens) {
 							if (tok.has_mod) {
 								tok.mod.tag.clear();
-//								tagged_tok_ids.push_back(tok.id);
 							}
 						}
 					}
 				}
 				else {
-					test_data[set].clear_mod();
+					test_data[test_cnt].clear_mod();
 				}
 
-				// when target detection is DETECT_BY_GOLD, only bool value of having modality is set to test data
-				/*
-				if (mod_parser.target_detection == modality::DETECT_BY_GOLD) {
-					for (std::vector< nlp::chunk >::iterator it_chk=test_data[set].chunks.begin() ; it_chk!=test_data[set].chunks.end() ; ++it_chk) {
-						for (std::vector< nlp::token >::iterator it_tok=it_chk->tokens.begin() ; it_tok!=it_chk->tokens.end() ; ++it_tok) {
-							if ( std::find(tagged_tok_ids.begin(), tagged_tok_ids.end(), it_tok->id) != tagged_tok_ids.end() ) {
-								it_tok->has_mod = true;
-								it_chk->has_mod = true;
-							}
+				// tokens to be analyzed are detected by specified method in analyze() and gold data validation
+				mod_parser.analyze(test_data[test_cnt]);
+
+#ifdef _MODEBUG
+				std::cout << "after  " << test_data[test_cnt].sent_id << ": ";
+				BOOST_FOREACH (nlp::chunk chk, test_data[test_cnt].chunks) {
+					BOOST_FOREACH (nlp::token tok, chk.tokens) {
+						if (tok.has_mod) {
+							std::string mod_str;
+							tok.mod.str(mod_str);
+							std::cout << "  " << mod_str << std::endl;
 						}
 					}
 				}
-				*/
+#endif
 
-				// tokens to be analyzed are detected by specified method in analyze() and gold data validation
-				nlp::sentence tagged_sent = mod_parser.analyze(test_data[set]);
-
-				for (unsigned int chk_cnt=0 ; chk_cnt<tagged_sent.chunks.size() ; ++chk_cnt) {
-					for (unsigned int tok_cnt=0 ; tok_cnt<tagged_sent.chunks[chk_cnt].tokens.size() ; ++tok_cnt) {
-						nlp::token tok_gold = split_data[step][set].chunks[chk_cnt].tokens[tok_cnt];
-						nlp::token tok_sys = tagged_sent.chunks[chk_cnt].tokens[tok_cnt];
+				for (unsigned int chk_cnt=0 ; chk_cnt<test_data[test_cnt].chunks.size() ; ++chk_cnt) {
+					for (unsigned int tok_cnt=0 ; tok_cnt<test_data[test_cnt].chunks[chk_cnt].tokens.size() ; ++tok_cnt) {
+						nlp::token tok_gold = split_data[step][test_cnt].chunks[chk_cnt].tokens[tok_cnt];
+						nlp::token tok_sys = test_data[test_cnt].chunks[chk_cnt].tokens[tok_cnt];
 						if (tok_gold.has_mod && tok_sys.has_mod) {
 							std::stringstream id_ss;
-							id_ss << tagged_sent.sent_id << "_" << tok_sys.id;
+							id_ss << test_data[test_cnt].sent_id << "_" << tok_sys.id;
 
 							BOOST_FOREACH (unsigned int i, mod_parser.analyze_tags) {
 								evals[i].add( id_ss.str() , tok_gold.mod.tag[mod_parser.id2tag(i)], tok_sys.mod.tag[mod_parser.id2tag(i)] );
@@ -292,7 +281,7 @@ int main(int argc, char *argv[]) {
 							}
 						}
 						else if (tok_sys.has_mod && !tok_gold.has_mod) {
-							std::cerr << "ERROR: modality tag does not exist in token " << tok_sys.id << " in " << test_data[set].sent_id << std::endl;
+							std::cerr << "ERROR: modality tag does not exist in token " << tok_sys.id << " in " << test_data[test_cnt].sent_id << std::endl;
 						}
 					}
 				}

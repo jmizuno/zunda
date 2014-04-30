@@ -14,25 +14,27 @@
 
 
 namespace modality {
-	void feature_generator::gen_feature_mod(std::string tag) {
-		if (tok_core.has_mod) {
-			feat_cat["mod_" + tag][tok_core.mod.tag[tag]] = 1.0;
+	void feature_generator2::gen_feature_mod(const std::string &tag) {
+		if (tok_core->has_mod) {
+			feat_cat["mod_" + tag][tok_core->mod.tag[tag]] = 1.0;
 		}
 	}
 
 
-	std::string feature_generator::compile_feat_str(std::vector<std::string> use_feats) {
+	bool feature_generator2::compile_feat_str(const std::vector<std::string> &use_feats, std::string &str_res) {
 		std::stringstream feat_str;
-		t_feat compiled_feat = compile_feat(use_feats);
+		t_feat compiled_feat;
+		compile_feat(use_feats, compiled_feat);
 		for (t_feat::iterator it=compiled_feat.begin() ; it!=compiled_feat.end() ; ++it) {
 			feat_str << it->first << ":" << it->second << " ";
 		}
-		return feat_str.str();
+		str_res = feat_str.str();
+		return true;
 	}
 
 
-	t_feat feature_generator::compile_feat(std::vector<std::string> use_feats) {
-		t_feat compiled_feat;
+	bool feature_generator2::compile_feat(const std::vector<std::string> &use_feats, t_feat &compiled_feat) {
+		compiled_feat.clear();
 		BOOST_FOREACH (std::string cat, use_feats) {
 			t_feat::iterator it_feat;
 			if (feat_cat.find(cat) != feat_cat.end()) {
@@ -46,18 +48,15 @@ namespace modality {
 #endif
 			}
 		}
-		return compiled_feat;
+		return true;
 	}
 
 
-	void feature_generator::gen_feature_function() {
-		std::string func_ex = "";
-		std::vector< int > func_ids;
+	void feature_generator2::gen_feature_function() {
+		std::string func_ex;
 
-		nlp::chunk chk = sent.get_chunk_by_tokenID(tok_id);
-
-		BOOST_FOREACH ( nlp::token tok, chk.tokens ) {
-			if (tok_id < tok.id) {
+		BOOST_FOREACH ( nlp::token tok, chk_core->tokens ) {
+			if (tok_core->id < tok.id) {
 				func_ex += tok.surf + ".";
 			}
 		}
@@ -66,16 +65,16 @@ namespace modality {
 	}
 
 
-	void feature_generator::gen_feature_basic(const int n) {
-		BOOST_FOREACH(nlp::chunk chk, sent.chunks) {
+	void feature_generator2::gen_feature_basic(const int n) {
+		BOOST_FOREACH(nlp::chunk chk, sent->chunks) {
 			BOOST_FOREACH(nlp::token tok, chk.tokens) {
-				if (tok_id <= tok.id + n && tok.id - n <= tok_id && tok_id != tok.id) {
+				if (tok_core->id <= tok.id + n && tok.id - n <= tok_core->id && tok_core->id != tok.id) {
 					std::stringstream ss;
-					ss << tok.id - tok_id;
+					ss << tok.id - tok_core->id;
 					feat_cat["tok"]["surf_" + ss.str() + "_" + tok.surf] = 1.0;
 					feat_cat["tok"]["orig_" + ss.str() + "_" + tok.orig] = 1.0;
 				}
-				if (tok.id == tok_id) {
+				if (tok.id == tok_core->id) {
 					feat_cat["tok"]["surf_" + tok.surf] = 1.0;
 					feat_cat["tok"]["orig_" + tok.orig] = 1.0;
 				}
@@ -84,13 +83,18 @@ namespace modality {
 	}
 
 
-	void feature_generator::gen_feature_dst_chunks() {
+	void feature_generator2::gen_feature_dst_chunks() {
+		nlp::chunk *chk_dst;
+		chk_dst = sent->get_dst_chunk(*chk_core);
 		for (unsigned int i=1 ; i<3 ; ++i) {
-			if (has_chk_dst) {
-				feat_cat["chunk"]["dst_surf_" + chk_dst.str()] = 1.0;
-				feat_cat["chunk"]["dst_orig_" + chk_dst.str_orig()] = 1.0;
+			if (chk_core->dst != -1) {
+				std::string chk_str;
+				chk_dst->str(chk_str);
+				feat_cat["chunk"]["dst_surf_" + chk_str] = 1.0;
+				chk_dst->str_orig(chk_str);
+				feat_cat["chunk"]["dst_orig_" + chk_str] = 1.0;
 				int tid = 0;
-				BOOST_FOREACH (nlp::token tok, chk_dst.tokens) {
+				BOOST_FOREACH (nlp::token tok, chk_dst->tokens) {
 					std::stringstream ss;
 					ss << tid;
 					feat_cat["chunk"]["dst_tok_surf_" + ss.str() + "_" + tok.surf] = 1.0;
@@ -102,11 +106,11 @@ namespace modality {
 	}
 
 
-	void feature_generator::gen_feature_ttj(cdbpp::cdbpp *dbr_ttj) {
-		int tok_id_start = tok_id;
+	void feature_generator2::gen_feature_ttj(cdbpp::cdbpp *dbr_ttj) {
+		int tok_id_start = tok_core->id;
 		std::vector< t_match_func > match_funcs;
 
-		BOOST_FOREACH (nlp::token tok, chk_core.tokens) {
+		BOOST_FOREACH (nlp::token tok, chk_core->tokens) {
 			std::vector< t_match_func > match_funcs_local;
 			if (tok.id > tok_id_start) {
 				size_t vsize;
@@ -165,13 +169,13 @@ namespace modality {
 								std::string surf = word[1];
 
 								int around_tid = tok.id + pos;
-								if (around_tid < sent.tid_min || sent.tid_max < around_tid) {
+								if (around_tid < sent->tid_min || sent->tid_max < around_tid) {
 									match = false;
 									break;
 								}
 
-								nlp::token tok = sent.get_token(around_tid);
-								if (tok.surf != surf) {
+								nlp::token *tok = sent->get_token(around_tid);
+								if (tok->surf != surf) {
 									match = false;
 									break;
 								}
@@ -207,7 +211,7 @@ namespace modality {
 #ifdef _MODEBUG
 			std::cerr << " lookup ttj: " << mf.semrel << ":";
 			BOOST_FOREACH (int id, mf.tok_ids) {
-				std::cerr << " " << sent.get_token(id).surf << "(" << id << ")";
+				std::cerr << " " << sent->get_token(id)->surf << "(" << id << ")";
 			}
 			std::cerr << std::endl;
 #endif
@@ -222,14 +226,14 @@ namespace modality {
 
 
 
-	void feature_generator::gen_feature_fadic(cdbpp::cdbpp *dbr_fadic) {
+	void feature_generator2::gen_feature_fadic(cdbpp::cdbpp *dbr_fadic) {
 		std::string tense, auth;
 
-		if (tok_core.has_mod) {
-			if (tok_core.mod.tag["tense"] == "未来") {
+		if (tok_core->has_mod) {
+			if (tok_core->mod.tag["tense"] == "未来") {
 				tense = "future";
 			}
-			else if (tok_core.mod.tag["tense"] == "非未来") {
+			else if (tok_core->mod.tag["tense"] == "非未来") {
 				tense = "present";
 			}
 			else {
@@ -237,36 +241,34 @@ namespace modality {
 			}
 		}
 #ifdef _MODEBUG
-		std::cerr << " lookup fadic: " << tok_core.orig << " tense -> " << tense << std::endl;
+		std::cerr << " lookup fadic: " << tok_core->orig << " tense -> " << tense << std::endl;
 #endif
 
-		nlp::token tok_dst;
-		if (chk_core.dst == -1) {
-		}
-		else {
-			nlp::chunk chk_dst = sent.get_chunk(chk_core.dst);
-			tok_dst = chk_dst.get_token_has_mod();
-			if (tok_dst.orig != "*") {
-				if (tok_dst.mod.tag["authenticity"] == "成立" || tok_dst.mod.tag["authenticity"] == "高確率" || tok_dst.mod.tag["authenticity"] == "不成立から成立" || tok_dst.mod.tag["authenticity"] == "低確率から高確率") {
+		nlp::token *tok_dst;
+		if (chk_core->dst != -1) {
+			nlp::chunk *chk_dst = sent->get_chunk(chk_core->dst);
+			tok_dst = chk_dst->get_token_has_mod();
+			if (tok_dst != NULL) {
+				if (tok_dst->mod.tag["authenticity"] == "成立" || tok_dst->mod.tag["authenticity"] == "高確率" || tok_dst->mod.tag["authenticity"] == "不成立から成立" || tok_dst->mod.tag["authenticity"] == "低確率から高確率") {
 					auth = "pos";
 				}
-				else if (tok_dst.mod.tag["authenticity"] == "0") {
+				else if (tok_dst->mod.tag["authenticity"] == "0") {
 					auth = "";
 				}
 				else {
 					auth = "neg";
 				}
 #ifdef _MODEBUG
-				std::cerr << " lookup fadic: " << tok_core.orig << " auth " << "(" << tok_dst.orig << ")" << " -> " << auth << std::endl;
+				std::cerr << " lookup fadic: " << tok_core->orig << " auth " << "(" << tok_dst->orig << ")" << " -> " << auth << std::endl;
 #endif
 			}
 		}
 
 		if (auth != "" && tense != "") {
 			boost::unordered_map<std::string, std::string> keys;
-			keys["authenticity"] = tok_dst.orig + ":" + auth + "_" + tense + "_actuality";
-			keys["sentiment"] = tok_dst.orig + ":" + auth + "_" + tense + "_sentiment";
-			keys["worth"] = tok_dst.orig + ":" + auth + "_" + tense + "_worth";
+			keys["authenticity"] = tok_dst->orig + ":" + auth + "_" + tense + "_actuality";
+			keys["sentiment"] = tok_dst->orig + ":" + auth + "_" + tense + "_sentiment";
+			keys["worth"] = tok_dst->orig + ":" + auth + "_" + tense + "_worth";
 
 			for (boost::unordered_map<std::string, std::string>::iterator it=keys.begin() ; it!=keys.end() ; ++it) {
 #ifdef _MODEBUG

@@ -327,6 +327,7 @@ namespace nlp {
 	bool sentence::parse_knp(const std::vector< std::string > &lines) {
 		int tok_cnt = 0;
 		int chk_cnt = 0;
+		int tok_cnt_local = 0;
 		bool comment_flag = true;
 		std::string line;
 
@@ -341,6 +342,7 @@ namespace nlp {
 				chk.id = chk_cnt;
 				chk.type = type;
 				chk_cnt++;
+				tok_cnt_local = 0;
 
 				chunks.push_back(chk);
 			}
@@ -350,13 +352,14 @@ namespace nlp {
 				break;
 			}
 			else {
-				token *tok;
-				tok_addr.push_back(tok);
-				tok->parse_juman(line, tok_cnt);
-				t2c[tok->id] = chunks[chunks.size()-1].id;
-				chunks[chunks.size()-1].tokens.push_back(*tok);
+				token tok;
+				tok.parse_juman(line, tok_cnt);
+				t2c[tok.id] = chunks[chunks.size()-1].id;
+				chunks[chunks.size()-1].tok_g2l[tok_cnt] = tok_cnt_local;
+				chunks[chunks.size()-1].tokens.push_back(tok);
 
 				tok_cnt++;
+				tok_cnt_local++;
 			}
 		}
 
@@ -371,6 +374,7 @@ namespace nlp {
 
 	bool sentence::parse_cabocha(const std::vector< std::string > &lines) {
 		int tok_cnt = 0;
+		int tok_cnt_local = 0;
 		bool comment_flag = true;
 		std::string line;
 
@@ -383,6 +387,7 @@ namespace nlp {
 				char type;
 				sscanf(line.c_str(), "* %d %d%s", &chk.id, &chk.dst, &type);
 				chk.type = type;
+				tok_cnt_local = 0;
 
 				if (chk.id != (int)chunks.size()) {
 					std::cerr << "error: chunk id is not in order" << std::endl;
@@ -395,13 +400,13 @@ namespace nlp {
 				break;
 			}
 			else {
-				token *tok = new token;
+				token tok;
 				switch (ma_dic) {
 					case IPADic:
-						tok->parse_mecab(line, tok_cnt);
+						tok.parse_mecab(line, tok_cnt);
 						break;
 					case JumanDic:
-						tok->parse_mecab_juman(line, tok_cnt);
+						tok.parse_mecab_juman(line, tok_cnt);
 						break;
 					case UniDic:
 						std::cerr << "ERROR: it has not been implemented" << std::endl;
@@ -411,11 +416,12 @@ namespace nlp {
 						return false;
 				}
 
-				tok_addr.push_back(tok);
-				t2c[tok->id] = chunks[chunks.size()-1].id;
-				chunks[chunks.size()-1].tokens.push_back(*tok);
+				t2c[tok.id] = chunks[chunks.size()-1].id;
+				chunks[chunks.size()-1].tok_g2l[tok_cnt] = tok_cnt_local;
+				chunks[chunks.size()-1].tokens.push_back(tok);
 
 				tok_cnt++;
+				tok_cnt_local++;
 			}
 		}
 
@@ -457,8 +463,7 @@ namespace nlp {
 
 	chunk* sentence::get_chunk_by_tokenID(const int tid) {
 		if (t2c.find(tid) != t2c.end() ) {
-			int cid = t2c[tid];
-			return get_chunk(cid);
+			return get_chunk(t2c[tid]);
 		}
 		else {
 			return NULL;
@@ -468,7 +473,8 @@ namespace nlp {
 
 	token* sentence::get_token(const int tid) {
 		if (tid_min <= tid && tid <= tid_max) {
-			return tok_addr[tid];
+			nlp::chunk *chk = get_chunk(t2c[tid]);
+			return &(chk->tokens[chk->tok_g2l[tid]]);
 		}
 		return NULL;
 	}
@@ -482,7 +488,7 @@ namespace nlp {
 	}
 
 
-	chunk* sentence::get_dst_chunk(const chunk &chk_core, const unsigned int depth) {
+/*	chunk* sentence::get_dst_chunk(const chunk &chk_core, const unsigned int depth) {
 		int cid_dst = chk_core.dst;
 		if (cid_dst == -1) {
 			return NULL;
@@ -497,8 +503,9 @@ namespace nlp {
 				return chk;
 			}
 		}
-		return chk;
+		return NULL;
 	}
+	*/
 
 
 	void sentence::cabocha(std::string &str_res) {
