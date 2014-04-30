@@ -425,6 +425,12 @@ namespace nlp {
 			}
 		}
 
+#if _MODEBUG
+		for (int ti=0 ; ti<tok_cnt-1 ; ++ti) {
+			std::cout << ti << "->" << t2c[ti] << std::endl;
+		}
+#endif
+
 		tid_min = 0;
 		tid_max = tok_cnt-1;
 		cid_min = 0;
