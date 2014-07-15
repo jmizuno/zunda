@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (argmap.count("version")) {
-		std::cout << MODALITY_VERSION << std::endl;
+		std::cout << PACKAGE_VERSION << std::endl;
 		return 1;
 	}
 

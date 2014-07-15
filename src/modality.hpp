@@ -17,8 +17,11 @@ namespace linear {
 
 #include "sentence.hpp"
 #include "cdbmap.hpp"
+#include "../config.h"
 
-#define MODALITY_VERSION 1.0
+#ifndef PACKAGE_VERSION
+#  define PACKAGE_VERSION "beta"
+#endif
 #define LABEL_NUM 6
 
 #ifndef MODELDIR_IPA
