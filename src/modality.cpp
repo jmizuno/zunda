@@ -18,6 +18,7 @@
 #include "sentence.hpp"
 #include "modality.hpp"
 #include "cdbmap.hpp"
+#include "util.hpp"
 
 namespace modality {
 	std::string parser::id2tag(unsigned int id) {
@@ -76,14 +77,39 @@ namespace modality {
 	}
 
 
-	bool parser::detect_target(nlp::token &tok) {
-		std::string pos_set = tok.pos + "\t" + tok.pos1;
+	bool parser::detect_target(nlp::token &tok, nlp::sentence &sent) {
+		nlp::token *t;
 		switch (target_detection) {
 			case DETECT_BY_POS:
-				if (std::find(target_pos.begin(), target_pos.end(), pos_set) != target_pos.end()) {
-					return true;
+				{
+					std::vector< std::vector< std::string > > poss;
+					for (int i=0 ; i<max_num_tok_target ; ++i) {
+						t = sent.get_token(tok.id+i);
+						if (t!=NULL) {
+							std::vector<std::string> _pos;
+							_pos.push_back(t->pos);
+							_pos.push_back(t->pos1);
+							poss.push_back(_pos);
+						}
+					}
+
+					BOOST_FOREACH (std::vector< std::vector<std::string> > t_poss, target_pos) {
+						bool is_target = true;
+						if (t_poss.size() > poss.size())
+							continue;
+						for (int i=0 ; i<t_poss.size() ; ++i) {
+							if (t_poss[i][0] == poss[i][0] && ( t_poss[i][1] == "*" || t_poss[i][1] == poss[i][1] )) {
+							}
+							else {
+								is_target = false;
+								break;
+							}
+						}
+						if (is_target)
+							return true;
+					}
+					break;
 				}
-				break;
 			case DETECT_BY_PAS:
 				if (tok.pas.is_pred()) {
 					return true;
@@ -241,7 +267,7 @@ namespace modality {
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sc_end ; ++rit_chk) {
 			st_end = rit_chk->tokens.rend();
 			for(rit_tok=rit_chk->tokens.rbegin() ; rit_tok!=st_end ; ++rit_tok) {
-				if (detect_target(*rit_tok)) {
+				if (detect_target(*rit_tok, sent)) {
 #ifdef _MODEBUG
 					std::string chk_str;
 					rit_chk->str(chk_str);
@@ -401,7 +427,7 @@ namespace modality {
 		BOOST_FOREACH (nlp::sentence sent, learning_data) {
 			BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
 				BOOST_FOREACH (nlp::token tok, chk.tokens) {
-					if (detect_target(tok) && tok.has_mod) {
+					if (detect_target(tok, sent) && tok.has_mod) {
 						num_node++;
 					}
 				}
@@ -420,7 +446,7 @@ namespace modality {
 			BOOST_FOREACH (nlp::sentence sent, learning_data) {
 				BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
 					BOOST_FOREACH (nlp::token tok, chk.tokens) {
-						if (detect_target(tok) && tok.has_mod) {
+						if (detect_target(tok, sent) && tok.has_mod) {
 							std::string label = tok.mod.tag[id2tag(tag_id)];
 							if (!l2i.exists_on_map(label)) {
 								int lid = l2i.size()+1;

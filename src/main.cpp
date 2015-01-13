@@ -15,6 +15,7 @@ int main(int argc, char *argv[]) {
 	opt.add_options()
 		("input,i", boost::program_options::value<int>(), "input layer (optional)\n 0 - raw text layer [default]\n 1 - dependency parsed layer by CaboCha/J.DepP\n 2 - dependency parsed layer by KNP\n 3 - predicate-argument structure analyzed layer by SynCha/ChaPAS\n 4 - predicate-argument structure analyzed layer by KNP")
 		("pos", boost::program_options::value<int>(), "POS tag for CaboCha/J.DepP (optional)\n 0 - IPA/Naist-jdic [default]\n 1 - JumanDic\n 2 - UniDic")
+		("posset", boost::program_options::value<std::string>(), "POS set to parse (optional")
 		("target,t", boost::program_options::value<unsigned int>(), "method of detecting token to be analyzed\n 0 - by part of speech [default]\n 1 - predicate detected by a predicate-argument structure analyzer (only SynCha format is supported)\n 2 - by machine learning (has not been implemented)")
 		("model,m", boost::program_options::value<std::string>(), "model directory (optional)")
 		("dic,d", boost::program_options::value<std::string>(), "dictionary directory (optional)")
@@ -50,6 +51,11 @@ int main(int argc, char *argv[]) {
 		pos_tag = argmap["pos"].as<int>();
 	}
 
+	std::string pos_set;
+	if (argmap.count("posset")) {
+		pos_set = argmap["posset"].as<std::string>();
+	}
+
 	std::string model_dir;
 	switch (pos_tag) {
 		case modality::POS_IPA:
@@ -83,7 +89,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	modality::parser mod_parser(model_dir, dic_dir);
-	mod_parser.set_pos_tag(pos_tag);
+	mod_parser.set_pos_tag(pos_tag, pos_set);
 
 	if (argmap.count("target")) {
 		mod_parser.target_detection = argmap["target"].as<unsigned int>();

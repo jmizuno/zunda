@@ -6,6 +6,7 @@
 #include <boost/unordered_map.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
 //#include <mecab.h>
 #include <cabocha.h>
 #include "../tinyxml2/tinyxml2.h"
@@ -34,6 +35,10 @@ namespace linear {
 #ifndef DICDIR
 #  define DICDIR "dic"
 #endif
+
+#define POSSET_IPA "動詞,*|形容詞,*|名詞,サ変接続|名詞,形容動詞語幹"
+//#define POS_IPA "動詞,*|形容詞,*|名詞,サ変接続|名詞,形容動詞語幹|名詞,*:助動詞,*|名詞,*:助詞,*:助動詞,*"
+#define POSSET_JUMAN "動詞,*|形容詞,*|名詞,サ変名詞"
 
 const boost::filesystem::path TMP_DIR("/tmp");
 
@@ -123,8 +128,8 @@ namespace modality {
 			std::vector<std::string> use_feats[LABEL_NUM];
 			
 			int pos_tag;
-			std::vector<std::string> target_pos;
-			std::string test_pos;
+			std::vector< std::vector< std::vector<std::string> > > target_pos;
+			int max_num_tok_target;
 			
 			parser(std::string model_dir = MODELDIR_IPA, std::string dic_dir = DICDIR) {
 				analyze_tags.push_back(TENSE);
@@ -176,7 +181,7 @@ namespace modality {
 				
 				target_detection = DETECT_BY_POS;
 				pos_tag = POS_IPA;
-				set_pos_tag(pos_tag);
+				set_pos_tag(pos_tag, "");
 				
 				open_f2i_cdb();
 				open_l2i_cdb();
@@ -200,30 +205,52 @@ namespace modality {
 			void set_model_dir(boost::filesystem::path);
 			unsigned int detect_format(std::string);
 			unsigned int detect_format(std::vector<std::string>);
-			bool detect_target(nlp::token &);
-			void set_pos_tag(int _pos_tag) {
+			bool detect_target(nlp::token &, nlp::sentence &);
+
+			bool parse_pos_str(const std::string &t_pos, std::vector< std::vector< std::vector<std::string> > > *t_pos_vec, int *_max_num_tok_target) {
+				*_max_num_tok_target = 0;
+				if (t_pos.empty())
+					return false;
+				t_pos_vec->clear();
+
+				std::vector<std::string> psets;
+				boost::algorithm::split(psets, t_pos, boost::algorithm::is_any_of("|"));
+				BOOST_FOREACH (std::string pset, psets) {
+					std::vector<std::string> _poss;
+					std::vector< std::vector<std::string> > poss;
+					boost::algorithm::split(_poss, pset, boost::algorithm::is_any_of(":"));
+					BOOST_FOREACH (std::string pos, _poss) {
+						std::vector<std::string> pp;
+						boost::algorithm::split(pp, pos, boost::algorithm::is_any_of(","));
+						poss.push_back(pp);
+					}
+					t_pos_vec->push_back(poss);
+					if (*_max_num_tok_target < poss.size())
+						*_max_num_tok_target = poss.size();
+				}
+
+				return true;
+			}
+
+			void set_pos_tag(int _pos_tag, const std::string &_pos_set) {
 				pos_tag = _pos_tag;
+				std::string t_pos;
 				switch (pos_tag) {
 					case POS_IPA:
-						target_pos.clear();
-						target_pos.push_back("動詞\t自立");
-						target_pos.push_back("形容詞\t自立");
-						target_pos.push_back("名詞\tサ変接続");
-						target_pos.push_back("名詞\t形容動詞語幹");
+						t_pos = POSSET_IPA;
 						break;
 					case POS_JUMAN:
-						target_pos.clear();
-						target_pos.push_back("動詞\t*");
-						target_pos.push_back("形容詞\t*");
-						target_pos.push_back("名詞\tサ変名詞");
+						t_pos = POSSET_JUMAN;
 						break;
 					case POS_UNI:
-						target_pos.clear();
 						break;
 					default:
 						std::cerr << "ERROR: invalid pos tag" << std::endl;
 						break;
 				}
+				if (!_pos_set.empty())
+					t_pos = _pos_set;
+				parse_pos_str(t_pos, &target_pos, &max_num_tok_target);
 			}
 
 			bool load_models(boost::filesystem::path *);

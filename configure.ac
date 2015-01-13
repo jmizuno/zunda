@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.59])
 #AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
-AC_INIT([zunda], [1.5], [jmizuno@gmail.com])
+AC_INIT([zunda], [1.6], [jmizuno@gmail.com])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/main.cpp])
 AC_CONFIG_HEADERS([config.h])

@@ -31,6 +31,7 @@ int main(int argc, char *argv[]) {
 		("list,l", boost::program_options::value< std::vector<std::string> >()->multitoken(), "list files of input data")
 		("input,i", boost::program_options::value<int>(), "input format\n 0 - BCCWJ-style XML tagged format re-parsed by CaboCha [default]\n 1 - BCCWJ-style XML tagged format re-parsed by KNP\n 2 - depndency parsed format by CaboCha/J.DepP\n 3 - dependency parsed format by KNP\n 4 - predicate-argument structure analyzed format by SynCha/ChaPAS\n 5 - predicate-argument structure analyzed format by KNP")
 		("pos", boost::program_options::value<int>(), "POS tag for CaboCha/J.DepP (optional)\n 0 - IPA/Naist-jdic [default]\n 1 - JumanDic\n 2 - UniDic")
+		("posset", boost::program_options::value<std::string>(), "POS set to parse (optional")
 		("cross,x", "enable cross validation (optional): default off")
 		("split,g", boost::program_options::value<unsigned int>(), "number of groups for cross validation (optional): default 5")
 		("outdir,o", boost::program_options::value<std::string>(), "directory to store output files (optional)\n simple training -  stores model file and feature file to \"model (default)\"\n cross validation - stores model file, feature file and result file to \"output (default)\"")
@@ -83,6 +84,11 @@ int main(int argc, char *argv[]) {
 		pos_tag = argmap["pos"].as<int>();
 	}
 
+	std::string pos_set;
+	if (argmap.count("posset")) {
+		pos_set = argmap["posset"].as<std::string>();
+	}
+
 	if (!argmap.count("path") && !argmap.count("list")) {
 		std::cerr << "ERROR: no input data" << std::endl;
 		return false;
@@ -114,7 +120,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	modality::parser mod_parser(outdir_path.string(), dic_dir);
-	mod_parser.set_pos_tag(pos_tag);
+	mod_parser.set_pos_tag(pos_tag, pos_set);
 
 	if (argmap.count("target")) {
 		mod_parser.target_detection = argmap["target"].as<unsigned int>();
