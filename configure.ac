@@ -69,19 +69,28 @@ AC_SUBST(BOOST_LIBS)
 #LDFLAGS=${old_LDFLAGS}
 
 AC_ARG_WITH(
-						cabocha,	
+						[cabocha],	
 						[AC_HELP_STRING([--with-cabocha=DIR], [cabocha directory])],
 						[AM_CPPFLAGS="-I${withval}/include ${AM_CPPFLAGS}"; AM_LDFLAGS="-L${withval}/lib ${AM_LDFLAGS}"]
 						)
-old_CPPFLAGS=${CPPFLAGS}
-old_LDFLAGS=${LDFLAGS}
-CPPFLAGS=${AM_CPPFLAGS}
-LDFLAGS=${AM_LDFLAGS}
-AC_CHECK_HEADER([cabocha.h], [break]  ,[AC_MSG_ERROR(cabocha.h not found)])
-AC_CHECK_LIB([cabocha], main,   ,[AC_MSG_ERROR(cabocha library not found)])
-CPPFLAGS=${old_CPPFLAGS}
-LDFLAGS=${old_LDFLAGS}
+AC_ARG_ENABLE(
+							[cabocha],
+							AC_HELP_STRING([--disable-cabocha], [use cabocha (default is no)]),
+							[enable_cabocha=no],
+							)
 
+AS_IF([test "x$enable_cabocha" != xno],
+			[AM_CXXFLAGS=" -DUSE_CABOCHA ${AM_CXXFLAGS}"
+			 old_CPPFLAGS=${CPPFLAGS}
+			 old_LDFLAGS=${LDFLAGS}
+			 CPPFLAGS=${AM_CPPFLAGS}
+			 LDFLAGS=${AM_LDFLAGS}
+			 AC_CHECK_HEADER([cabocha.h], [break]  ,[AC_MSG_ERROR(cabocha.h not found)])
+			 AC_CHECK_LIB([cabocha], main,   ,[AC_MSG_ERROR(cabocha library not found)])
+			 CPPFLAGS=${old_CPPFLAGS}
+			 LDFLAGS=${old_LDFLAGS}
+			 ]
+			)
 
 AC_ARG_ENABLE(
 							[debug],
