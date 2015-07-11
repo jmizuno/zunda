@@ -61,27 +61,34 @@ namespace nlp {
 		}
 	}
 
-	bool pas::parse(std::string pas_line, pas *pas) {
-		std::vector<std::string> pas_infos;
-		boost::algorithm::split(pas_infos, pas_line, boost::algorithm::is_any_of(" ") );
+	bool pas::parse(const std::string &pas_line, pas *pas) {
+		std::vector<std::string> pas_sets;
+		boost::algorithm::split(pas_sets, pas_line, boost::algorithm::is_any_of("|") );
 
-		BOOST_FOREACH(std::string pas_info, pas_infos) {
-			std::vector<std::string> v;
-			boost::algorithm::split(v, pas_info, boost::algorithm::is_any_of("=") );
+		BOOST_FOREACH (std::string pas_set, pas_sets) {
+			boost::algorithm::trim(pas_set);
+			std::vector<std::string> pas_infos;
+			boost::algorithm::split(pas_infos, pas_set, boost::algorithm::is_any_of(" ") );
 
-			if (v.size() == 2) {
-				rm_quote(v[1]);
-				if (v[0] == "type") {
-					pas->pred_type = v[1];
-				}
-				else if (v[0] == "ID") {
-					pas->arg_id = boost::lexical_cast<int>(v[1]);
-				}
-				else {
-					pas->arg_type[v[0]] = boost::lexical_cast<int>(v[1]);
+			BOOST_FOREACH(std::string pas_info, pas_infos) {
+				std::vector<std::string> v;
+				boost::algorithm::split(v, pas_info, boost::algorithm::is_any_of("=") );
+
+				if (v.size() == 2) {
+					rm_quote(v[1]);
+					if (v[0] == "type") {
+						pas->pred_type = v[1];
+					}
+					else if (v[0] == "ID") {
+						if (pas->arg_id == -1)
+							pas->arg_id = boost::lexical_cast<int>(v[1]);
+					}
+					else {
+						if (pas->arg_type.find(v[0]) == pas->arg_type.end())
+							pas->arg_type[v[0]] = boost::lexical_cast<int>(v[1]);
+					}
 				}
 			}
-
 		}
 
 		return true;

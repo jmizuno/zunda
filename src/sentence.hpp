@@ -26,7 +26,7 @@ namespace nlp {
 				pred_type = "null";
 			}
 		
-			bool parse(std::string, pas *);
+			bool parse(const std::string &, pas *);
 			bool is_pred();
 	};
 	
