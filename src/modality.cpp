@@ -531,6 +531,14 @@ namespace modality {
 			_prob.bias = -1;
 
 			linear::model *model;
+			const char *error_msg;
+			error_msg = linear::check_parameter(&_prob,&_param);
+			if(error_msg)
+			{
+				fprintf(stderr,"ERROR: %s\n",error_msg);
+				exit(1);
+			}
+
 			model = linear::train(&_prob, &_param);
 			linear::save_model(model_path[tag_id].string().c_str(), model);
 
