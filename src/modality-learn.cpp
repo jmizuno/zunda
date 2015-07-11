@@ -73,6 +73,7 @@ int main(int argc, char *argv[]) {
 	if (argmap.count("dic")) {
 		dic_dir = argmap["dic"].as<std::string>();
 	}
+	boost::filesystem::path dic_dir_path(dic_dir);
 
 	int input_layer;
 	if (argmap.count("input")) {
@@ -121,6 +122,10 @@ int main(int argc, char *argv[]) {
 
 	modality::parser mod_parser(outdir_path.string(), dic_dir);
 	mod_parser.set_pos_tag(pos_tag, pos_set);
+
+	boost::filesystem::path kt_path("keyterms.txt");
+	kt_path = dic_dir_path / kt_path;
+	mod_parser.fgen.load_keyterms(kt_path);
 
 	if (argmap.count("target")) {
 		mod_parser.target_detection = argmap["target"].as<unsigned int>();

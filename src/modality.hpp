@@ -93,7 +93,81 @@ namespace modality {
 		std::vector<int> tok_ids;
 		std::string semrel;
 	} t_match_func;
-		
+
+
+
+	class feature_generator2 {
+		public:
+			boost::unordered_map< std::string, std::vector<std::string> > keyterms;
+
+			nlp::token *tok_core;
+			nlp::chunk *chk_core;
+			nlp::sentence *sent;
+			t_feat_cat feat_cat;
+		public:
+			feature_generator2() {
+			}
+		public:
+			bool compile_feat_str( const std::vector<std::string> &, std::string & );
+			bool compile_feat( const std::vector<std::string> &, t_feat & );
+			void gen_feature_function();
+			void gen_feature_mod(const std::string &);
+			void gen_feature_basic(const int);
+			void gen_feature_dst_chunks();
+			void gen_feature_ttj(cdbpp::cdbpp *);
+			void gen_feature_fadic(cdbpp::cdbpp *);
+			void gen_feature_neg();
+			/*
+			void gen_feature_last_pred();
+			void gen_feature_dst_chunks(const unsigned int);
+			*/
+
+
+		public:
+			void set(nlp::sentence *_sent, nlp::chunk *chk, nlp::token *tok) {
+				sent = _sent;
+				tok_core = tok;
+				chk_core = chk;
+				feat_cat.clear();
+			}
+
+
+		public:
+			void load_keyterms(const boost::filesystem::path &kt_path) {
+				keyterms.clear();
+
+				std::ifstream ifs;
+				ifs.open(kt_path.string().c_str());
+				std::string line, key;
+				while (ifs && getline(ifs, line)) {
+					boost::algorithm::trim_right(line);
+					if (line.compare(0, 1, "#") == 0 || line.size() == 0) {
+						continue;
+					}
+					else if (line.compare(0, 1, ":") == 0) {
+						line.replace(0,1,"");
+						key = line;
+					}
+					else {
+						keyterms[key].push_back(line);
+					}
+				}
+
+				boost::unordered_map< std::string, std::vector<std::string> >::iterator it_kt;
+				boost::unordered_map< std::string, std::vector<std::string> >::iterator ite_kt=keyterms.end();
+				for (it_kt=keyterms.begin() ; it_kt!=ite_kt ; ++it_kt) {
+					std::sort(it_kt->second.begin(), it_kt->second.end());
+#ifdef _MODEBUG
+					std::string buf;
+					join(buf, it_kt->second, ", ");
+					BOOST_LOG_TRIVIAL(debug) << it_kt->first << ": " << it_kt->second.size() << " " << buf;
+#endif
+				}
+			}
+	};
+
+
+
 	class parser {
 		public:
 			cdbpp::cdbpp dbr_ttj;
@@ -135,6 +209,8 @@ namespace modality {
 			std::vector< std::vector< std::vector<std::string> > > target_pos;
 			int max_num_tok_target;
 			
+			feature_generator2 fgen;
+
 			parser(std::string model_dir = MODELDIR_IPA, std::string dic_dir = DICDIR) {
 				analyze_tags.push_back(TENSE);
 				analyze_tags.push_back(TYPE);
@@ -146,7 +222,7 @@ namespace modality {
 				use_feats_str[TENSE] = use_feats_common_str + ",mod_type";
 				use_feats_str[TYPE] = use_feats_common_str + ",fadic_worth";
 				use_feats_str[ASSUMPTIONAL] = use_feats_common_str + ",mod_type";
-				use_feats_str[AUTHENTICITY] = use_feats_common_str + ",fadic_authenticity,mod_type";
+				use_feats_str[AUTHENTICITY] = use_feats_common_str + ",fadic_authenticity,mod_type,neg";
 				use_feats_str[SENTIMENT] = use_feats_common_str + ",fadic_sentiment,mod_type";
 
 				BOOST_FOREACH (unsigned int i, analyze_tags) {
@@ -156,6 +232,7 @@ namespace modality {
 				model_path = new boost::filesystem::path[LABEL_NUM];
 				feat_path = new boost::filesystem::path[LABEL_NUM];
 				set_model_dir(model_dir);
+
 
 				//				mecab = MeCab::createTagger("-p");
 				//				
@@ -289,73 +366,6 @@ namespace modality {
 			void save_i2l();
 	};
 
-	class feature_generator2 {
-		public:
-			nlp::token *tok_core;
-			nlp::chunk *chk_core;
-			nlp::sentence *sent;
-			t_feat_cat feat_cat;
-		public:
-			feature_generator2(nlp::sentence *_sent, nlp::chunk *chk, nlp::token *tok) {
-				sent = _sent;
-				tok_core = tok;
-				chk_core = chk;
-			}
-		public:
-			bool compile_feat_str( const std::vector<std::string> &, std::string & );
-			bool compile_feat( const std::vector<std::string> &, t_feat & );
-			void gen_feature_function();
-			void gen_feature_mod(const std::string &);
-			void gen_feature_basic(const int);
-			void gen_feature_dst_chunks();
-			void gen_feature_ttj(cdbpp::cdbpp *);
-			void gen_feature_fadic(cdbpp::cdbpp *);
-			/*
-			void gen_feature_last_pred();
-			void gen_feature_dst_chunks(const unsigned int);
-			*/
-	};
-
-	/*
-	class feature_generator {
-		public:
-			nlp::token tok_core;
-			nlp::chunk chk_core, chk_dst;
-			std::vector< nlp::chunk > chks_src;
-			bool has_chk_dst;
-			nlp::sentence sent;
-			int tok_id;
-			t_feat_cat feat_cat;
-		public:
-			void update(nlp::sentence sent) {
-//				tok_core = sent.get_token(tok_id);
-//				chk_core = sent.get_chunk_by_tokenID(tok_id);
-				if (chk_core.dst != -1) {
-//					chk_dst = sent.get_chunk(chk_core.dst);
-					has_chk_dst = true;
-				}
-//				sent.get_chunks_src(&chks_src, chk_core);
-			}
-
-			feature_generator(nlp::sentence _sent, int _tok_id) {
-				has_chk_dst = false;
-
-				sent = _sent;
-				tok_id = _tok_id;
-				update(sent);
-			}
-
-			
-			std::string compile_feat_str(std::vector<std::string>);
-			t_feat compile_feat(std::vector<std::string>);
-			void gen_feature_function();
-			void gen_feature_mod(std::string);
-			void gen_feature_basic(const int);
-			void gen_feature_dst_chunks();
-			void gen_feature_ttj(cdbpp::cdbpp *);
-			void gen_feature_fadic(cdbpp::cdbpp *);
-	};
-	*/
 };
 
 #endif

@@ -53,6 +53,29 @@ namespace modality {
 	}
 
 
+	void feature_generator2::gen_feature_neg() {
+		BOOST_FOREACH (nlp::token t, chk_core->tokens) {
+			if (t.id > tok_core->id) {
+				if (std::binary_search(keyterms["Negations"].begin(), keyterms["Negations"].end(), t.orig) || std::binary_search(keyterms["Correctings"].begin(), keyterms["Correctings"].end(), t.orig) ) {
+					feat_cat["neg"]["exist_in_core_chunk"] = 1.0;
+					feat_cat["neg"]["term_in_core_chunk_" + t.orig] = 1.0;
+				}
+			}
+		}
+
+		unsigned int tid_a_core = chk_core->tokens[chk_core->tokens.size()-1].id+1;
+		for (unsigned int tid=tid_a_core ; tid<tid_a_core+8 ; ++tid) {
+			nlp::token *t = sent->get_token(tid);
+			if (t != NULL) {
+				if (std::binary_search(keyterms["Negations"].begin(), keyterms["Negations"].end(), t->orig) || std::binary_search(keyterms["Correctings"].begin(), keyterms["Correctings"].end(), t->orig) ) {
+					feat_cat["neg"]["exist_after_core"] = 1.0;
+					feat_cat["neg"]["term_after_core_" + t->orig] = 1.0;
+				}
+			}
+		}
+	}
+
+
 	void feature_generator2::gen_feature_function() {
 		std::vector< std::vector< nlp::token * > > ng_tok;
 		std::vector< nlp::token * > toks;
