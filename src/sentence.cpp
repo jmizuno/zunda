@@ -338,7 +338,7 @@ namespace nlp {
 				comment_flag = false;
 				chunk chk;
 				char type;
-				sscanf(line.c_str(), "* %d%s", &chk.dst, &type);
+				sscanf(line.c_str(), "* %d%c", &chk.dst, &type);
 				chk.id = chk_cnt;
 				chk.type = type;
 				chk_cnt++;
@@ -385,7 +385,7 @@ namespace nlp {
 				comment_flag = false;
 				chunk chk;
 				char type;
-				sscanf(line.c_str(), "* %d %d%s", &chk.id, &chk.dst, &type);
+				sscanf(line.c_str(), "* %d %d%c", &chk.id, &chk.dst, &type);
 				chk.type = type;
 				tok_cnt_local = 0;
 

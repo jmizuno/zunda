@@ -184,8 +184,6 @@ namespace nlp {
 			}
 			bool parse(const std::string &);
 			bool parse(const std::vector< std::string > &);
-			bool parse_cabocha(const std::vector< std::string > &);
-			bool parse_knp(const std::vector< std::string > &);
 			bool pp();
 			chunk* get_chunk(const int);
 			chunk* get_chunk_by_tokenID(const int);
@@ -196,6 +194,9 @@ namespace nlp {
 			void str(std::string &);
 			void cabocha(std::string &);
 			void clear_mod();
+		protected:
+			bool parse_cabocha(const std::vector< std::string > &);
+			bool parse_knp(const std::vector< std::string > &);
 	};
 };
 
