@@ -282,7 +282,7 @@ namespace modality {
 					rit_tok->has_mod = true;
 					rit_chk->has_mod = true;
 
-					feature_generator2 fgen(&sent, &(*rit_chk), &(*rit_tok));
+					fgen.set(&sent, &(*rit_chk), &(*rit_tok));
 					fgen.gen_feature_basic(3);
 					fgen.gen_feature_function();
 					fgen.gen_feature_dst_chunks();
@@ -304,6 +304,7 @@ namespace modality {
 							case AUTHENTICITY:
 								fgen.gen_feature_mod("type");
 								fgen.gen_feature_fadic(&dbr_fadic);
+								fgen.gen_feature_neg();
 								break;
 							case SENTIMENT:
 								fgen.gen_feature_fadic(&dbr_fadic);
@@ -465,7 +466,7 @@ namespace modality {
 							std::stringstream tok_id_full;
 							tok_id_full << sent.sent_id << "_" << chk.id << "_" << tok.id;
 
-							feature_generator2 fgen(&sent, &chk, &tok);
+							fgen.set(&sent, &chk, &tok);
 							fgen.gen_feature_basic(3);
 							fgen.gen_feature_function();
 							fgen.gen_feature_dst_chunks();
@@ -484,6 +485,7 @@ namespace modality {
 								case AUTHENTICITY:
 									fgen.gen_feature_mod("type");
 									fgen.gen_feature_fadic(&dbr_fadic);
+									fgen.gen_feature_neg();
 									break;
 								case SENTIMENT:
 									fgen.gen_feature_fadic(&dbr_fadic);

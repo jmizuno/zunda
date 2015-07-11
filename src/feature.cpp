@@ -11,6 +11,7 @@
 
 #include "sentence.hpp"
 #include "modality.hpp"
+#include "util.hpp"
 
 
 namespace modality {
@@ -52,16 +53,53 @@ namespace modality {
 	}
 
 
-	void feature_generator2::gen_feature_function() {
-		std::string func_ex;
-
-		BOOST_FOREACH ( nlp::token tok, chk_core->tokens ) {
-			if (tok_core->id < tok.id) {
-				func_ex += tok.surf + ".";
+	void feature_generator2::gen_feature_neg() {
+		BOOST_FOREACH (nlp::token t, chk_core->tokens) {
+			if (t.id > tok_core->id) {
+				if (std::binary_search(keyterms["Negations"].begin(), keyterms["Negations"].end(), t.orig) || std::binary_search(keyterms["Correctings"].begin(), keyterms["Correctings"].end(), t.orig) ) {
+					feat_cat["neg"]["exist_in_core_chunk"] = 1.0;
+					feat_cat["neg"]["term_in_core_chunk_" + t.orig] = 1.0;
+				}
 			}
 		}
 
-		feat_cat["func_surf"][func_ex] = 1.0;
+		unsigned int tid_a_core = chk_core->tokens[chk_core->tokens.size()-1].id+1;
+		for (unsigned int tid=tid_a_core ; tid<tid_a_core+8 ; ++tid) {
+			nlp::token *t = sent->get_token(tid);
+			if (t != NULL) {
+				if (std::binary_search(keyterms["Negations"].begin(), keyterms["Negations"].end(), t->orig) || std::binary_search(keyterms["Correctings"].begin(), keyterms["Correctings"].end(), t->orig) ) {
+					feat_cat["neg"]["exist_after_core"] = 1.0;
+					feat_cat["neg"]["term_after_core_" + t->orig] = 1.0;
+				}
+			}
+		}
+	}
+
+
+	void feature_generator2::gen_feature_function() {
+		std::vector< std::vector< nlp::token * > > ng_tok;
+		std::vector< nlp::token * > toks;
+		for (unsigned int tid=tok_core->id+1 ; tid<tok_core->id+8 ; ++tid) {
+			nlp::token *t = sent->get_token(tid);
+			if (t!=NULL)
+				toks.push_back(t);
+		}
+		if (toks.size() != 0) {
+			ng_tok.clear();
+			get_subvec(&ng_tok, toks, 1, toks.size());
+			BOOST_FOREACH (std::vector<nlp::token *> ngt, ng_tok) {
+				std::string f_surf_str, f_orig_str;
+				std::vector<std::string> f_surf_v, f_orig_v;
+				BOOST_FOREACH (nlp::token *t, ngt) {
+					f_surf_v.push_back(t->surf);
+					f_orig_v.push_back(t->orig);
+				}
+				join(f_surf_str, f_surf_v, ".");
+				join(f_orig_str, f_orig_v, ".");
+				feat_cat["func"]["surf_" + f_surf_str] = 1.0;
+				feat_cat["func"]["orig_" + f_orig_str] = 1.0;
+			}
+		}
 	}
 
 
