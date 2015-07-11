@@ -142,7 +142,7 @@ namespace modality {
 				analyze_tags.push_back(AUTHENTICITY);
 				analyze_tags.push_back(SENTIMENT);
 				
-				std::string use_feats_common_str = "func_surf,tok,chunk,func_sem";
+				std::string use_feats_common_str = "func,tok,chunk,func_sem";
 				use_feats_str[TENSE] = use_feats_common_str + ",mod_type";
 				use_feats_str[TYPE] = use_feats_common_str + ",fadic_worth";
 				use_feats_str[ASSUMPTIONAL] = use_feats_common_str + ",mod_type";
