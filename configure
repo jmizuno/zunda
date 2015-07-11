@@ -734,6 +734,7 @@ enable_dependency_tracking
 with_boost_include
 with_boost_lib
 with_cabocha
+enable_cabocha
 enable_debug
 '
       ac_precious_vars='build_alias
@@ -1369,6 +1370,7 @@ Optional Features:
                           do not reject slow dependency extractors
   --disable-dependency-tracking
                           speeds up one-time build
+  --disable-cabocha       use cabocha (default is no)
   --enable-debug          debug mode (default is no)
 
 Optional Packages:
@@ -5340,11 +5342,19 @@ if test "${with_cabocha+set}" = set; then :
 
 fi
 
-old_CPPFLAGS=${CPPFLAGS}
-old_LDFLAGS=${LDFLAGS}
-CPPFLAGS=${AM_CPPFLAGS}
-LDFLAGS=${AM_LDFLAGS}
-ac_fn_cxx_check_header_mongrel "$LINENO" "cabocha.h" "ac_cv_header_cabocha_h" "$ac_includes_default"
+# Check whether --enable-cabocha was given.
+if test "${enable_cabocha+set}" = set; then :
+  enableval=$enable_cabocha; enable_cabocha=no
+fi
+
+
+if test "x$enable_cabocha" != xno; then :
+  AM_CXXFLAGS=" -DUSE_CABOCHA ${AM_CXXFLAGS}"
+			 old_CPPFLAGS=${CPPFLAGS}
+			 old_LDFLAGS=${LDFLAGS}
+			 CPPFLAGS=${AM_CPPFLAGS}
+			 LDFLAGS=${AM_LDFLAGS}
+			 ac_fn_cxx_check_header_mongrel "$LINENO" "cabocha.h" "ac_cv_header_cabocha_h" "$ac_includes_default"
 if test "x$ac_cv_header_cabocha_h" = xyes; then :
   break
 else
@@ -5352,7 +5362,7 @@ else
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lcabocha" >&5
+			 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lcabocha" >&5
 $as_echo_n "checking for main in -lcabocha... " >&6; }
 if ${ac_cv_lib_cabocha_main+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -5393,9 +5403,11 @@ else
   as_fn_error $? "cabocha library not found" "$LINENO" 5
 fi
 
-CPPFLAGS=${old_CPPFLAGS}
-LDFLAGS=${old_LDFLAGS}
+			 CPPFLAGS=${old_CPPFLAGS}
+			 LDFLAGS=${old_LDFLAGS}
 
+
+fi
 
 # Check whether --enable-debug was given.
 if test "${enable_debug+set}" = set; then :

@@ -11,7 +11,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <sstream>
-#include <cabocha.h>
 #include <iomanip>
 
 #include "../tinyxml2/tinyxml2.h"
@@ -160,36 +159,42 @@ namespace modality {
 	bool parser::analyze(const std::string &str, const int input_layer, nlp::sentence &sent) {
 		switch (pos_tag) {
 			case POS_IPA:
-				sent.ma_dic = sent.IPADic;
+				sent.ma_dic = nlp::sentence::IPADic;
 				break;
 			case POS_JUMAN:
-				sent.ma_dic = sent.JumanDic;
+				sent.ma_dic = nlp::sentence::JumanDic;
 				break;
 			case POS_UNI:
-				sent.ma_dic = sent.UniDic;
+				sent.ma_dic = nlp::sentence::UniDic;
 				break;
 		}
 
 		std::string parsed_text;
 		switch (input_layer) {
 			case IN_RAW:
-				sent.da_tool = sent.CaboCha;
+#ifdef USE_CABOCHA
+				sent.da_tool = nlp::sentence::CaboCha;
 				parsed_text = cabocha->parseToString( str.c_str() );
+#else
+				std::cerr << "--with-cabocha is required in configure" << std::endl;
+				exit(-1);
+#endif
 				break;
 			case IN_DEP_CAB:
 			case IN_PAS_SYN:
 				parsed_text = str;
-				sent.da_tool = sent.CaboCha;
+				sent.da_tool = nlp::sentence::CaboCha;
 				break;
 			case IN_DEP_KNP:
 			case IN_PAS_KNP:
 				parsed_text = str;
-				sent.da_tool = sent.KNP;
+				sent.da_tool = nlp::sentence::KNP;
 				break;
 			default:
 				std::cerr << "invalid input layer" << std::endl;
 				break;
 		}
+
 		sent.parse(parsed_text);
 
 		return analyze(sent);
@@ -545,10 +550,12 @@ namespace modality {
 			case IN_XML_CAB:
 			case IN_DEP_CAB:
 			case IN_PAS_SYN:
+#ifdef USE_CABOCHA
 				parsed_text = cabocha->parseToString( text.c_str() );
-				sent.ma_dic = sent.IPADic;
-				sent.da_tool = sent.CaboCha;
+				sent.ma_dic = nlp::sentence::IPADic;
+				sent.da_tool = nlp::sentence::CaboCha;
 				sent.parse(parsed_text);
+#endif
 				break;
 			case IN_XML_KNP:
 			case IN_DEP_KNP:
@@ -574,7 +581,7 @@ namespace modality {
 						exit(-1);
 					}
 
-					sent.da_tool = sent.KNP;
+					sent.da_tool = nlp::sentence::KNP;
 					sent.parse(lines);
 
 					break;

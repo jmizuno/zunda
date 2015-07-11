@@ -8,7 +8,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 //#include <mecab.h>
-#include <cabocha.h>
+#ifdef USE_CABOCHA
+#  include <cabocha.h>
+#endif
 #include "../tinyxml2/tinyxml2.h"
 
 namespace linear {
@@ -98,7 +100,9 @@ namespace modality {
 			cdbpp::cdbpp dbr_fadic;
 
 //			MeCab::Tagger *mecab;
+#ifdef USE_CABOCHA
 			CaboCha::Parser *cabocha;
+#endif
 			
 			std::vector< nlp::sentence > learning_data;
 			unsigned int target_detection;
@@ -177,7 +181,9 @@ namespace modality {
 				dbr_fadic.open(ifs_db);
 				ifs_db.close();
 
+#ifdef USE_CABOCHA
 				cabocha = CaboCha::createParser("-f1");
+#endif
 				
 				target_detection = DETECT_BY_POS;
 				pos_tag = POS_IPA;
