@@ -171,8 +171,8 @@ int main(int argc, char *argv[]) {
 	if (argmap.count("cross")) {
 		evaluator evals[LABEL_NUM];
 	
-		if (argmap.count("x")) {
-			split_num = argmap["x"].as<unsigned int>();
+		if (argmap.count("split")) {
+			split_num = argmap["split"].as<unsigned int>();
 		}
 		unsigned int grp_size = mod_parser.learning_data.size() / split_num;
 		std::vector< std::vector< nlp::sentence > > split_data;
