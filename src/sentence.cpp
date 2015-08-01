@@ -100,11 +100,17 @@ namespace nlp {
 		std::vector<std::string> tok_infos;
 		boost::algorithm::split(tok_infos, line, boost::algorithm::is_any_of("\t") );
 
+		int offset_ti = 0;
+		if (has_fsem) {
+			fsem = tok_infos[0];
+			++offset_ti;
+		}
+
 		std::vector<std::string> v;
-		boost::algorithm::split(v, tok_infos[1], boost::is_any_of(","));
+		boost::algorithm::split(v, tok_infos[offset_ti+1], boost::is_any_of(","));
 
 		id = tok_id;
-		surf = tok_infos[0];
+		surf = tok_infos[offset_ti];
 		pos = v[0];
 		pos1 = v[1];
 		pos2 = v[2];
@@ -117,14 +123,14 @@ namespace nlp {
 			pron = v[8];
 		}
 		else {
-			read = tok_infos[0];
+			read = tok_infos[offset_ti+1];
 		}
 
-		if (tok_infos.size() > 2) {
+		if (tok_infos.size() > offset_ti+2) {
 			ne = tok_infos[2];
 		}
 
-		if (tok_infos.size() > 3) {
+		if (tok_infos.size() > offset_ti+3) {
 			pas.parse(tok_infos[3], &pas);
 		}
 
@@ -136,11 +142,17 @@ namespace nlp {
 		std::vector<std::string> tok_infos;
 		boost::algorithm::split(tok_infos, line, boost::algorithm::is_any_of("\t") );
 
+		int offset_ti = 0;
+		if (has_fsem) {
+			fsem = tok_infos[0];
+			++offset_ti;
+		}
+
 		std::vector<std::string> v;
-		boost::algorithm::split(v, tok_infos[1], boost::is_any_of(","));
+		boost::algorithm::split(v, tok_infos[offset_ti+1], boost::algorithm::is_any_of(","));
 
 		id = tok_id;
-		surf = tok_infos[0];
+		surf = tok_infos[offset_ti];
 
 		pos = v[0];
 		orig = v[4];
@@ -155,7 +167,61 @@ namespace nlp {
 			type = v[2];
 			form2 = v[3];
 		}
+
+		if (tok_infos.size() > offset_ti+2) {
+			ne = tok_infos[2];
+		}
+
+		if (tok_infos.size() > offset_ti+3) {
+			pas.parse(tok_infos[3], &pas);
+		}
+
 		return true;
+	}
+
+
+	bool token::parse_mecab_unidic(const std::string &line, const int tok_id) {
+		std::vector<std::string> tok_infos;
+		boost::algorithm::split(tok_infos, line, boost::algorithm::is_any_of("\t"));
+
+		int offset_ti = 0;
+		if (has_fsem) {
+			fsem = tok_infos[0];
+			++offset_ti;
+		}
+
+		std::vector<std::string> v;
+		boost::algorithm::split(v, tok_infos[offset_ti+1], boost::algorithm::is_any_of(","));
+
+		id = tok_id;
+		surf = tok_infos[offset_ti];
+		pos1 = v[0];
+		pos = pos1;
+		pos2 = v[1];
+		pos3 = v[2];
+		pos4 = v[3];
+		cType = v[4];
+		cForm = v[5];
+		lForm = v[6];
+		lemma = v[7];
+		orig = lemma;
+		orth = v[8];
+		pron = v[9];
+		orthBase = v[10];
+		pronBase = v[11];
+		goshu = v[12];
+		iType = v[13];
+		iForm = v[14];
+		fType = v[15];
+		fForm = v[16];
+
+		if (tok_infos.size() > offset_ti+2) {
+			ne = tok_infos[2];
+		}
+
+		if (tok_infos.size() > offset_ti+3) {
+			pas.parse(tok_infos[3], &pas);
+		}
 	}
 
 
@@ -408,6 +474,7 @@ namespace nlp {
 			}
 			else {
 				token tok;
+				if (has_fsem) tok.has_fsem = true;
 				switch (ma_dic) {
 					case IPADic:
 						tok.parse_mecab(line, tok_cnt);
@@ -416,8 +483,8 @@ namespace nlp {
 						tok.parse_mecab_juman(line, tok_cnt);
 						break;
 					case UniDic:
-						std::cerr << "ERROR: it has not been implemented" << std::endl;
-						return false;
+						tok.parse_mecab_unidic(line, tok_cnt);
+						break;
 					default:
 						std::cerr << "Error: unknown Morphological Analysis tool" << std::endl;
 						return false;
@@ -575,7 +642,7 @@ namespace nlp {
 		BOOST_FOREACH( chunk chk, chunks ) {
 			std::cout << chk.id << " -> " << chk.dst << " (" << chk.score << ")" << std::endl;
 			BOOST_FOREACH( token tok, chk.tokens ) {
-				std::cout << "   " << tok.id << " " << tok.surf << " " << tok.orig << " " << tok.pos1;
+				std::cout << "   " << tok.id << " " << tok.surf << " " << tok.orig << " " << tok.pos1 << " " << tok.fsem;
 				if (tok.pas.is_pred() ) {
 					std::cout << "\t" << tok.pas.pred_type << " ";
 					boost::unordered_map< std::string, int >::iterator it;

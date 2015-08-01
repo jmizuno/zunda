@@ -66,21 +66,41 @@ namespace nlp {
 			std::string surf;
 			std::string orig;
 			std::string pos;
-			int pos_id;
 			std::string pos1;
-			int pos1_id;
 			std::string pos2;
-			int pos2_id;
 			std::string pos3;
-			int pos3_id;
 			std::string type;
-			int type_id;
 			std::string form;
+			std::string read;
+			std::string pron;
+
+			// for Juman
+			int pos_id;
+			int pos1_id;
+			int pos2_id;
+			int pos3_id;
+			int type_id;
 			int form_id;
 			std::string form2;
 			int form2_id;
-			std::string read;
-			std::string pron;
+
+			// for UniDic
+			std::string pos4;
+			//int pos4_id;
+			std::string cType;
+			std::string cForm;
+			std::string lForm;
+			std::string lemma;
+			std::string orth;
+			//std::string pron;
+			std::string orthBase;
+			std::string pronBase;
+			std::string goshu;
+			std::string iType;
+			std::string iForm;
+			std::string fType;
+			std::string fForm;
+
 			std::string ne;
 			nlp::pas pas;
 			nlp::modality mod;
@@ -89,8 +109,12 @@ namespace nlp {
 			
 			std::string judge_pos_juman;
 
+			bool has_fsem;
+			std::string fsem;
+
 			bool parse_mecab(const std::string &, const int);
 			bool parse_mecab_juman(const std::string &, const int);
+			bool parse_mecab_unidic(const std::string &, const int);
 			bool parse_juman(const std::string &, const int);
 		public:
 			token() {
@@ -100,6 +124,7 @@ namespace nlp {
 				pos1 = "*";
 				pos2 = "*";
 				pos3 = "*";
+				pos4 = "*";
 				type = "*";
 				form = "*";
 				read = "*";
@@ -108,6 +133,9 @@ namespace nlp {
 				has_mod = false;
 
 				judge_pos_juman = "詞";
+
+				has_fsem = false;
+				fsem = "O";
 			}
 	};
 
@@ -162,6 +190,8 @@ namespace nlp {
 			};
 			int da_tool;
 
+			 bool has_fsem;
+
 /*			enum {
 				SynCha = 0,
 				KNP = 1,
@@ -178,6 +208,7 @@ namespace nlp {
 				
 				ma_dic = IPADic;
 				da_tool = CaboCha;
+				has_fsem = false;
 //				pas_tool = SynCha;
 			}
 			~sentence() {

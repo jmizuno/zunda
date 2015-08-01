@@ -15,7 +15,8 @@ int main(int argc, char *argv[]) {
 	opt.add_options()
 		("input,i", boost::program_options::value<int>(), "input layer (optional)\n 0 - raw text layer [default]\n 1 - dependency parsed layer by CaboCha/J.DepP\n 2 - dependency parsed layer by KNP\n 3 - predicate-argument structure analyzed layer by SynCha/ChaPAS\n 4 - predicate-argument structure analyzed layer by KNP")
 		("pos", boost::program_options::value<int>(), "POS tag for CaboCha/J.DepP (optional)\n 0 - IPA/Naist-jdic [default]\n 1 - JumanDic\n 2 - UniDic")
-		("posset", boost::program_options::value<std::string>(), "POS set to parse (optional")
+		("posset", boost::program_options::value<std::string>(), "POS set to parse (optional)")
+		("with-fsem", "functional expressions are labeled with semantic labels")
 		("target,t", boost::program_options::value<unsigned int>(), "method of detecting token to be analyzed\n 0 - by part of speech [default]\n 1 - predicate detected by a predicate-argument structure analyzer (only SynCha format is supported)\n 2 - by machine learning (has not been implemented)")
 		("model,m", boost::program_options::value<std::string>(), "model directory (optional)")
 		("dic,d", boost::program_options::value<std::string>(), "dictionary directory (optional)")
@@ -64,6 +65,9 @@ int main(int argc, char *argv[]) {
 		case modality::POS_JUMAN:
 			model_dir = MODELDIR_JUMAN;
 			break;
+		case modality::POS_UNI:
+			model_dir = MODELDIR_UNI;
+			break;
 		default:
 			std::cerr << "ERROR: no such input layer" << std::endl;
 			return -1;
@@ -98,6 +102,10 @@ int main(int argc, char *argv[]) {
 
 	if (argmap.count("target")) {
 		mod_parser.target_detection = argmap["target"].as<unsigned int>();
+	}
+
+	if (argmap.count("with-fsem")) {
+		mod_parser.has_fsem = true;
 	}
 
 #ifdef _MODEBUG

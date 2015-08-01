@@ -33,6 +33,9 @@ namespace linear {
 #ifndef MODELDIR_JUMAN
 #  define MODELDIR_JUMAN "model_juman"
 #endif
+#ifndef MODELDIR_UNI
+#  define MODELDIR_UNI "model_uni"
+#endif
 
 #ifndef DICDIR
 #  define DICDIR "dic"
@@ -41,6 +44,8 @@ namespace linear {
 #define POSSET_IPA "動詞,*|形容詞,*|名詞,サ変接続|名詞,形容動詞語幹"
 //#define POS_IPA "動詞,*|形容詞,*|名詞,サ変接続|名詞,形容動詞語幹|名詞,*:助動詞,*|名詞,*:助詞,*:助動詞,*"
 #define POSSET_JUMAN "動詞,*|形容詞,*|名詞,サ変名詞"
+// ToDo update
+#define POSSET_UNI "動詞,*|形容詞,*|名詞,サ変接続"
 
 const boost::filesystem::path TMP_DIR("/tmp");
 
@@ -208,6 +213,8 @@ namespace modality {
 			int pos_tag;
 			std::vector< std::vector< std::vector<std::string> > > target_pos;
 			int max_num_tok_target;
+
+			bool has_fsem;
 			
 			feature_generator2 fgen;
 
@@ -233,6 +240,7 @@ namespace modality {
 				feat_path = new boost::filesystem::path[LABEL_NUM];
 				set_model_dir(model_dir);
 
+				has_fsem = false;
 
 				//				mecab = MeCab::createTagger("-p");
 				//				
@@ -326,6 +334,7 @@ namespace modality {
 						t_pos = POSSET_JUMAN;
 						break;
 					case POS_UNI:
+						t_pos = POSSET_UNI;
 						break;
 					default:
 						std::cerr << "ERROR: invalid pos tag" << std::endl;

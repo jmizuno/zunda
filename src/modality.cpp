@@ -247,6 +247,7 @@ namespace modality {
 
 	bool parser::analyzeToString( const std::string &str, const int input_layer, std::string &parsed_str) {
 		nlp::sentence sent;
+		if (has_fsem) sent.has_fsem = true;
 		if (analyze(str, input_layer, sent)) {
 			sentToString(sent, parsed_str);
 			return true;
@@ -355,6 +356,7 @@ namespace modality {
 
 			nlp::sentence sent;
 			sent.sent_id = sent_id;
+			if (has_fsem) sent.has_fsem = true;
 			switch (pos_tag) {
 				case POS_IPA:
 					sent.ma_dic = nlp::sentence::IPADic;

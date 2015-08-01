@@ -131,6 +131,10 @@ int main(int argc, char *argv[]) {
 		mod_parser.target_detection = argmap["target"].as<unsigned int>();
 	}
 
+	if (argmap.count("with-fsem")) {
+		mod_parser.has_fsem = true;
+	}
+
 	switch (input_layer) {
 		case modality::IN_DEP_CAB:
 		case modality::IN_DEP_KNP:
