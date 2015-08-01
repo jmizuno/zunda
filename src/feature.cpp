@@ -144,6 +144,17 @@ namespace modality {
 	}
 
 
+	void feature_generator2::gen_feature_fsem() {
+		BOOST_FOREACH (nlp::token tok, chk_core->tokens) {
+			if (tok.fsem.compare(0, 2, "B:") == 0) {
+				std::string fsem = tok.fsem;
+				fsem.erase(0, 2);
+				feat_cat["func_sem"][fsem] = 1.0;
+			}
+		}
+	}
+
+
 	void feature_generator2::gen_feature_ttj(cdbpp::cdbpp *dbr_ttj) {
 		int tok_id_start = tok_core->id;
 		std::vector< t_match_func > match_funcs;

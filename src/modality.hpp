@@ -21,6 +21,7 @@ namespace linear {
 #include "sentence.hpp"
 #include "cdbmap.hpp"
 #include "../config.h"
+#include "util.hpp"
 
 #ifndef PACKAGE_VERSION
 #  define PACKAGE_VERSION "beta"
@@ -122,6 +123,7 @@ namespace modality {
 			void gen_feature_ttj(cdbpp::cdbpp *);
 			void gen_feature_fadic(cdbpp::cdbpp *);
 			void gen_feature_neg();
+			void gen_feature_fsem();
 			/*
 			void gen_feature_last_pred();
 			void gen_feature_dst_chunks(const unsigned int);
@@ -165,7 +167,7 @@ namespace modality {
 #ifdef _MODEBUG
 					std::string buf;
 					join(buf, it_kt->second, ", ");
-					BOOST_LOG_TRIVIAL(debug) << it_kt->first << ": " << it_kt->second.size() << " " << buf;
+					std::cerr << it_kt->first << ": " << it_kt->second.size() << " " << buf << std::endl;
 #endif
 				}
 			}

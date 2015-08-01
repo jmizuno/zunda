@@ -287,7 +287,8 @@ namespace modality {
 					fgen.gen_feature_basic(3);
 					fgen.gen_feature_function();
 					fgen.gen_feature_dst_chunks();
-					fgen.gen_feature_ttj(&dbr_ttj);
+					//fgen.gen_feature_ttj(&dbr_ttj);
+					fgen.gen_feature_fsem();
 
 
 					t_feat::iterator it_feat;
@@ -472,7 +473,8 @@ namespace modality {
 							fgen.gen_feature_basic(3);
 							fgen.gen_feature_function();
 							fgen.gen_feature_dst_chunks();
-							fgen.gen_feature_ttj(&dbr_ttj);
+							//fgen.gen_feature_ttj(&dbr_ttj);
+							fgen.gen_feature_fsem();
 
 							//fgen.update(sent);
 							switch (tag_id) {
