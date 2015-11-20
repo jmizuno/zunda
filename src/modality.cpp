@@ -688,7 +688,7 @@ namespace modality {
 		std::vector<t_token> toks;
 		
 		if ( std::string(elemSent->Name()) == "sentence" || std::string(elemSent->Name()) == "quote" ) {
-			tinyxml2::XMLElement *elem = elemSent->FirstChildElement("SUW");
+			tinyxml2::XMLElement *elem = elemSent->FirstChildElement();
 			while (elem) {
 				if (std::string(elem->Name()) == "SUW") {
 					t_token tok;
@@ -699,11 +699,27 @@ namespace modality {
 					toks.push_back(tok);
 					*sp = tok.ep + 1;
 				}
+				else if (std::string(elem->Name()) == "ruby") {
+					tinyxml2::XMLElement *elem_suw_in_ruby = elem->FirstChildElement("SUW");
+					while (elem_suw_in_ruby) {
+						if (std::string(elem_suw_in_ruby->Name()) == "SUW") {
+							t_token tok;
+							tok.orthToken = elem_suw_in_ruby->Attribute("orthToken");
+							tok.morphID = elem_suw_in_ruby->Attribute("morphID");
+							tok.sp = *sp;
+							tok.ep = tok.sp + tok.orthToken.size() - 1;
+							toks.push_back(tok);
+							*sp = tok.ep + 1;
+						}
+						elem_suw_in_ruby = elem_suw_in_ruby->NextSiblingElement();
+					}
+				}
 				else if ( std::string(elem->Name()) == "sentence" || std::string(elem->Name()) == "quote" ) {
 					BOOST_FOREACH(t_token tok, parse_bccwj_sent(elem, sp)) {
 						toks.push_back(tok);
 					}
 				}
+
 				elem = elem->NextSiblingElement();
 			}
 		}
