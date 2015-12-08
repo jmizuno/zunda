@@ -145,12 +145,20 @@ namespace modality {
 
 
 	void feature_generator2::gen_feature_fsem() {
+		std::vector<std::string> fsems;
 		BOOST_FOREACH (nlp::token tok, chk_core->tokens) {
 			if (tok.fsem.compare(0, 2, "B:") == 0) {
 				std::string fsem = tok.fsem;
 				fsem.erase(0, 2);
-				feat_cat["func_sem"][fsem] = 1.0;
+				fsems.push_back(fsem);
 			}
+		}
+		std::vector< std::vector<std::string> > ng_fsem;
+		get_subvec(&ng_fsem, fsems, 1, fsems.size());
+		BOOST_FOREACH (std::vector<std::string> fsems, ng_fsem) {
+			std::string _fsem_str;
+			join(_fsem_str, fsems, ".");
+			feat_cat["func_sem"][_fsem_str] = 1.0;
 		}
 	}
 
