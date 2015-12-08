@@ -387,7 +387,8 @@ namespace modality {
 			std::string buf, str;
 			std::vector< std::string > lines;
 			while ( getline(ifs, buf) ) {
-				lines.push_back(buf);
+				if (buf != "")
+					lines.push_back(buf);
 			}
 			sent.parse(lines);
 

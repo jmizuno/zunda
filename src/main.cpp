@@ -127,6 +127,9 @@ int main(int argc, char *argv[]) {
 	std::string parsed_sent;
 	bool run = false;
 	while( getline(std::cin, buf) ) {
+		if (buf == "") {
+			continue;
+		}
 		switch (input_layer) {
 			case modality::IN_RAW:
 				sent = buf;
