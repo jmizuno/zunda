@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 	opt.add_options()
 		("path,p", boost::program_options::value< std::vector<std::string> >()->multitoken(), "input data to learn (required)")
 		("list,l", boost::program_options::value< std::vector<std::string> >()->multitoken(), "list files of input data")
-		("input,i", boost::program_options::value<int>(), "input format\n 0 - BCCWJ-style XML tagged format re-parsed by CaboCha [default]\n 1 - BCCWJ-style XML tagged format re-parsed by KNP\n 2 - depndency parsed format by CaboCha/J.DepP\n 3 - dependency parsed format by KNP\n 4 - predicate-argument structure analyzed format by SynCha/ChaPAS\n 5 - predicate-argument structure analyzed format by KNP")
+		("input,i", boost::program_options::value<int>(), "input layer (optional)\n 1 - dependency parsed layer by CaboCha/J.DepP\n 2 - dependency parsed layer by KNP\n 3 - predicate-argument structure analyzed layer by SynCha/ChaPAS\n 4 - predicate-argument structure analyzed layer by KNP\n 5 - BCCWJ-style XML format (inputs are analyzed by MeCab and CaboCha with IPA PoS tag)\n 6 - BCCWJ XML format (inputs are analyzed by Juman and KNP)")
 		("pos", boost::program_options::value<int>(), "POS tag for CaboCha/J.DepP (optional)\n 0 - IPA/Naist-jdic [default]\n 1 - JumanDic\n 2 - UniDic")
 		("posset", boost::program_options::value<std::string>(), "POS set to parse (optional")
 		("with-fsem", "functional expressions are labeled with semantic labels")
