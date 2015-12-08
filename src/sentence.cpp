@@ -100,17 +100,11 @@ namespace nlp {
 		std::vector<std::string> tok_infos;
 		boost::algorithm::split(tok_infos, line, boost::algorithm::is_any_of("\t") );
 
-		int offset_ti = 0;
-		if (has_fsem) {
-			fsem = tok_infos[0];
-			++offset_ti;
-		}
-
 		std::vector<std::string> v;
-		boost::algorithm::split(v, tok_infos[offset_ti+1], boost::is_any_of(","));
+		boost::algorithm::split(v, tok_infos[1], boost::is_any_of(","));
 
 		id = tok_id;
-		surf = tok_infos[offset_ti];
+		surf = tok_infos[0];
 		pos = v[0];
 		pos1 = v[1];
 		pos2 = v[2];
@@ -123,16 +117,14 @@ namespace nlp {
 			pron = v[8];
 		}
 		else {
-			read = tok_infos[offset_ti+1];
+			read = tok_infos[0];
 		}
 
-		if (tok_infos.size() > offset_ti+2) {
+		if (tok_infos.size() > 2)
 			ne = tok_infos[2];
-		}
 
-		if (tok_infos.size() > offset_ti+3) {
+		if (tok_infos.size() > 3)
 			pas.parse(tok_infos[3], &pas);
-		}
 
 		return true;
 	}
@@ -142,17 +134,11 @@ namespace nlp {
 		std::vector<std::string> tok_infos;
 		boost::algorithm::split(tok_infos, line, boost::algorithm::is_any_of("\t") );
 
-		int offset_ti = 0;
-		if (has_fsem) {
-			fsem = tok_infos[0];
-			++offset_ti;
-		}
-
 		std::vector<std::string> v;
-		boost::algorithm::split(v, tok_infos[offset_ti+1], boost::algorithm::is_any_of(","));
+		boost::algorithm::split(v, tok_infos[1], boost::algorithm::is_any_of(","));
 
 		id = tok_id;
-		surf = tok_infos[offset_ti];
+		surf = tok_infos[0];
 
 		pos = v[0];
 		orig = v[4];
@@ -168,13 +154,11 @@ namespace nlp {
 			form2 = v[3];
 		}
 
-		if (tok_infos.size() > offset_ti+2) {
+		if (tok_infos.size() > 2)
 			ne = tok_infos[2];
-		}
 
-		if (tok_infos.size() > offset_ti+3) {
+		if (tok_infos.size() > 3)
 			pas.parse(tok_infos[3], &pas);
-		}
 
 		return true;
 	}
@@ -184,17 +168,11 @@ namespace nlp {
 		std::vector<std::string> tok_infos;
 		boost::algorithm::split(tok_infos, line, boost::algorithm::is_any_of("\t"));
 
-		int offset_ti = 0;
-		if (has_fsem) {
-			fsem = tok_infos[0];
-			++offset_ti;
-		}
-
 		std::vector<std::string> v;
-		boost::algorithm::split(v, tok_infos[offset_ti+1], boost::algorithm::is_any_of(","));
+		boost::algorithm::split(v, tok_infos[1], boost::algorithm::is_any_of(","));
 
 		id = tok_id;
-		surf = tok_infos[offset_ti];
+		surf = tok_infos[0];
 		pos1 = v[0];
 		pos = pos1;
 		pos2 = v[1];
@@ -215,13 +193,13 @@ namespace nlp {
 		fType = v[15];
 		fForm = v[16];
 
-		if (tok_infos.size() > offset_ti+2) {
+		if (tok_infos.size() > 2)
 			ne = tok_infos[2];
-		}
 
-		if (tok_infos.size() > offset_ti+3) {
+		if (tok_infos.size() > 3)
 			pas.parse(tok_infos[3], &pas);
-		}
+
+		return true;
 	}
 
 
@@ -339,6 +317,7 @@ namespace nlp {
 		join(input_orig, lines, "\n");  // stored original parsed sentence
 
 		std::vector< modality > mods;
+		std::vector< std::string > funcexps;
 
 		BOOST_FOREACH (std::string l, lines) {
 			if (l.compare(0, 6, "# S-ID") == 0) {
@@ -355,6 +334,10 @@ namespace nlp {
 				modality mod;
 				mod.parse(l);
 				mods.push_back(mod);
+			}
+			else if (l.compare(0, 8, "#FUNCEXP") == 0) {
+				std::string sub = l.substr(9);
+				boost::algorithm::split(funcexps, sub, boost::algorithm::is_any_of(","));
 			}
 			else if (l.compare(0, 1, "#") == 0) {
 			}
@@ -380,10 +363,19 @@ namespace nlp {
 				return false;
 		}
 
+		if (funcexps.size() == (unsigned int)tid_max + 1) {
+			has_fsem = true;
+		}
+
 		std::vector<chunk>::iterator it_chk;
 		std::vector<token>::iterator it_tok;
 		for (it_chk = chunks.begin() ; it_chk != chunks.end() ; ++it_chk) {
 			for (it_tok = it_chk->tokens.begin() ; it_tok != it_chk->tokens.end() ; ++it_tok) {
+				if (has_fsem) {
+					it_tok->has_fsem = true;
+					it_tok->fsem = funcexps[it_tok->id];
+				}
+
 				BOOST_FOREACH (modality mod, mods) {
 					if ( find(mod.tids.begin(), mod.tids.end(), it_tok->id) != mod.tids.end() ) {
 						it_tok->mod = mod;
@@ -474,7 +466,6 @@ namespace nlp {
 			}
 			else {
 				token tok;
-				if (has_fsem) tok.has_fsem = true;
 				switch (ma_dic) {
 					case IPADic:
 						tok.parse_mecab(line, tok_cnt);
@@ -600,6 +591,18 @@ namespace nlp {
 					eve_id++;
 				}
 			}
+		}
+
+		if (has_fsem) {
+			cabocha_ss << "#FUNCEXP\t";
+			BOOST_FOREACH (chunk chk, chunks) {
+				BOOST_FOREACH (token tok, chk.tokens) {
+					cabocha_ss << tok.fsem;
+					if (tok.id != tid_max)
+						cabocha_ss << ",";
+				}
+			}
+			cabocha_ss << "\n";
 		}
 
 		BOOST_FOREACH( chunk chk, chunks ) {

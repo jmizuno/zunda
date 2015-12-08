@@ -190,7 +190,7 @@ namespace nlp {
 			};
 			int da_tool;
 
-			 bool has_fsem;
+			bool has_fsem;
 
 /*			enum {
 				SynCha = 0,
