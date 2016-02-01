@@ -56,7 +56,7 @@ namespace modality {
 	void feature_generator2::gen_feature_neg() {
 		BOOST_FOREACH (nlp::token t, chk_core->tokens) {
 			if (t.id > tok_core->id) {
-				if (std::binary_search(keyterms["Negations"].begin(), keyterms["Negations"].end(), t.orig) || std::binary_search(keyterms["Correctings"].begin(), keyterms["Correctings"].end(), t.orig) ) {
+				if (std::binary_search(keyterms["Negations"].begin(), keyterms["Negations"].end(), t.orig)) {
 					feat_cat["neg"]["exist_in_core_chunk"] = 1.0;
 					feat_cat["neg"]["term_in_core_chunk_" + t.orig] = 1.0;
 				}
@@ -150,16 +150,20 @@ namespace modality {
 			if (tok.fsem.compare(0, 2, "B:") == 0) {
 				std::string fsem = tok.fsem;
 				fsem.erase(0, 2);
-				fsems.push_back(fsem);
+				feat_cat["func_sem"][fsem] = 1.0;
+				//fsems.push_back(fsem);
 			}
 		}
+		/*
 		std::vector< std::vector<std::string> > ng_fsem;
+		std::reverse(fsems.begin(), fsems.end());
 		get_subvec(&ng_fsem, fsems, 1, fsems.size());
 		BOOST_FOREACH (std::vector<std::string> fsems, ng_fsem) {
 			std::string _fsem_str;
 			join(_fsem_str, fsems, ".");
 			feat_cat["func_sem"][_fsem_str] = 1.0;
 		}
+		*/
 	}
 
 
