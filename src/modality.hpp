@@ -194,6 +194,7 @@ namespace modality {
 //			boost::unordered_map< std::string, int > feat2id;
 			boost::filesystem::path *model_path;
 			boost::filesystem::path *feat_path;
+			boost::filesystem::path model_dir_path;
 
 			CdbMap<std::string, int> l2i;
 			boost::filesystem::path l2i_path;
@@ -242,7 +243,8 @@ namespace modality {
 
 				model_path = new boost::filesystem::path[LABEL_NUM];
 				feat_path = new boost::filesystem::path[LABEL_NUM];
-				set_model_dir(model_dir);
+				model_dir_path = model_dir;
+				set_model_dir(model_dir_path);
 
 				has_fsem = false;
 

@@ -229,6 +229,18 @@ namespace modality {
 	inline void sentToString(const nlp::sentence &parsed_sent, std::string &parsed_str) {
 		std::stringstream cabocha_ss;
 
+		if (parsed_sent.has_fsem) {
+			cabocha_ss << "#FUNCEXP\t";
+			BOOST_FOREACH (nlp::chunk chk, parsed_sent.chunks) {
+				BOOST_FOREACH (nlp::token tok, chk.tokens) {
+					cabocha_ss << tok.fsem;
+					if (tok.id != parsed_sent.tid_max)
+						cabocha_ss << ",";
+				}
+			}
+			cabocha_ss << "\n";
+		}
+
 		int eve_id = 0;
 		BOOST_FOREACH ( nlp::chunk chk, parsed_sent.chunks ) {
 			BOOST_FOREACH ( nlp::token tok, chk.tokens) {
@@ -270,7 +282,7 @@ namespace modality {
 		std::vector<nlp::chunk>::reverse_iterator sc_end = sent.chunks.rend();
 		std::vector<nlp::token>::reverse_iterator st_end;
 
-		funcsem::tagger f_tagger("model");
+		funcsem::tagger f_tagger(model_dir_path.string());
 		f_tagger.tag(sent);
 
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sc_end ; ++rit_chk) {

@@ -7,6 +7,7 @@
 #include <boost/unordered_map.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
+#include <boost/filesystem.hpp>
 
 #include <crfsuite_api.hpp>
 #include "sentence.hpp"
@@ -30,7 +31,12 @@ namespace funcsem {
 
 		public:
 			void tag(nlp::sentence &);
-			bool tag_by_crf(std::vector<nlp::token *> &);
+			bool tag_by_crf(nlp::sentence &, unsigned int, unsigned int);
+
+		private:
+			bool is_func(const nlp::token &);
+			bool is_pred(const nlp::token &);
+
 
 		public:
 			tagger(const std::string &model_dir) {
