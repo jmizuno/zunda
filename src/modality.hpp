@@ -22,6 +22,7 @@ namespace linear {
 #include "cdbmap.hpp"
 #include "../config.h"
 #include "util.hpp"
+#include "funcsem.hpp"
 
 #ifndef PACKAGE_VERSION
 #  define PACKAGE_VERSION "beta"
@@ -48,7 +49,8 @@ namespace linear {
 // ToDo update
 #define POSSET_UNI "動詞,*|形容詞,*|名詞,サ変接続"
 
-const boost::filesystem::path TMP_DIR("/tmp");
+//const boost::filesystem::path TMP_DIR("/tmp");
+
 
 namespace modality {
 	typedef boost::unordered_map< std::string, boost::unordered_map< std::string, double > > t_feat_cat;

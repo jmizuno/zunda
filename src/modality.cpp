@@ -270,6 +270,9 @@ namespace modality {
 		std::vector<nlp::chunk>::reverse_iterator sc_end = sent.chunks.rend();
 		std::vector<nlp::token>::reverse_iterator st_end;
 
+		funcsem::tagger f_tagger("model");
+		f_tagger.tag(sent);
+
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sc_end ; ++rit_chk) {
 			st_end = rit_chk->tokens.rend();
 			for(rit_tok=rit_chk->tokens.rbegin() ; rit_tok!=st_end ; ++rit_tok) {
@@ -576,6 +579,7 @@ namespace modality {
 			case IN_DEP_KNP:
 			case IN_PAS_KNP:
 				{
+					const boost::filesystem::path TMP_DIR("/tmp");
 					boost::filesystem::path tmp_knp("temp.knp");
 					tmp_knp = TMP_DIR / tmp_knp;
 					std::string com = "echo \"" + text + "\" | juman | knp -tab > " + tmp_knp.string();

@@ -92,6 +92,26 @@ AS_IF([test "x$enable_cabocha" != xno],
 			 ]
 			)
 
+AC_ARG_WITH(
+						[crfsuite],
+						[AC_HELP_STRING([--with-crfsuite=DIR], [crfsuite directory])],
+						[AM_CPPFLAGS="-I${withval}/include ${AM_CPPFLAGS}"; AM_LDFLAGS="-L${withval}/lib ${AM_LDFLAGS}"]
+						)
+
+AS_IF([test "x$with_crfsuite" != xno],
+			[
+			 old_CPPFLAGS=${CPPFLAGS}
+			 old_LDFLAGS=${LDFLAGS}
+			 CPPFLAGS=${AM_CPPFLAGS}
+			 LDFLAGS=${AM_LDFLAGS}
+			 AC_CHECK_HEADER([crfsuite.hpp], [break]  ,[AC_MSG_ERROR(crfsuite.hpp not found)])
+			 AC_CHECK_LIB([crfsuite], main,   ,[AC_MSG_ERROR(crfsuite library not found)])
+			 CPPFLAGS=${old_CPPFLAGS}
+			 LDFLAGS=${old_LDFLAGS}
+			 ]
+			)
+
+
 AC_ARG_ENABLE(
 							[debug],
 							AC_HELP_STRING([--enable-debug], [debug mode (default is no)]),

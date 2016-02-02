@@ -18,6 +18,9 @@
 /* Define to 1 if you have the `cabocha' library (-lcabocha). */
 #undef HAVE_LIBCABOCHA
 
+/* Define to 1 if you have the `crfsuite' library (-lcrfsuite). */
+#undef HAVE_LIBCRFSUITE
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 

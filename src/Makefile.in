@@ -91,15 +91,15 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_zunda_OBJECTS = main.$(OBJEXT) modality.$(OBJEXT) \
-	sentence.$(OBJEXT) feature.$(OBJEXT)
+	sentence.$(OBJEXT) feature.$(OBJEXT) funcsem.$(OBJEXT)
 zunda_OBJECTS = $(am_zunda_OBJECTS)
 zunda_DEPENDENCIES =
 am_zunda_conv_OBJECTS = xml2cab.$(OBJEXT) modality.$(OBJEXT) \
-	sentence.$(OBJEXT) feature.$(OBJEXT)
+	sentence.$(OBJEXT) feature.$(OBJEXT) funcsem.$(OBJEXT)
 zunda_conv_OBJECTS = $(am_zunda_conv_OBJECTS)
 zunda_conv_DEPENDENCIES =
 am_zunda_train_OBJECTS = modality-learn.$(OBJEXT) modality.$(OBJEXT) \
-	sentence.$(OBJEXT) feature.$(OBJEXT)
+	sentence.$(OBJEXT) feature.$(OBJEXT) funcsem.$(OBJEXT)
 zunda_train_OBJECTS = $(am_zunda_train_OBJECTS)
 zunda_train_DEPENDENCIES =
 AM_V_P = $(am__v_P_@AM_V@)
@@ -281,6 +281,7 @@ zunda_SOURCES = main.cpp \
 								util.hpp \
 								eval.hpp \
 								cdbmap.hpp \
+								funcsem.cpp \
 								../liblinear-1.8/linear.h \
 								../cdbpp-1.1/include/cdbpp.h
 
@@ -294,6 +295,7 @@ zunda_train_SOURCES = modality-learn.cpp \
 											util.hpp \
 											eval.hpp \
 											cdbmap.hpp \
+											funcsem.cpp \
 											../liblinear-1.8/linear.h \
 											../cdbpp-1.1/include/cdbpp.h
 
@@ -306,6 +308,7 @@ zunda_conv_SOURCES = xml2cab.cpp \
 										 feature.cpp \
 										 util.hpp \
 										 cdbmap.hpp \
+										 funcsem.cpp \
 										 ../liblinear-1.8/linear.h \
 										 ../cdbpp-1.1/include/cdbpp.h
 
@@ -406,6 +409,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/feature.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/funcsem.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/modality-learn.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/modality.Po@am__quote@
