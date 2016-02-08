@@ -145,25 +145,33 @@ namespace modality {
 
 
 	void feature_generator2::gen_feature_fsem() {
-		std::vector<std::string> fsems;
-		BOOST_FOREACH (nlp::token tok, chk_core->tokens) {
-			if (tok.fsem.compare(0, 2, "B:") == 0) {
-				std::string fsem = tok.fsem;
-				fsem.erase(0, 2);
-				feat_cat["func_sem"][fsem] = 1.0;
-				//fsems.push_back(fsem);
+		std::vector<std::string> fsem_vec;
+		fsem_vec.push_back("BOF");
+		BOOST_FOREACH (nlp::chunk chk, sent->chunks) {
+			if (chk.id > chk_core->id && chk.tokens[0].fsem == "O") {
+				break;
+			}
+			BOOST_FOREACH (nlp::token tok, chk.tokens) {
+				if (tok.id > tok_core->id && tok.fsem.compare(0, 2, "B:") == 0) {
+					std::string fsem = tok.fsem;
+					fsem.erase(0,2);
+					if (fsem_vec[fsem_vec.size()-1] != fsem) {
+						fsem_vec.push_back(fsem);
+					}
+				}
 			}
 		}
-		/*
-		std::vector< std::vector<std::string> > ng_fsem;
-		std::reverse(fsems.begin(), fsems.end());
-		get_subvec(&ng_fsem, fsems, 1, fsems.size());
-		BOOST_FOREACH (std::vector<std::string> fsems, ng_fsem) {
-			std::string _fsem_str;
-			join(_fsem_str, fsems, ".");
-			feat_cat["func_sem"][_fsem_str] = 1.0;
+		fsem_vec.push_back("EOF");
+
+		std::vector< std::vector<std::string> > fsem_ngs;
+		get_subvec(&fsem_ngs, fsem_vec, 1, fsem_vec.size());
+		BOOST_FOREACH (std::vector<std::string> ngf, fsem_ngs) {
+			std::string ngf_str;
+			join(ngf_str, ngf, "_");
+			if (ngf_str != "BOF" && ngf_str != "EOF") {
+				feat_cat["func_sem"][ngf_str] = 1.0;
+			}
 		}
-		*/
 	}
 
 
@@ -171,103 +179,110 @@ namespace modality {
 		int tok_id_start = tok_core->id;
 		std::vector< t_match_func > match_funcs;
 
-		BOOST_FOREACH (nlp::token tok, chk_core->tokens) {
-			std::vector< t_match_func > match_funcs_local;
-			if (tok.id > tok_id_start) {
-				size_t vsize;
-				const char *value = (const char *)dbr_ttj->get(tok.surf.c_str(), tok.surf.length(), &vsize);
-				if (value != NULL) {
-					std::string val = std::string(value, vsize);
-					std::vector<std::string> ents;
-					boost::algorithm::split(ents, val, boost::algorithm::is_any_of("\t"));
+		BOOST_FOREACH (nlp::chunk chk, sent->chunks) {
+			if (chk.id > chk_core->id && chk.tokens[0].fsem == "O") {
+				break;
+			}
 
-					BOOST_FOREACH (std::string ent, ents) {
-						std::vector<std::string> seq;
-						boost::algorithm::split(seq, ent, boost::algorithm::is_any_of("_"));
-						std::string semclass = seq.back();
-						if (semclass == "") {
-							continue;
-						}
-						seq.pop_back();
-						bool match = true;
-						t_match_func match_func;
-						match_func.tok_ids.push_back(tok.id);
+			BOOST_FOREACH (nlp::token tok, chk.tokens) {
+				std::vector< t_match_func > match_funcs_local;
+				if (tok.id > tok_id_start) {
+					size_t vsize;
+					const char *value = (const char *)dbr_ttj->get(tok.surf.c_str(), tok.surf.length(), &vsize);
+					if (value != NULL) {
+						std::string val = std::string(value, vsize);
+						std::vector<std::string> ents;
+						boost::algorithm::split(ents, val, boost::algorithm::is_any_of("\t"));
 
-						// functional expression containing only single token
-						if (seq.size() == 1 && seq[0] == "") {
-							if ( 
-									// n(添加) IPA品詞体系では接続詞の一部になるので不可能
-									// R(比況) 例文が分からず
-									( (semclass == "Q(並立)") && (tok.pos == "助詞" && tok.pos1 == "並立助詞") )
-									|| ( (semclass == "O(主体)" || semclass == "N(目的)" || semclass == "b(対象)" || semclass == "d(状況)" || semclass == "e(起点)") && (tok.pos == "助詞" && tok.pos1 == "格助詞") )
-									|| ( (semclass == "t(逆接)" || semclass == "r(順接)") && (tok.pos == "助詞" && (tok.pos1 == "接続助詞" || tok.pos1 == "副助詞")) )
-									|| ( (semclass == "D(判断)") && (tok.pos == "助動詞" || tok.pos == "名詞") )
-									|| ( (semclass == "z(願望)") && (tok.pos == "助動詞" || tok.pos == "動詞") )
-									|| ( (semclass == "m(限定)") && (tok.pos == "名詞" || (tok.pos == "助詞" && tok.pos1 == "副助詞")) )
-									|| ( (semclass == "f(範囲)") && (tok.pos == "助詞" && tok.pos1 == "副助詞") )
-									|| ( (semclass == "v(付帯)") && (tok.pos == "名詞" || (tok.pos == "助詞" && tok.pos1 == "接続助詞")) )
-									|| ( (semclass == "I(推量)" || semclass == "A(伝聞)") && (tok.pos == "助動詞" || tok.pos == "動詞") )
-									|| ( (semclass == "s(理由)") && (tok.pos == "名詞" || (tok.pos == "助詞" && tok.pos1 == "接続助詞")) )
-									|| ( (semclass == "B(過去)" || semclass == "E(可能)") && (tok.pos == "動詞" || tok.pos == "助動詞") )
-									|| ( (semclass == "u(対比)" || semclass == "l(強調)") && (tok.pos == "名詞") )
-									|| ( (semclass == "J(進行)") && (tok.pos == "動詞" || tok.pos == "名詞" || tok.pos == "接続詞") )
-									|| ( (semclass == "P(例示)") && (tok.pos == "名詞" || (tok.pos == "助詞" && (tok.pos1 == "副助詞" || tok.pos1 == "係助詞"))) )
-									|| ( (semclass == "o(同時性)") && (tok.pos == "名詞") )
-									|| ( (semclass == "G(意志)") && (tok.pos == "名詞" || tok.pos == "助動詞") )
-									|| ( semclass == "y(否定)" || semclass == "")
-								 ) {
+						BOOST_FOREACH (std::string ent, ents) {
+							std::vector<std::string> seq;
+							boost::algorithm::split(seq, ent, boost::algorithm::is_any_of("_"));
+							std::string semclass = seq.back();
+							if (semclass == "") {
+								continue;
 							}
+							seq.pop_back();
+							bool match = true;
+							t_match_func match_func;
+							match_func.tok_ids.push_back(tok.id);
+
+							// functional expression containing only single token
+							if (seq.size() == 1 && seq[0] == "") {
+								if ( 
+										// n(添加) IPA品詞体系では接続詞の一部になるので不可能
+										// R(比況) 例文が分からず
+										( (semclass == "Q(並立)") && (tok.pos == "助詞" && tok.pos1 == "並立助詞") )
+										|| ( (semclass == "O(主体)" || semclass == "N(目的)" || semclass == "b(対象)" || semclass == "d(状況)" || semclass == "e(起点)") && (tok.pos == "助詞" && tok.pos1 == "格助詞") )
+										|| ( (semclass == "t(逆接)" || semclass == "r(順接)") && (tok.pos == "助詞" && (tok.pos1 == "接続助詞" || tok.pos1 == "副助詞")) )
+										|| ( (semclass == "D(判断)") && (tok.pos == "助動詞" || tok.pos == "名詞") )
+										|| ( (semclass == "z(願望)") && (tok.pos == "助動詞" || tok.pos == "動詞") )
+										|| ( (semclass == "m(限定)") && (tok.pos == "名詞" || (tok.pos == "助詞" && tok.pos1 == "副助詞")) )
+										|| ( (semclass == "f(範囲)") && (tok.pos == "助詞" && tok.pos1 == "副助詞") )
+										|| ( (semclass == "v(付帯)") && (tok.pos == "名詞" || (tok.pos == "助詞" && tok.pos1 == "接続助詞")) )
+										|| ( (semclass == "I(推量)" || semclass == "A(伝聞)") && (tok.pos == "助動詞" || tok.pos == "動詞") )
+										|| ( (semclass == "s(理由)") && (tok.pos == "名詞" || (tok.pos == "助詞" && tok.pos1 == "接続助詞")) )
+										|| ( (semclass == "B(過去)" || semclass == "E(可能)") && (tok.pos == "動詞" || tok.pos == "助動詞") )
+										|| ( (semclass == "u(対比)" || semclass == "l(強調)") && (tok.pos == "名詞") )
+										|| ( (semclass == "J(進行)") && (tok.pos == "動詞" || tok.pos == "名詞" || tok.pos == "接続詞") )
+										|| ( (semclass == "P(例示)") && (tok.pos == "名詞" || (tok.pos == "助詞" && (tok.pos1 == "副助詞" || tok.pos1 == "係助詞"))) )
+										|| ( (semclass == "o(同時性)") && (tok.pos == "名詞") )
+										|| ( (semclass == "G(意志)") && (tok.pos == "名詞" || tok.pos == "助動詞") )
+										|| ( semclass == "y(否定)" || semclass == "")
+									 ) {
+								}
+								else {
+									match = false;
+								}
+							}
+							// functional expression containing multiple tokens
 							else {
-								match = false;
-							}
-						}
-						// functional expression containing multiple tokens
-						else {
-							BOOST_FOREACH (std::string s, seq) {
-								std::vector<std::string> word;
-								boost::algorithm::split(word, s, boost::algorithm::is_any_of(":"));
-								int pos = boost::lexical_cast<int>(word[0]);
-								std::string surf = word[1];
+								BOOST_FOREACH (std::string s, seq) {
+									std::vector<std::string> word;
+									boost::algorithm::split(word, s, boost::algorithm::is_any_of(":"));
+									int pos = boost::lexical_cast<int>(word[0]);
+									std::string surf = word[1];
 
-								int around_tid = tok.id + pos;
-								if (around_tid < sent->tid_min || sent->tid_max < around_tid) {
-									match = false;
-									break;
+									int around_tid = tok.id + pos;
+									if (around_tid < sent->tid_min || sent->tid_max < around_tid) {
+										match = false;
+										break;
+									}
+
+									nlp::token *tok = sent->get_token(around_tid);
+									if (tok->surf != surf) {
+										match = false;
+										break;
+									}
+									match_func.tok_ids.push_back(around_tid);
 								}
-
-								nlp::token *tok = sent->get_token(around_tid);
-								if (tok->surf != surf) {
-									match = false;
-									break;
-								}
-								match_func.tok_ids.push_back(around_tid);
 							}
-						}
 
-						if (match) {
-							match_func.semrel = semclass;
-							sort(match_func.tok_ids.begin(), match_func.tok_ids.end());
-							match_funcs_local.push_back(match_func);
+							if (match) {
+								match_func.semrel = semclass;
+								sort(match_func.tok_ids.begin(), match_func.tok_ids.end());
+								match_funcs_local.push_back(match_func);
+							}
 						}
 					}
 				}
-			}
 
-			unsigned int tok_width = 0;
-			BOOST_FOREACH (t_match_func mf, match_funcs_local) {
-				if (mf.tok_ids.size() > tok_width) {
-					tok_width = mf.tok_ids.size();
+				unsigned int tok_width = 0;
+				BOOST_FOREACH (t_match_func mf, match_funcs_local) {
+					if (mf.tok_ids.size() > tok_width) {
+						tok_width = mf.tok_ids.size();
+					}
 				}
-			}
-			BOOST_FOREACH (t_match_func mf, match_funcs_local) {
-				if (mf.tok_ids.size() == tok_width) {
-					tok_id_start = mf.tok_ids.back();
-					match_funcs.push_back(mf);
+				BOOST_FOREACH (t_match_func mf, match_funcs_local) {
+					if (mf.tok_ids.size() == tok_width) {
+						tok_id_start = mf.tok_ids.back();
+						match_funcs.push_back(mf);
+					}
 				}
 			}
 		}
 
 		std::vector< std::string > sems;
+		sems.push_back("BOF");
 		BOOST_FOREACH (t_match_func mf, match_funcs) {
 #ifdef _MODEBUG
 			std::cerr << " lookup ttj: " << mf.semrel << ":";
@@ -278,10 +293,16 @@ namespace modality {
 #endif
 			sems.push_back(mf.semrel);
 		}
-		sort(sems.begin(), sems.end());
-		sems.erase(unique(sems.begin(), sems.end()), sems.end());
-		BOOST_FOREACH(std::string sem, sems) {
-			feat_cat["func_sem"][sem] = 1.0;
+		sems.push_back("EOF");
+
+		std::vector< std::vector<std::string> > fsem_ngs;
+		get_subvec(&fsem_ngs, sems, 1, sems.size());
+		BOOST_FOREACH (std::vector<std::string> ngf, fsem_ngs) {
+			std::string ngf_str;
+			join(ngf_str, ngf, "_");
+			if (ngf_str != "BOF" && ngf_str != "EOF") {
+				feat_cat["func_sem"][ngf_str] = 1.0;
+			}
 		}
 	}
 
