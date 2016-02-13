@@ -312,9 +312,14 @@ namespace nlp {
 
 
 	bool sentence::parse(const std::vector< std::string > &lines) {
-		input_orig_lines = lines;
+		std::vector<std::string> input_orig_lines;
+		BOOST_FOREACH (std::string line, lines) {
+			if (line.compare(0, 6, "#EVENT") != 0 && line.compare(0, 8, "#FUNCEXP") != 0) {
+				input_orig_lines.push_back(line);
+			}
+		}
 		input_orig.clear();
-		join(input_orig, lines, "\n");  // stored original parsed sentence
+		join(input_orig, input_orig_lines, "\n");  // stored original parsed sentence
 
 		std::vector< modality > mods;
 		std::vector< std::string > funcexps;

@@ -119,6 +119,7 @@ namespace modality {
 				return false;
 			case DETECT_BY_GOLD:
 				if (tok.has_mod) {
+					tok.mod = nlp::modality();
 					return true;
 				}
 				break;

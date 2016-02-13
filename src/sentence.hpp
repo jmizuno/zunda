@@ -166,7 +166,6 @@ namespace nlp {
 	class sentence {
 		public:
 			std::string input_orig;
-			std::vector< std::string > input_orig_lines;
 			std::string doc_id;
 			std::string sent_id;
 			std::vector< chunk > chunks;
