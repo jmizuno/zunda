@@ -79,7 +79,7 @@ namespace modality {
 	void feature_generator2::gen_feature_function() {
 		std::vector< std::vector< nlp::token * > > ng_tok;
 		std::vector< nlp::token * > toks;
-		for (unsigned int tid=tok_core->id+1 ; tid<tok_core->id+8 ; ++tid) {
+		for (unsigned int tid=tok_core->id+1 ; tid<=sent->tid_max ; ++tid) {
 			nlp::token *t = sent->get_token(tid);
 			if (t!=NULL)
 				toks.push_back(t);

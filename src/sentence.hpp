@@ -150,13 +150,11 @@ namespace nlp {
 			int subj;
 			int func;
 			std::vector< token > tokens;
-			bool has_mod;
 			// map global token ID to local token ID
 			boost::unordered_map< int, int > tok_g2l;
 		public:
 			chunk() {
 				score = 0.0;
-				has_mod = false;
 				subj = 0;
 				func = 0;
 			}

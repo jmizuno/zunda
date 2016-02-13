@@ -380,7 +380,6 @@ namespace nlp {
 					if ( find(mod.tids.begin(), mod.tids.end(), it_tok->id) != mod.tids.end() ) {
 						it_tok->mod = mod;
 						it_tok->has_mod = true;
-						it_chk->has_mod = true;
 					}
 				}
 			}
@@ -668,7 +667,6 @@ namespace nlp {
 				it_tok->has_mod = false;
 				it_tok->mod = modality();
 			}
-			it_chk->has_mod = false;
 		}
 	}
 

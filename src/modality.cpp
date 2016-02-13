@@ -259,7 +259,6 @@ namespace modality {
 
 	bool parser::analyzeToString( const std::string &str, const int input_layer, std::string &parsed_str) {
 		nlp::sentence sent;
-		if (has_fsem) sent.has_fsem = true;
 		if (analyze(str, input_layer, sent)) {
 			sentToString(sent, parsed_str);
 			return true;
@@ -282,8 +281,8 @@ namespace modality {
 		std::vector<nlp::chunk>::reverse_iterator sc_end = sent.chunks.rend();
 		std::vector<nlp::token>::reverse_iterator st_end;
 
-		funcsem::tagger f_tagger(model_dir_path.string());
-		f_tagger.tag(sent);
+		//funcsem::tagger f_tagger(model_dir_path.string());
+		//f_tagger.tag(sent);
 
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sc_end ; ++rit_chk) {
 			st_end = rit_chk->tokens.rend();
@@ -296,7 +295,6 @@ namespace modality {
 #endif
 					rit_tok->mod.tids.push_back(rit_tok->id);
 					rit_tok->has_mod = true;
-					rit_chk->has_mod = true;
 
 					fgen.set(&sent, &(*rit_chk), &(*rit_tok));
 					fgen.gen_feature_basic(3);
@@ -305,6 +303,7 @@ namespace modality {
 					//fgen.gen_feature_ttj(&dbr_ttj);
 					fgen.gen_feature_fsem();
 
+					fgen.gen_feature_neg();
 
 					t_feat::iterator it_feat;
 
@@ -372,7 +371,6 @@ namespace modality {
 
 			nlp::sentence sent;
 			sent.sent_id = sent_id;
-			if (has_fsem) sent.has_fsem = true;
 			switch (pos_tag) {
 				case POS_IPA:
 					sent.ma_dic = nlp::sentence::IPADic;
@@ -492,7 +490,8 @@ namespace modality {
 							//fgen.gen_feature_ttj(&dbr_ttj);
 							fgen.gen_feature_fsem();
 
-							//fgen.update(sent);
+							fgen.gen_feature_neg();
+
 							switch (tag_id) {
 								case TENSE:
 									break;
@@ -539,7 +538,7 @@ namespace modality {
 
 			linear::parameter _param;
 			_param.solver_type = linear::L2R_LR;
-			_param.eps = 0.01;
+			_param.eps = 0.1;
 			_param.C = 1;
 			_param.nr_weight = 0;
 			_param.weight_label = new int(1);
@@ -674,7 +673,6 @@ namespace modality {
 
 							it_tok->mod.tids.push_back(it_tok->id);
 							it_tok->has_mod = true;
-							chk_has_mod = true;
 #ifdef _MODEBUG
 							std::cout << "found\t" << tok.orthToken << "(" << tok.morphID << ") - " << it_tok->surf << "(" << it_tok->id << ")" << std::endl;
 							matchedIDs.push_back(tok.morphID);
@@ -686,7 +684,6 @@ namespace modality {
 				sort(it_tok->mod.tids.begin(), it_tok->mod.tids.end());
 				it_tok->mod.tids.erase(unique(it_tok->mod.tids.begin(), it_tok->mod.tids.end()), it_tok->mod.tids.end());
 			}
-			it_chk->has_mod = chk_has_mod;
 		}
 		
 #ifdef _MODEBUG

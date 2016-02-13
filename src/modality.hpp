@@ -219,8 +219,6 @@ namespace modality {
 			std::vector< std::vector< std::vector<std::string> > > target_pos;
 			int max_num_tok_target;
 
-			bool has_fsem;
-			
 			feature_generator2 fgen;
 
 			parser(std::string model_dir = MODELDIR_IPA, std::string dic_dir = DICDIR) {
@@ -245,8 +243,6 @@ namespace modality {
 				feat_path = new boost::filesystem::path[LABEL_NUM];
 				model_dir_path = model_dir;
 				set_model_dir(model_dir_path);
-
-				has_fsem = false;
 
 				//				mecab = MeCab::createTagger("-p");
 				//				

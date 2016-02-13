@@ -32,12 +32,12 @@ int main(int argc, char *argv[]) {
 		("input,i", boost::program_options::value<int>(), "input layer (optional)\n 1 - dependency parsed layer by CaboCha/J.DepP\n 2 - dependency parsed layer by KNP\n 3 - predicate-argument structure analyzed layer by SynCha/ChaPAS\n 4 - predicate-argument structure analyzed layer by KNP\n 5 - BCCWJ-style XML format (inputs are analyzed by MeCab and CaboCha with IPA PoS tag)\n 6 - BCCWJ XML format (inputs are analyzed by Juman and KNP)")
 		("pos", boost::program_options::value<int>(), "POS tag for CaboCha/J.DepP (optional)\n 0 - IPA/Naist-jdic [default]\n 1 - JumanDic\n 2 - UniDic")
 		("posset", boost::program_options::value<std::string>(), "POS set to parse (optional")
-		("with-fsem", "functional expressions are labeled with semantic labels")
 		("cross,x", "enable cross validation (optional): default off")
 		("split,g", boost::program_options::value<unsigned int>(), "number of groups for cross validation (optional): default 5")
 		("outdir,o", boost::program_options::value<std::string>(), "directory to store output files (optional)\n simple training -  stores model file and feature file to \"model (default)\"\n cross validation - stores model file, feature file and result file to \"output (default)\"")
 		("dic,d", boost::program_options::value<std::string>(), "dictionary directory (optional)")
 		("target,t", boost::program_options::value<unsigned int>(), "method of detecting token to be learned\n 0 - by part of speech [default]\n 1 - predicate detected by a predicate-argument structure analyzer (only SynCha format is supported)\n 2 - by machine learning (has not been implemented)\n 3 - by gold data")
+		("only-matrix", "trained and evaluated only matrix clause for each sentence")
 		("help,h", "Show help messages")
 		("version,v", "Show version informaion");
 
@@ -132,10 +132,6 @@ int main(int argc, char *argv[]) {
 		mod_parser.target_detection = argmap["target"].as<unsigned int>();
 	}
 
-	if (argmap.count("with-fsem")) {
-		mod_parser.has_fsem = true;
-	}
-
 	switch (input_layer) {
 		case modality::IN_DEP_CAB:
 		case modality::IN_DEP_KNP:
@@ -162,9 +158,38 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
+
+	unsigned int cnt_inst_matrix = 0;
+	if (argmap.count("only-matrix")) {
+		std::vector<nlp::sentence>::iterator it_sent, ite_sent=mod_parser.learning_data.end();
+		for (it_sent=mod_parser.learning_data.begin() ; it_sent!=ite_sent ; ++it_sent) {
+			bool use_mod = true;
+			std::vector<nlp::chunk>::reverse_iterator it_c, ite_c=it_sent->chunks.rend();
+			for (it_c=it_sent->chunks.rbegin() ; it_c!=ite_c ; ++it_c) {
+				std::vector<nlp::token>::reverse_iterator it_t, ite_t=it_c->tokens.rend();
+				for (it_t=it_c->tokens.rbegin() ; it_t!=ite_t ; ++it_t) {
+					if (it_t->has_mod) {
+						if (use_mod) {
+							cnt_inst_matrix++;
+							use_mod = false;
+						}
+						else {
+							it_t->has_mod = false;
+							it_t->mod = nlp::modality();
+						}
+					}
+				}
+			}
+			if (use_mod)
+				std::cerr << "not found modality in matrix clause for " << it_sent->sent_id << std::endl;
+		}
+	}
+
 	std::cout << "load done" << std::endl;
  	std::cout << "   " << mod_parser.learning_data.size() << " sents" << std::endl;
  	std::cout << "   " << cnt_inst << " instances" << std::endl;
+	if (argmap.count("only-matrix"))
+		std::cout << "   " << cnt_inst_matrix << " instances in matrix clause" << std::endl;
 	std::cout << std::endl;
 
 
