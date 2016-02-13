@@ -75,7 +75,7 @@ AC_ARG_WITH(
 						)
 AC_ARG_ENABLE(
 							[cabocha],
-							AC_HELP_STRING([--disable-cabocha], [use cabocha (default is no)]),
+							AC_HELP_STRING([--disable-cabocha], [do not use cabocha (default is no)]),
 							[enable_cabocha=no],
 							)
 
@@ -97,9 +97,14 @@ AC_ARG_WITH(
 						[AC_HELP_STRING([--with-crfsuite=DIR], [crfsuite directory])],
 						[AM_CPPFLAGS="-I${withval}/include ${AM_CPPFLAGS}"; AM_LDFLAGS="-L${withval}/lib ${AM_LDFLAGS}"]
 						)
+AC_ARG_ENABLE(
+							[crfsuite],
+							AC_HELP_STRING([--disable-crfsuite], [do not use crfsuite i.e. disabled functional expression analysis (default is no)]),
+							[enable_crfsuite=no],
+							)
 
-AS_IF([test "x$with_crfsuite" != xno],
-			[
+AS_IF([test "x$enable_crfsuite" != xno],
+			[AM_CXXFLAGS=" -DUSE_CRFSUITE ${AM_CXXFLAGS}"
 			 old_CPPFLAGS=${CPPFLAGS}
 			 old_LDFLAGS=${LDFLAGS}
 			 CPPFLAGS=${AM_CPPFLAGS}

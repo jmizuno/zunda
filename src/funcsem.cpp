@@ -8,12 +8,14 @@
 #include <sstream>
 
 #include "util.hpp"
-#include <crfsuite.hpp>
-//#include <crfsuite_api.hpp>
+#ifdef USE_CRFSUITE
+#  include <crfsuite.hpp>
+#endif
 #include "funcsem.hpp"
 #include "sentence.hpp"
 
 namespace funcsem {
+#ifdef USE_CRFSUITE
 	bool tagger::tag_by_crf(nlp::sentence &sent, unsigned int tid_p, unsigned int tid_pe) {
 		CRFSuite::ItemSequence seq;
 
@@ -118,6 +120,7 @@ namespace funcsem {
 		std::cerr << std::endl;
 #endif
 	}
+#endif
 
 
 	bool tagger::is_func(const nlp::token &tok) {
@@ -169,7 +172,9 @@ namespace funcsem {
 			if (tid_p == tid_pe)
 				continue;
 
+#ifdef USE_CRFSUITE
 			tag_by_crf(sent, tid_p, tid_pe);
+#endif
 		}
 	}
 };

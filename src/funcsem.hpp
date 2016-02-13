@@ -9,7 +9,9 @@
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 
-#include <crfsuite_api.hpp>
+#ifdef USE_CRFSUITE
+#  include <crfsuite_api.hpp>
+#endif
 #include "sentence.hpp"
 
 
@@ -26,12 +28,16 @@ namespace funcsem {
 
 	class tagger {
 		public:
+#ifdef USE_CRFSUITE
 			CRFSuite::Tagger crf_tagger;
+#endif
 			std::vector<std::string> func_terms;
 
 		public:
 			void tag(nlp::sentence &);
+#ifdef USE_CRFSUITE
 			bool tag_by_crf(nlp::sentence &, unsigned int, unsigned int);
+#endif
 
 		private:
 			bool is_func(const nlp::token &);
@@ -44,6 +50,7 @@ namespace funcsem {
 				boost::filesystem::path model_dir_path(model_dir);
 				model_path = model_dir_path / model_path;
 
+#ifdef USE_CRFSUITE
 				if (crf_tagger.open(model_path.string())) {
 #ifdef _MODEBUG
 					std::cerr << "opened " << model_path.string() << std::endl;
@@ -53,6 +60,7 @@ namespace funcsem {
 					std::cerr << "error: opening " << model_path.string() << std::endl;
 					exit(-1);
 				}
+#endif
 
 
 				boost::algorithm::split(func_terms, FUNC_TERMS, boost::algorithm::is_any_of(","));
