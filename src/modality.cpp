@@ -198,6 +198,15 @@ namespace modality {
 
 		sent.parse(parsed_text);
 
+		std::vector<nlp::chunk>::iterator it_c, ite_c=sent.chunks.end();
+		for (it_c=sent.chunks.begin() ; it_c!=ite_c ; ++it_c) {
+			std::vector<nlp::token>::iterator it_t, ite_t=it_c->tokens.end();
+			for (it_t=it_c->tokens.begin() ; it_t!=ite_t ; ++it_t) {
+				if (it_t->has_mod)
+					it_t->mod = nlp::modality();
+			}
+		}
+
 		return analyze(sent);
 	}
 
@@ -245,7 +254,7 @@ namespace modality {
 		int eve_id = 0;
 		BOOST_FOREACH ( nlp::chunk chk, parsed_sent.chunks ) {
 			BOOST_FOREACH ( nlp::token tok, chk.tokens) {
-				if (tok.has_mod) {
+				if (tok.has_mod && tok.mod.tids.size() != 0) {
 					std::string mod_str;
 					tok.mod.str(mod_str);
 					cabocha_ss << "#EVENT" << eve_id << "\t" << mod_str << "\n";
