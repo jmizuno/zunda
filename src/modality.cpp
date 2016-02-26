@@ -119,7 +119,7 @@ namespace modality {
 				return false;
 			case DETECT_BY_GOLD:
 				if (tok.has_mod) {
-					tok.mod = nlp::modality();
+					//tok.mod = nlp::modality();
 					return true;
 				}
 				break;
@@ -291,8 +291,16 @@ namespace modality {
 		std::vector<nlp::chunk>::reverse_iterator sc_end = sent.chunks.rend();
 		std::vector<nlp::token>::reverse_iterator st_end;
 
-		//funcsem::tagger f_tagger(model_dir_path.string());
-		//f_tagger.tag(sent);
+		if (!sent.has_fsem) {
+#ifdef _MODEBUG
+			std::cerr << "start: functional expression analysis" << std::endl;
+#endif
+			funcsem::tagger f_tagger(model_dir_path.string());
+			f_tagger.tag(sent);
+#ifdef _MODEBUG
+			std::cerr << "done: functional expression analysis" << std::endl;
+#endif
+		}
 
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sc_end ; ++rit_chk) {
 			st_end = rit_chk->tokens.rend();

@@ -16,7 +16,7 @@
 
 
 #ifndef FUNC_MODEL_IPA
-#  define FUNC_MODEL_IPA "1627.m"
+#  define FUNC_MODEL_IPA "jfe_corpus_ver2.1_core.model"
 #endif
 
 #define FUNC_TERMS "する,ある,こと,もの,事,いう,言う,いい,できる,得る,える,なる"

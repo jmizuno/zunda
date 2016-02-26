@@ -17,7 +17,13 @@
 namespace funcsem {
 #ifdef USE_CRFSUITE
 	bool tagger::tag_by_crf(nlp::sentence &sent, unsigned int tid_p, unsigned int tid_pe) {
+		const size_t num_uni=10, num_bi=4;
+
 		CRFSuite::ItemSequence seq;
+
+#ifdef _MODEBUG
+		std::cerr << "range of tokens for " << sent.get_token(tid_p)->surf << " " << tid_p << ":" << tid_pe << " / " << sent.tid_min << ":" << sent.tid_max << std::endl;
+#endif
 
 		for (int tid=tid_p+1 ; tid<=tid_pe ; ++tid) {
 			std::vector<nlp::token *> toks;
@@ -44,18 +50,29 @@ namespace funcsem {
 			/* uni-gram feature */
 			BOOST_FOREACH (nlp::token *t, toks) {
 				int tid_sub = t->id - tid;
-				std::stringstream k[5], v[5];
-				k[0] << "p[" << tid_sub << "]|p1[" << tid_sub << "]";
-				v[0] << t->pos << "|" << t->pos1;
-				k[1] << "p[" << tid_sub << "]|p1[" << tid_sub << "]|p2[" << tid_sub << "]";
-				v[1] << t->pos << "|" << t->pos1 << "|" << t->pos2;
-				k[2] << "p[" << tid_sub << "]|p1[" << tid_sub << "]|p2[" << tid_sub << "]|p3[" << tid_sub << "]";
-				v[2] << t->pos << "|" << t->pos1 << "|" << t->pos2 << "|" << t->pos3;
-				k[3] << "cf[" << tid_sub << "]";
-				v[3] << t->form;
-				k[4] << "bf[" << tid_sub << "]|cf[" << tid_sub << "]";
-				v[4] << t->orig << "|" << t->form;
-				for (size_t i=0 ; i<5 ; ++i) {
+				std::stringstream k[num_uni], v[num_uni];
+				k[0] << "w[" << tid_sub << "]";
+				v[0] << t->surf;
+				k[1] << "p[" << tid_sub << "]";
+				v[1] << t->pos;
+				k[2] << "p[" << tid_sub << "]|p1[" << tid_sub << "]";
+				v[2] << t->pos << "|" << t->pos1;
+				k[3] << "p[" << tid_sub << "]|p1[" << tid_sub << "]|p2[" << tid_sub << "]";
+				v[3] << t->pos << "|" << t->pos1 << "|" << t->pos2;
+				k[4] << "p[" << tid_sub << "]|p1[" << tid_sub << "]|p2[" << tid_sub << "]|p3[" << tid_sub << "]";
+				v[4] << t->pos << "|" << t->pos1 << "|" << t->pos2 << "|" << t->pos3;
+				k[5] << "cf[" << tid_sub << "]";
+				v[5] << t->form;
+				k[6] << "bf[" << tid_sub << "]";
+				v[6] << t->orig;
+				k[7] << "bf[" << tid_sub << "]|p[" << tid_sub << "]";
+				v[7] << t->orig << "|" << t->pos;
+				k[8] << "bf[" << tid_sub << "]|p[" << tid_sub << "]|p1[" << tid_sub << "]";
+				v[8] << t->orig << "|" << t->pos1;
+				k[9] << "bf[" << tid_sub << "]|p[" << tid_sub << "]|p1[" << tid_sub << "]|p2[" << tid_sub << "]";
+				v[9] << t->orig << "|" << t->pos1 << "|" << t->pos2;
+
+				for (size_t i=0 ; i<num_uni ; ++i) {
 					if (k[i].str().size() != 0)
 						feat.push_back(k[i].str() + "=" + v[i].str());
 				}
@@ -65,24 +82,32 @@ namespace funcsem {
 			std::vector< std::vector<nlp::token *> > ng_toks;
 			get_subvec(&ng_toks, toks, 1, 2);
 			BOOST_FOREACH (std::vector<nlp::token *> ngt, ng_toks) {
-				std::stringstream k[3], v[3];
+				std::stringstream k[num_bi], v[num_bi];
 				BOOST_FOREACH (nlp::token *t, ngt) {
 					if (k[0].str().size() != 0) {
-						for (size_t i=0 ; i<3 ; ++i) {
+						for (size_t i=0 ; i<num_bi ; ++i) {
 							k[i] << "|";
 							v[i] << "|";
 						}
 					}
 					int tid_sub = t->id - tid;
-					k[0] << "w[" << tid_sub << "]";
-					v[0] << t->surf;
-					k[1] << "p[" << tid_sub << "]";
-					v[1] << t->pos;
+					k[0] << "p[" << tid_sub << "]";
+					v[0] << t->pos;
+					k[1] << "w[" << tid_sub << "]";
+					v[1] << t->surf;
 					k[2] << "bf[" << tid_sub << "]";
 					v[2] << t->orig;
+					if (k[3].str().size() == 0) {
+						k[3] << "cf[" << tid_sub << "]";
+						v[3] << t->form;
+					}
+					else {
+						k[3] << "w[" << tid_sub << "]";
+						v[3] << t->surf;
+					}
 				}
 
-				for (size_t i=0 ; i<3 ; ++i) {
+				for (size_t i=0 ; i<num_bi ; ++i) {
 					if (k[i].str().size() != 0)
 						feat.push_back(k[i].str() + "=" + v[i].str());
 				}
@@ -111,14 +136,11 @@ namespace funcsem {
 			std::cerr << sent.get_token(i+tid_p+1)->surf << std::endl;
 			std::cerr << r << std::endl;
 #endif
-			++i;
 			sent.get_token(i+tid_p+1)->has_fsem = true;
 			sent.get_token(i+tid_p+1)->fsem = r;
 			sent.has_fsem = true;
+			++i;
 		}
-#ifdef _MODEBUG
-		std::cerr << std::endl;
-#endif
 	}
 #endif
 
@@ -139,14 +161,6 @@ namespace funcsem {
 	}
 
 	void tagger::tag(nlp::sentence &sent) {
-		std::vector<nlp::token *> toks;
-		BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
-			std::vector<nlp::token>::iterator it_tok, ite_tok=chk.tokens.end();
-			for (it_tok=chk.tokens.begin() ; it_tok!=ite_tok ; ++it_tok) {
-				toks.push_back(&(*it_tok));
-			}
-		}
-
 		std::vector<unsigned int> tids_pred, tids_normal;
 		BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
 			BOOST_FOREACH (nlp::token tok, chk.tokens) {
@@ -159,6 +173,11 @@ namespace funcsem {
 		}
 
 		BOOST_FOREACH (unsigned int tid_p, tids_pred) {
+			if (tid_p == tids_pred[tids_pred.size()-1]) {
+				tag_by_crf(sent, tid_p, sent.tid_max);
+				break;
+			}
+
 			unsigned int tid_pe = sent.tid_max;
 			BOOST_REVERSE_FOREACH (unsigned int _tid, tids_pred) {
 				if (tid_pe >= _tid && _tid > tid_p)
