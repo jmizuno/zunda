@@ -160,7 +160,7 @@ namespace funcsem {
 			return false;
 	}
 
-	void tagger::tag(nlp::sentence &sent) {
+	void tagger::tag(nlp::sentence &sent, const std::vector<int> &tids) {
 		std::vector<unsigned int> tids_pred, tids_normal;
 		BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
 			BOOST_FOREACH (nlp::token tok, chk.tokens) {

@@ -33,8 +33,12 @@ namespace funcsem {
 #endif
 			std::vector<std::string> func_terms;
 
+		private:
+			std::vector< std::vector< std::vector<std::string> > > target_pos;
+			int max_num_tok_target;
+
 		public:
-			void tag(nlp::sentence &);
+			void tag(nlp::sentence &, const std::vector<int> &);
 #ifdef USE_CRFSUITE
 			bool tag_by_crf(nlp::sentence &, unsigned int, unsigned int);
 #endif

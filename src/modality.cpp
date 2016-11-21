@@ -291,12 +291,22 @@ namespace modality {
 		std::vector<nlp::chunk>::reverse_iterator sc_end = sent.chunks.rend();
 		std::vector<nlp::token>::reverse_iterator st_end;
 
+		std::vector<int> target_tids;
+		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sc_end ; ++rit_chk) {
+			st_end = rit_chk->tokens.rend();
+			for(rit_tok=rit_chk->tokens.rbegin() ; rit_tok!=st_end ; ++rit_tok) {
+				if (detect_target(*rit_tok, sent)) {
+					target_tids.push_back(rit_tok->id);
+				}
+			}
+		}
+
 		if (!sent.has_fsem) {
 #ifdef _MODEBUG
 			std::cerr << "start: functional expression analysis" << std::endl;
 #endif
 			funcsem::tagger f_tagger(model_dir_path.string());
-			f_tagger.tag(sent);
+			f_tagger.tag(sent, target_tids);
 #ifdef _MODEBUG
 			std::cerr << "done: functional expression analysis" << std::endl;
 #endif
@@ -305,7 +315,7 @@ namespace modality {
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sc_end ; ++rit_chk) {
 			st_end = rit_chk->tokens.rend();
 			for(rit_tok=rit_chk->tokens.rbegin() ; rit_tok!=st_end ; ++rit_tok) {
-				if (detect_target(*rit_tok, sent)) {
+				if (std::find(target_tids.begin(), target_tids.end(), rit_tok->id) != target_tids.end()) {
 #ifdef _MODEBUG
 					std::string chk_str;
 					rit_chk->str(chk_str);
@@ -615,7 +625,7 @@ namespace modality {
 #ifdef _MODEBUG
 					std::cerr << com << std::endl;
 #endif
-					system(com.c_str());
+					bool res = system(com.c_str());
 
 					std::vector<std::string> lines;
 					std::string buf;
