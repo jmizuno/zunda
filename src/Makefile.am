@@ -8,6 +8,7 @@ zunda_SOURCES = main.cpp \
 								util.hpp \
 								eval.hpp \
 								cdbmap.hpp \
+								funcsem.hpp \
 								funcsem.cpp \
 								../liblinear-1.8/linear.h \
 								../cdbpp-1.1/include/cdbpp.h
@@ -22,6 +23,7 @@ zunda_train_SOURCES = modality-learn.cpp \
 											util.hpp \
 											eval.hpp \
 											cdbmap.hpp \
+											funcsem.hpp \
 											funcsem.cpp \
 											../liblinear-1.8/linear.h \
 											../cdbpp-1.1/include/cdbpp.h
@@ -35,6 +37,7 @@ zunda_conv_SOURCES = xml2cab.cpp \
 										 feature.cpp \
 										 util.hpp \
 										 cdbmap.hpp \
+										 funcsem.hpp \
 										 funcsem.cpp \
 										 ../liblinear-1.8/linear.h \
 										 ../cdbpp-1.1/include/cdbpp.h
