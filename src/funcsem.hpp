@@ -40,6 +40,7 @@ namespace funcsem {
 		public:
 			void tag(nlp::sentence &, const std::vector<int> &);
 #ifdef USE_CRFSUITE
+			bool load_model(const std::string &);
 			bool tag_by_crf(nlp::sentence &, unsigned int, unsigned int);
 #endif
 
@@ -49,24 +50,7 @@ namespace funcsem {
 
 
 		public:
-			tagger(const std::string &model_dir) {
-				boost::filesystem::path model_path(FUNC_MODEL_IPA);
-				boost::filesystem::path model_dir_path(model_dir);
-				model_path = model_dir_path / model_path;
-
-#ifdef USE_CRFSUITE
-				if (crf_tagger.open(model_path.string())) {
-#ifdef _MODEBUG
-					std::cerr << "opened " << model_path.string() << std::endl;
-#endif
-				}
-				else {
-					std::cerr << "error: opening " << model_path.string() << std::endl;
-					exit(-1);
-				}
-#endif
-
-
+			tagger() {
 				boost::algorithm::split(func_terms, FUNC_TERMS, boost::algorithm::is_any_of(","));
 				std::sort(func_terms.begin(), func_terms.end());
 			}

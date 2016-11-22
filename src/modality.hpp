@@ -144,7 +144,6 @@ namespace modality {
 				chk_core = chk;
 				feat_cat.clear();
 				tagged_tense = false;
-				tagged_fadic = false;
 			}
 
 
@@ -282,7 +281,7 @@ namespace modality {
 #endif
 
 #ifdef USE_CRFSUITE
-				f_tagger = new funcsem::tagger(model_dir_path.string());
+				f_tagger = new funcsem::tagger();
 #endif
 
 				target_detection = DETECT_BY_POS;

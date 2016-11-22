@@ -16,6 +16,24 @@
 
 namespace funcsem {
 #ifdef USE_CRFSUITE
+	bool tagger::load_model(const std::string &model_dir) {
+		boost::filesystem::path model_path(FUNC_MODEL_IPA);
+		boost::filesystem::path model_dir_path(model_dir);
+		model_path = model_dir_path / model_path;
+
+		if (crf_tagger.open(model_path.string())) {
+#ifdef _MODEBUG
+			std::cerr << "opened " << model_path.string() << std::endl;
+#endif
+		}
+		else {
+			std::cerr << "error: opening " << model_path.string() << std::endl;
+			return false;
+		}
+
+		return true;
+	}
+
 	bool tagger::tag_by_crf(nlp::sentence &sent, unsigned int tid_p, unsigned int tid_pe) {
 		const size_t num_uni=10, num_bi=4;
 

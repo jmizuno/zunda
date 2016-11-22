@@ -117,6 +117,18 @@ int main(int argc, char *argv[]) {
 	std::cerr << "* load model done: " << (et-st) / (double)CLOCKS_PER_SEC << " sec" << std::endl;
 #endif
 
+#ifdef _MODEBUG
+	st = std::clock();
+#endif
+	if (!mod_parser.f_tagger->load_model(model_dir)) {
+		std::cerr << "ERROR: load model failed" << std::endl;
+		return false;
+	}
+#ifdef _MODEBUG
+	et = std::clock();
+	std::cerr << "* load model done: " << (et-st) / (double)CLOCKS_PER_SEC << " sec" << std::endl;
+#endif
+
 	std::string buf;
 	std::string sent;
 	std::string parsed_sent;
