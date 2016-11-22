@@ -305,8 +305,7 @@ namespace modality {
 #ifdef _MODEBUG
 			std::cerr << "start: functional expression analysis" << std::endl;
 #endif
-			funcsem::tagger f_tagger(model_dir_path.string());
-			f_tagger.tag(sent, target_tids);
+			f_tagger->tag(sent, target_tids);
 #ifdef _MODEBUG
 			std::cerr << "done: functional expression analysis" << std::endl;
 #endif

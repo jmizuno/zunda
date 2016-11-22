@@ -179,6 +179,10 @@ namespace modality {
 
 	class parser {
 		public:
+			boost::filesystem::path *model_path;
+			boost::filesystem::path *feat_path;
+			boost::filesystem::path model_dir_path;
+
 			cdbpp::cdbpp dbr_ttj;
 			cdbpp::cdbpp dbr_fadic;
 
@@ -186,16 +190,14 @@ namespace modality {
 #ifdef USE_CABOCHA
 			CaboCha::Parser *cabocha;
 #endif
-			
+
+#ifdef USE_CRFSUITE
+			funcsem::tagger *f_tagger;
+#endif
+
 			std::vector< nlp::sentence > learning_data;
 			unsigned int target_detection;
 			
-//			boost::unordered_map< std::string, int > label2id;
-//			boost::unordered_map< std::string, int > feat2id;
-			boost::filesystem::path *model_path;
-			boost::filesystem::path *feat_path;
-			boost::filesystem::path model_dir_path;
-
 			CdbMap<std::string, int> l2i;
 			boost::filesystem::path l2i_path;
 			boost::filesystem::path l2id_path;
@@ -271,7 +273,11 @@ namespace modality {
 #ifdef USE_CABOCHA
 				cabocha = CaboCha::createParser("-f1");
 #endif
-				
+
+#ifdef USE_CRFSUITE
+				f_tagger = new funcsem::tagger(model_dir_path.string());
+#endif
+
 				target_detection = DETECT_BY_POS;
 				pos_tag = POS_IPA;
 				set_pos_tag(pos_tag, "");
@@ -283,11 +289,13 @@ namespace modality {
 			}
 
 			~parser() {
-//				delete [] model_path;
-//				delete [] feat_path;
+				delete cabocha;
+				delete f_tagger;
+				delete [] model_path;
+				delete [] feat_path;
 				if (model_loaded) {
 					BOOST_FOREACH (unsigned int i, analyze_tags) {
-//						linear::free_and_destroy_model(&models[i]);
+						linear::free_and_destroy_model(&models[i]);
 					}
 				}
 			}
