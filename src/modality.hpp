@@ -112,8 +112,13 @@ namespace modality {
 			nlp::chunk *chk_core;
 			nlp::sentence *sent;
 			t_feat_cat feat_cat;
+
+			bool tagged_tense;
+			bool tagged_fadic;
 		public:
 			feature_generator2() {
+				tagged_tense = false;
+				tagged_fadic = false;
 			}
 		public:
 			bool compile_feat_str( const std::vector<std::string> &, std::string & );
@@ -138,6 +143,8 @@ namespace modality {
 				tok_core = tok;
 				chk_core = chk;
 				feat_cat.clear();
+				tagged_tense = false;
+				tagged_fadic = false;
 			}
 
 

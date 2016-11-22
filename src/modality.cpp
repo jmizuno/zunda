@@ -330,13 +330,17 @@ namespace modality {
 					//fgen.gen_feature_ttj(&dbr_ttj);
 					fgen.gen_feature_fsem();
 
+					// for AUTHENTICITY
 					fgen.gen_feature_neg();
 
 					t_feat::iterator it_feat;
 
+					// gen_feature_fadic have to be runned after analyzing tense tag
+					// gen_feature_fadic is skipped if the feature has been already generated
 					BOOST_FOREACH (unsigned int i, analyze_tags) {
 						switch (i) {
 							case TENSE:
+								fgen.tagged_tense = true;
 								break;
 							case ASSUMPTIONAL:
 								break;
@@ -347,7 +351,6 @@ namespace modality {
 							case AUTHENTICITY:
 								fgen.gen_feature_mod("type");
 								fgen.gen_feature_fadic(&dbr_fadic);
-								fgen.gen_feature_neg();
 								break;
 							case SENTIMENT:
 								fgen.gen_feature_fadic(&dbr_fadic);

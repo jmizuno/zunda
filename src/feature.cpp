@@ -309,6 +309,10 @@ namespace modality {
 
 
 	void feature_generator2::gen_feature_fadic(cdbpp::cdbpp *dbr_fadic) {
+		// if TENSE has not been analyzed or fadic feature has been already generated, this function is skipped
+		if (!tagged_tense || tagged_fadic)
+			return;
+
 		std::string tense, auth;
 
 		if (tok_core->has_mod) {
@@ -373,6 +377,8 @@ namespace modality {
 				}
 			}
 		}
+
+		tagged_fadic = true;
 	}
 };
 
