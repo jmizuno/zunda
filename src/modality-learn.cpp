@@ -6,19 +6,7 @@
 #include "sentence.hpp"
 #include "modality.hpp"
 #include "eval.hpp"
-
-
-bool mkdir(const boost::filesystem::path &dir_path) {
-	std::cerr << dir_path.string() << std::endl;
-	if (!boost::filesystem::exists(dir_path)) {
-		std::cerr << "mkdir " << dir_path.string() << std::endl;
-		if (!boost::filesystem::create_directories(dir_path)) {
-			std::cerr << "ERROR: mkdir " << dir_path.string() << " failed" << std::endl;
-			return false;
-		}
-	}
-	return true;
-}
+#include "util.hpp"
 
 
 int main(int argc, char *argv[]) {

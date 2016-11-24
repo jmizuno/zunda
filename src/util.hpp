@@ -1,9 +1,23 @@
-#ifndef __UTIL_HPP__
-#define __UTIL_HPP__
+#pragma once
 
 #include <string>
 #include <sstream>
 #include <vector>
+#include <boost/filesystem.hpp>
+
+
+static bool mkdir(const boost::filesystem::path &dir_path) {
+	std::cerr << dir_path.string() << std::endl;
+	if (!boost::filesystem::exists(dir_path)) {
+		std::cerr << "mkdir " << dir_path.string() << std::endl;
+		if (!boost::filesystem::create_directories(dir_path)) {
+			std::cerr << "ERROR: mkdir " << dir_path.string() << " failed" << std::endl;
+			return false;
+		}
+	}
+	return true;
+}
+
 
 template< typename Tattr, typename Tspl >
 static void join( std::string &str, const std::vector< Tattr > &vec, const Tspl &splitter ) {
@@ -39,6 +53,4 @@ static void get_subvec(std::vector< std::vector< Tins > > *res, const std::vecto
 	}
 }
 
-
-#endif
 
