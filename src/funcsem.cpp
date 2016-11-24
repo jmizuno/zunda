@@ -31,7 +31,41 @@ namespace funcsem {
 			return false;
 		}
 
+		crf_tagger.params();
+
 		return true;
+	}
+
+
+	void tagger::train(const std::string &model_path, const std::vector< nlp::sentence > &tr_data) {
+		CRFSuite::Trainer crf_trainer;
+
+		BOOST_FOREACH (nlp::sentence tr_inst, tr_data) {
+			std::vector< std::vector< unsigned int > > targets;
+			detect_target(tr_inst, targets);
+
+			BOOST_FOREACH (std::vector< unsigned int > tids, targets) {
+				unsigned int tid_p = tids[0];
+				unsigned int tid_pe = tids[1];
+#ifdef _MODEBUG
+				std::cerr << "range of tokens for " << tr_inst.get_token(tid_p)->surf << " " << tid_p << ":" << tid_pe << " / " << tr_inst.tid_min << ":" << tr_inst.tid_max << std::endl;
+#endif
+
+				CRFSuite::ItemSequence seq;
+				CRFSuite::StringList yseq;
+				gen_feat(tr_inst, tid_p, tid_pe, seq);
+				for (int tid=tid_p+1 ; tid<=tid_pe ; ++tid)
+					yseq.push_back(tr_inst.get_token(tid)->fsem);
+				crf_trainer.append(seq, yseq, 0);
+			}
+		}
+
+		crf_trainer.select("l2sgd", "crf1d");
+		crf_trainer.set("c2", "0.1");
+		BOOST_FOREACH (std::string name, crf_trainer.params())
+			std::cout << name << "\t" << crf_trainer.get(name) << "\t" << crf_trainer.help(name) << std::endl;
+
+		crf_trainer.train(model_path, -1);
 	}
 
 
@@ -151,8 +185,6 @@ namespace funcsem {
 		CRFSuite::ItemSequence seq;
 		gen_feat(sent, tid_p, tid_pe, seq);
 
-		const size_t num_uni=10, num_bi=4;
-
 		CRFSuite::StringList list;
 		list = crf_tagger.tag(seq);
 		size_t i=0;
@@ -185,8 +217,9 @@ namespace funcsem {
 			return false;
 	}
 
-	void tagger::tag(nlp::sentence &sent, const std::vector<int> &tids) {
-		std::vector<unsigned int> tids_pred, tids_normal;
+
+	void tagger::detect_target(nlp::sentence &sent, std::vector< std::vector< unsigned int > > &targets) {
+		std::vector< unsigned int > tids_pred, tids_normal;
 		BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
 			BOOST_FOREACH (nlp::token tok, chk.tokens) {
 				if (is_pred(tok))
@@ -199,7 +232,10 @@ namespace funcsem {
 
 		BOOST_FOREACH (unsigned int tid_p, tids_pred) {
 			if (tid_p == tids_pred[tids_pred.size()-1]) {
-				tag_by_crf(sent, tid_p, sent.tid_max);
+				std::vector< unsigned int > _tids;
+				_tids.push_back(tid_p);
+				_tids.push_back(sent.tid_max);
+				targets.push_back(_tids);
 				break;
 			}
 
@@ -216,8 +252,21 @@ namespace funcsem {
 			if (tid_p == tid_pe)
 				continue;
 
+			std::vector< unsigned int > tids;
+			tids.push_back(tid_p);
+			tids.push_back(tid_pe);
+			targets.push_back(tids);
+		}
+	}
+
+
+	void tagger::tag(nlp::sentence &sent) {
+		std::vector< std::vector< unsigned int > > targets;
+		detect_target(sent, targets);
+
+		BOOST_FOREACH (std::vector< unsigned int > tids, targets) {
 #ifdef USE_CRFSUITE
-			tag_by_crf(sent, tid_p, tid_pe);
+			tag_by_crf(sent, tids[0], tids[1]);
 #endif
 		}
 	}

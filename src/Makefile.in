@@ -86,7 +86,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = zunda$(EXEEXT) zunda-train$(EXEEXT) zunda-conv$(EXEEXT)
+bin_PROGRAMS = zunda$(EXEEXT) zunda-train$(EXEEXT) zunda-conv$(EXEEXT) \
+	zunda-fsem-train$(EXEEXT)
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -107,6 +108,10 @@ am_zunda_conv_OBJECTS = xml2cab.$(OBJEXT) modality.$(OBJEXT) \
 	sentence.$(OBJEXT) feature.$(OBJEXT) funcsem.$(OBJEXT)
 zunda_conv_OBJECTS = $(am_zunda_conv_OBJECTS)
 zunda_conv_DEPENDENCIES =
+am_zunda_fsem_train_OBJECTS = funcsem-train.$(OBJEXT) \
+	funcsem.$(OBJEXT) sentence.$(OBJEXT)
+zunda_fsem_train_OBJECTS = $(am_zunda_fsem_train_OBJECTS)
+zunda_fsem_train_DEPENDENCIES =
 am_zunda_train_OBJECTS = modality-learn.$(OBJEXT) modality.$(OBJEXT) \
 	sentence.$(OBJEXT) feature.$(OBJEXT) funcsem.$(OBJEXT)
 zunda_train_OBJECTS = $(am_zunda_train_OBJECTS)
@@ -153,9 +158,9 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(zunda_SOURCES) $(zunda_conv_SOURCES) \
-	$(zunda_train_SOURCES)
+	$(zunda_fsem_train_SOURCES) $(zunda_train_SOURCES)
 DIST_SOURCES = $(zunda_SOURCES) $(zunda_conv_SOURCES) \
-	$(zunda_train_SOURCES)
+	$(zunda_fsem_train_SOURCES) $(zunda_train_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -327,6 +332,14 @@ zunda_conv_SOURCES = xml2cab.cpp \
 										 ../cdbpp-1.1/include/cdbpp.h
 
 zunda_conv_LDADD = -L../tinyxml2 -ltinyxml2 -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @AM_LDFLAGS@ @BOOST_LIBS@
+zunda_fsem_train_SOURCES = funcsem-train.cpp \
+													 funcsem.hpp \
+													 funcsem.cpp \
+													 sentence.hpp \
+													 sentence.cpp \
+													 util.hpp
+
+zunda_fsem_train_LDADD = @AM_LDFLAGS@ @BOOST_LIBS@
 all: all-am
 
 .SUFFIXES:
@@ -411,6 +424,10 @@ zunda-conv$(EXEEXT): $(zunda_conv_OBJECTS) $(zunda_conv_DEPENDENCIES) $(EXTRA_zu
 	@rm -f zunda-conv$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(zunda_conv_OBJECTS) $(zunda_conv_LDADD) $(LIBS)
 
+zunda-fsem-train$(EXEEXT): $(zunda_fsem_train_OBJECTS) $(zunda_fsem_train_DEPENDENCIES) $(EXTRA_zunda_fsem_train_DEPENDENCIES) 
+	@rm -f zunda-fsem-train$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(zunda_fsem_train_OBJECTS) $(zunda_fsem_train_LDADD) $(LIBS)
+
 zunda-train$(EXEEXT): $(zunda_train_OBJECTS) $(zunda_train_DEPENDENCIES) $(EXTRA_zunda_train_DEPENDENCIES) 
 	@rm -f zunda-train$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(zunda_train_OBJECTS) $(zunda_train_LDADD) $(LIBS)
@@ -422,6 +439,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/feature.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/funcsem-train.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/funcsem.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/modality-learn.Po@am__quote@

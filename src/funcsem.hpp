@@ -9,6 +9,8 @@
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 
+#include "../config.h"
+
 #ifdef USE_CRFSUITE
 #  include <crfsuite_api.hpp>
 #endif
@@ -16,7 +18,7 @@
 
 
 #ifndef FUNC_MODEL_IPA
-#  define FUNC_MODEL_IPA "jfe_corpus_ver2.1_core.model"
+#  define FUNC_MODEL_IPA "funcsem_v2.2.model"
 #endif
 
 #define FUNC_TERMS "する,ある,こと,もの,事,いう,言う,いい,できる,得る,える,なる"
@@ -38,16 +40,20 @@ namespace funcsem {
 			int max_num_tok_target;
 
 		public:
-			void tag(nlp::sentence &, const std::vector<int> &);
+			void tag(nlp::sentence &);
 #ifdef USE_CRFSUITE
 			bool load_model(const std::string &);
-			void gen_feat(nlp::sentence &, unsigned int, unsigned int, CRFSuite::ItemSequence &);
-			bool tag_by_crf(nlp::sentence &, unsigned int, unsigned int);
+			void train(const std::string &, const std::vector< nlp::sentence > &);
 #endif
 
 		private:
+			void detect_target(nlp::sentence &, std::vector< std::vector< unsigned int> > &);
 			bool is_func(const nlp::token &);
 			bool is_pred(const nlp::token &);
+#ifdef USE_CRFSUITE
+			void gen_feat(nlp::sentence &, unsigned int, unsigned int, CRFSuite::ItemSequence &);
+			bool tag_by_crf(nlp::sentence &, unsigned int, unsigned int);
+#endif
 
 
 		public:

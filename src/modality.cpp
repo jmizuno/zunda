@@ -305,7 +305,7 @@ namespace modality {
 #ifdef _MODEBUG
 			std::cerr << "start: functional expression analysis" << std::endl;
 #endif
-			f_tagger->tag(sent, target_tids);
+			f_tagger->tag(sent);
 #ifdef _MODEBUG
 			std::cerr << "done: functional expression analysis" << std::endl;
 #endif

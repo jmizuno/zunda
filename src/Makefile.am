@@ -1,4 +1,4 @@
-bin_PROGRAMS = zunda zunda-train zunda-conv
+bin_PROGRAMS = zunda zunda-train zunda-conv zunda-fsem-train
 zunda_SOURCES = main.cpp \
 								modality.hpp \
 								modality.cpp \
@@ -42,4 +42,12 @@ zunda_conv_SOURCES = xml2cab.cpp \
 										 ../liblinear-1.8/linear.h \
 										 ../cdbpp-1.1/include/cdbpp.h
 zunda_conv_LDADD = -L../tinyxml2 -ltinyxml2 -L../liblinear-1.8 -llinear -L../liblinear-1.8/blas -lblas @AM_LDFLAGS@ @BOOST_LIBS@
+
+zunda_fsem_train_SOURCES = funcsem-train.cpp \
+													 funcsem.hpp \
+													 funcsem.cpp \
+													 sentence.hpp \
+													 sentence.cpp \
+													 util.hpp
+zunda_fsem_train_LDADD = @AM_LDFLAGS@ @BOOST_LIBS@
 
