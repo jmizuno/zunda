@@ -34,14 +34,9 @@ namespace funcsem {
 		return true;
 	}
 
-	bool tagger::tag_by_crf(nlp::sentence &sent, unsigned int tid_p, unsigned int tid_pe) {
+
+	void tagger::gen_feat(nlp::sentence &sent, unsigned int tid_p, unsigned int tid_pe, CRFSuite::ItemSequence &seq) {
 		const size_t num_uni=10, num_bi=4;
-
-		CRFSuite::ItemSequence seq;
-
-#ifdef _MODEBUG
-		std::cerr << "range of tokens for " << sent.get_token(tid_p)->surf << " " << tid_p << ":" << tid_pe << " / " << sent.tid_min << ":" << sent.tid_max << std::endl;
-#endif
 
 		for (int tid=tid_p+1 ; tid<=tid_pe ; ++tid) {
 			std::vector<nlp::token *> toks;
@@ -145,6 +140,18 @@ namespace funcsem {
 			}
 			seq.push_back(item);
 		}
+	}
+
+
+	bool tagger::tag_by_crf(nlp::sentence &sent, unsigned int tid_p, unsigned int tid_pe) {
+#ifdef _MODEBUG
+		std::cerr << "range of tokens for " << sent.get_token(tid_p)->surf << " " << tid_p << ":" << tid_pe << " / " << sent.tid_min << ":" << sent.tid_max << std::endl;
+#endif
+
+		CRFSuite::ItemSequence seq;
+		gen_feat(sent, tid_p, tid_pe, seq);
+
+		const size_t num_uni=10, num_bi=4;
 
 		CRFSuite::StringList list;
 		list = crf_tagger.tag(seq);

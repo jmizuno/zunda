@@ -41,6 +41,7 @@ namespace funcsem {
 			void tag(nlp::sentence &, const std::vector<int> &);
 #ifdef USE_CRFSUITE
 			bool load_model(const std::string &);
+			void gen_feat(nlp::sentence &, unsigned int, unsigned int, CRFSuite::ItemSequence &);
 			bool tag_by_crf(nlp::sentence &, unsigned int, unsigned int);
 #endif
 
