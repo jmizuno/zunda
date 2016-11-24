@@ -31,8 +31,6 @@ namespace funcsem {
 			return false;
 		}
 
-		crf_tagger.params();
-
 		return true;
 	}
 
