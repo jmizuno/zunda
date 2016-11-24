@@ -9,6 +9,11 @@
 
 
 int main(int argc, char *argv[]) {
+#ifndef USE_CRFSUITE
+	std::cerr << "ERROR: this program requires CRFSuite" << std::endl;
+	exit(-1);
+#endif
+
 	boost::program_options::options_description opt("Usage", 200);
 	opt.add_options()
 		("path,p", boost::program_options::value< std::vector<std::string> >()->multitoken(), "input data to learn (required)")
@@ -60,6 +65,7 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
+#ifdef USE_CRFSUITE
 	funcsem::tagger f_tagger;
 	std::vector< nlp::sentence > tr_data;
 
@@ -91,5 +97,6 @@ int main(int argc, char *argv[]) {
 	std::cout << "\t" << tr_data.size() << " sentences" << std::endl;
 
 	f_tagger.train(model_path.string(), tr_data);
+#endif
 }
 

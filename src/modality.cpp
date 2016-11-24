@@ -301,6 +301,7 @@ namespace modality {
 			}
 		}
 
+#ifdef USE_CRFSUITE
 		if (!sent.has_fsem) {
 #ifdef _MODEBUG
 			std::cerr << "start: functional expression analysis" << std::endl;
@@ -310,6 +311,7 @@ namespace modality {
 			std::cerr << "done: functional expression analysis" << std::endl;
 #endif
 		}
+#endif
 
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sc_end ; ++rit_chk) {
 			st_end = rit_chk->tokens.rend();

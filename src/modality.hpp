@@ -295,8 +295,13 @@ namespace modality {
 			}
 
 			~parser() {
+#ifdef USE_CABOCHA
 				delete cabocha;
+#endif
+
+#ifdef USE_CRFSUITE
 				delete f_tagger;
+#endif
 				delete [] model_path;
 				delete [] feat_path;
 				if (model_loaded) {

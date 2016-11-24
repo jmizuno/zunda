@@ -8,6 +8,10 @@
 
 
 int main(int argc, char *argv[]) {
+#ifndef USE_CRFSUITE
+	std::cerr << "WARN: the performance is not good when CRFSuite is disable." << std::endl;
+#endif
+
 	std::ios::sync_with_stdio(false);
 	std::cin.tie(0);
 
@@ -117,6 +121,7 @@ int main(int argc, char *argv[]) {
 	std::cerr << "* load model done: " << (et-st) / (double)CLOCKS_PER_SEC << " sec" << std::endl;
 #endif
 
+#ifdef USE_CRFSUITE
 #ifdef _MODEBUG
 	st = std::clock();
 #endif
@@ -127,6 +132,7 @@ int main(int argc, char *argv[]) {
 #ifdef _MODEBUG
 	et = std::clock();
 	std::cerr << "* load model done: " << (et-st) / (double)CLOCKS_PER_SEC << " sec" << std::endl;
+#endif
 #endif
 
 	std::string buf;
