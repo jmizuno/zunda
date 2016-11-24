@@ -69,6 +69,13 @@ namespace funcsem {
 	}
 
 
+	/*
+	 * * unigram:
+	 *   表層、品詞、品詞細分類1、品詞細分類2、品詞細分類3、活用形
+	 *   基本形、基本形+品詞、基本形+品詞細分類1、基本形+品詞細分類2
+	 * * bigram:
+	 *   品詞、表層、基本形、活用形+次の表層
+	 */
 	void tagger::gen_feat(nlp::sentence &sent, unsigned int tid_p, unsigned int tid_pe, CRFSuite::ItemSequence &seq) {
 		const size_t num_uni=10, num_bi=4;
 
@@ -80,42 +87,41 @@ namespace funcsem {
 					toks.push_back(t);
 				}
 			}
-			/*
-			 * [uni-gram]
-			 * 0 p,p1: pos+pos1
-			 * 1 p,p1,p2: pos+pos1+pos2
-			 * 2 p,p1,p2,p3
-			 * 3 cf: form
-			 * 4 bf,cf: orig+form
-			 * [bi-gram]
-			 * 0 w: surf
-			 * 1 p: pos
-			 * 2 bf: orig
-			 */
+
 			std::vector<std::string> feat;
 
 			/* uni-gram feature */
 			BOOST_FOREACH (nlp::token *t, toks) {
 				int tid_sub = t->id - tid;
 				std::stringstream k[num_uni], v[num_uni];
+				// surface
 				k[0] << "w[" << tid_sub << "]";
 				v[0] << t->surf;
+				// pos
 				k[1] << "p[" << tid_sub << "]";
 				v[1] << t->pos;
+				// pos1 = pos+pos1
 				k[2] << "p[" << tid_sub << "]|p1[" << tid_sub << "]";
 				v[2] << t->pos << "|" << t->pos1;
+				// pos2 = pos+pos1+pos2
 				k[3] << "p[" << tid_sub << "]|p1[" << tid_sub << "]|p2[" << tid_sub << "]";
 				v[3] << t->pos << "|" << t->pos1 << "|" << t->pos2;
+				// pos3 = pos+pos1+pos2+pos3
 				k[4] << "p[" << tid_sub << "]|p1[" << tid_sub << "]|p2[" << tid_sub << "]|p3[" << tid_sub << "]";
 				v[4] << t->pos << "|" << t->pos1 << "|" << t->pos2 << "|" << t->pos3;
+				// form
 				k[5] << "cf[" << tid_sub << "]";
 				v[5] << t->form;
+				// base form
 				k[6] << "bf[" << tid_sub << "]";
 				v[6] << t->orig;
+				// base form+pos
 				k[7] << "bf[" << tid_sub << "]|p[" << tid_sub << "]";
 				v[7] << t->orig << "|" << t->pos;
+				// base form+pos1
 				k[8] << "bf[" << tid_sub << "]|p[" << tid_sub << "]|p1[" << tid_sub << "]";
 				v[8] << t->orig << "|" << t->pos1;
+				// base form+pos2
 				k[9] << "bf[" << tid_sub << "]|p[" << tid_sub << "]|p1[" << tid_sub << "]|p2[" << tid_sub << "]";
 				v[9] << t->orig << "|" << t->pos1 << "|" << t->pos2;
 
@@ -138,12 +144,16 @@ namespace funcsem {
 						}
 					}
 					int tid_sub = t->id - tid;
+					// pos
 					k[0] << "p[" << tid_sub << "]";
 					v[0] << t->pos;
+					// surface
 					k[1] << "w[" << tid_sub << "]";
 					v[1] << t->surf;
+					// base form
 					k[2] << "bf[" << tid_sub << "]";
 					v[2] << t->orig;
+					// form+next surface
 					if (k[3].str().size() == 0) {
 						k[3] << "cf[" << tid_sub << "]";
 						v[3] << t->form;
