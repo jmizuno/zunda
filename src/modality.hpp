@@ -292,6 +292,10 @@ namespace modality {
 				open_l2i_cdb();
 
 				model_loaded = false;
+
+				boost::filesystem::path kt_path("keyterms.txt");
+				kt_path = dic_dir_path / kt_path;
+				fgen.load_keyterms(kt_path);
 			}
 
 			~parser() {
