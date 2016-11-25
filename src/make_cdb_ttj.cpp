@@ -73,8 +73,7 @@ int main( int argc, char *argv[] ) {
 			for (unsigned int i=2 ; i<attr.size() ; ++i) {
 				surfs.push_back(attr[i]);
 			}
-			std::string surf;
-			join(surf, surfs, "_");
+			std::string surf = boost::algorithm::join(surfs, "_");
 
 			std::vector< std::string > sems;
 			boost::algorithm::split( sems, attr[0], boost::algorithm::is_any_of(":") );
@@ -91,8 +90,7 @@ int main( int argc, char *argv[] ) {
 		}
 		sort(funcs.begin(), funcs.end());
 		funcs.erase(unique(funcs.begin(), funcs.end()), funcs.end());
-		std::string func;
-		join(func, funcs, "\t");
+		std::string func = boost::algorithm::join(funcs, "\t");
 		dic[midashi] = func;
 		//std::cout << midashi << "\t" << funcs.size() << func << std::endl;
 	}

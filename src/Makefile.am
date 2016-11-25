@@ -6,6 +6,7 @@ zunda_SOURCES = main.cpp \
 								sentence.cpp \
 								feature.cpp \
 								util.hpp \
+								util.cpp \
 								eval.hpp \
 								cdbmap.hpp \
 								funcsem.hpp \
@@ -21,6 +22,7 @@ zunda_train_SOURCES = modality-learn.cpp \
 											sentence.cpp \
 											feature.cpp \
 											util.hpp \
+											util.cpp \
 											eval.hpp \
 											cdbmap.hpp \
 											funcsem.hpp \
@@ -36,6 +38,7 @@ zunda_conv_SOURCES = xml2cab.cpp \
 										 sentence.cpp \
 										 feature.cpp \
 										 util.hpp \
+										 util.cpp \
 										 cdbmap.hpp \
 										 funcsem.hpp \
 										 funcsem.cpp \
@@ -48,6 +51,7 @@ zunda_fsem_train_SOURCES = funcsem-train.cpp \
 													 funcsem.cpp \
 													 sentence.hpp \
 													 sentence.cpp \
-													 util.hpp
+													 util.hpp \
+													 util.cpp
 zunda_fsem_train_LDADD = @AM_LDFLAGS@ @BOOST_LIBS@
 

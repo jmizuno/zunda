@@ -94,8 +94,8 @@ namespace modality {
 					f_surf_v.push_back(t->surf);
 					f_orig_v.push_back(t->orig);
 				}
-				join(f_surf_str, f_surf_v, ".");
-				join(f_orig_str, f_orig_v, ".");
+				f_surf_str = boost::algorithm::join(f_surf_v, ".");
+				f_orig_str = boost::algorithm::join(f_orig_v, ".");
 				feat_cat["func"]["surf_" + f_surf_str] = 1.0;
 				feat_cat["func"]["orig_" + f_orig_str] = 1.0;
 			}
@@ -166,8 +166,7 @@ namespace modality {
 		std::vector< std::vector<std::string> > fsem_ngs;
 		get_subvec(&fsem_ngs, fsem_vec, 1, fsem_vec.size());
 		BOOST_FOREACH (std::vector<std::string> ngf, fsem_ngs) {
-			std::string ngf_str;
-			join(ngf_str, ngf, "_");
+			std::string ngf_str = boost::algorithm::join(ngf, "_");
 			if (ngf_str != "BOF" && ngf_str != "EOF") {
 				feat_cat["func_sem"][ngf_str] = 1.0;
 			}
@@ -298,8 +297,7 @@ namespace modality {
 		std::vector< std::vector<std::string> > fsem_ngs;
 		get_subvec(&fsem_ngs, sems, 1, sems.size());
 		BOOST_FOREACH (std::vector<std::string> ngf, fsem_ngs) {
-			std::string ngf_str;
-			join(ngf_str, ngf, "_");
+			std::string ngf_str = boost::algorithm::join(ngf, "_");
 			if (ngf_str != "BOF" && ngf_str != "EOF") {
 				feat_cat["func_sem"][ngf_str] = 1.0;
 			}

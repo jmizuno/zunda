@@ -43,10 +43,14 @@ namespace nlp {
 	}
 
 	void modality::str(std::string &str) {
-		std::string tid_str;
-		join(tid_str, tids, ",");
+		std::stringstream ss;
+		BOOST_FOREACH (int tid, tids) {
+			ss << tid;
+			if (tid != tids[tids.size()-1])
+				ss << ",";
+		}
 
-		str = tid_str + "\t" + tag["source"] + "\t" + tag["tense"] + "\t" + tag["assumptional"] + "\t" + tag["type"] + "\t" + tag["authenticity"] + "\t" + tag["sentiment"] + "\t" + tag["focus"];
+		str = ss.str() + "\t" + tag["source"] + "\t" + tag["tense"] + "\t" + tag["assumptional"] + "\t" + tag["type"] + "\t" + tag["authenticity"] + "\t" + tag["sentiment"] + "\t" + tag["focus"];
 	}
 };
 
@@ -242,7 +246,7 @@ namespace nlp {
 				for (unsigned int i=11 ; i<l.size() ; ++i) {
 					sems.push_back(l[i]);
 				}
-				join(sem_info, sems, " ");
+				sem_info = boost::algorithm::join(sems, " ");
 			}
 		}
 
@@ -318,8 +322,7 @@ namespace nlp {
 				input_orig_lines.push_back(line);
 			}
 		}
-		input_orig.clear();
-		join(input_orig, input_orig_lines, "\n");  // stored original parsed sentence
+		input_orig = boost::algorithm::join(input_orig_lines, "\n");  // stored original parsed sentence
 
 		std::vector< modality > mods;
 		std::vector< std::string > funcexps;
@@ -631,8 +634,7 @@ namespace nlp {
 						pas_info.push_back(ss.str());
 					}
 
-					std::string pas_info_str;
-					join(pas_info_str, pas_info, " ");
+					std::string pas_info_str = boost::algorithm::join(pas_info, " ");
 					cabocha_ss << "\t" << pas_info_str;
 				}
 				cabocha_ss << "\n";

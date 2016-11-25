@@ -101,19 +101,22 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_zunda_OBJECTS = main.$(OBJEXT) modality.$(OBJEXT) \
-	sentence.$(OBJEXT) feature.$(OBJEXT) funcsem.$(OBJEXT)
+	sentence.$(OBJEXT) feature.$(OBJEXT) util.$(OBJEXT) \
+	funcsem.$(OBJEXT)
 zunda_OBJECTS = $(am_zunda_OBJECTS)
 zunda_DEPENDENCIES =
 am_zunda_conv_OBJECTS = xml2cab.$(OBJEXT) modality.$(OBJEXT) \
-	sentence.$(OBJEXT) feature.$(OBJEXT) funcsem.$(OBJEXT)
+	sentence.$(OBJEXT) feature.$(OBJEXT) util.$(OBJEXT) \
+	funcsem.$(OBJEXT)
 zunda_conv_OBJECTS = $(am_zunda_conv_OBJECTS)
 zunda_conv_DEPENDENCIES =
 am_zunda_fsem_train_OBJECTS = funcsem-train.$(OBJEXT) \
-	funcsem.$(OBJEXT) sentence.$(OBJEXT)
+	funcsem.$(OBJEXT) sentence.$(OBJEXT) util.$(OBJEXT)
 zunda_fsem_train_OBJECTS = $(am_zunda_fsem_train_OBJECTS)
 zunda_fsem_train_DEPENDENCIES =
 am_zunda_train_OBJECTS = modality-learn.$(OBJEXT) modality.$(OBJEXT) \
-	sentence.$(OBJEXT) feature.$(OBJEXT) funcsem.$(OBJEXT)
+	sentence.$(OBJEXT) feature.$(OBJEXT) util.$(OBJEXT) \
+	funcsem.$(OBJEXT)
 zunda_train_OBJECTS = $(am_zunda_train_OBJECTS)
 zunda_train_DEPENDENCIES =
 AM_V_P = $(am__v_P_@AM_V@)
@@ -295,6 +298,7 @@ zunda_SOURCES = main.cpp \
 								sentence.cpp \
 								feature.cpp \
 								util.hpp \
+								util.cpp \
 								eval.hpp \
 								cdbmap.hpp \
 								funcsem.hpp \
@@ -310,6 +314,7 @@ zunda_train_SOURCES = modality-learn.cpp \
 											sentence.cpp \
 											feature.cpp \
 											util.hpp \
+											util.cpp \
 											eval.hpp \
 											cdbmap.hpp \
 											funcsem.hpp \
@@ -325,6 +330,7 @@ zunda_conv_SOURCES = xml2cab.cpp \
 										 sentence.cpp \
 										 feature.cpp \
 										 util.hpp \
+										 util.cpp \
 										 cdbmap.hpp \
 										 funcsem.hpp \
 										 funcsem.cpp \
@@ -337,7 +343,8 @@ zunda_fsem_train_SOURCES = funcsem-train.cpp \
 													 funcsem.cpp \
 													 sentence.hpp \
 													 sentence.cpp \
-													 util.hpp
+													 util.hpp \
+													 util.cpp
 
 zunda_fsem_train_LDADD = @AM_LDFLAGS@ @BOOST_LIBS@
 all: all-am
@@ -445,6 +452,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/modality-learn.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/modality.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sentence.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xml2cab.Po@am__quote@
 
 .cpp.o:

@@ -173,8 +173,7 @@ namespace modality {
 				for (it_kt=keyterms.begin() ; it_kt!=ite_kt ; ++it_kt) {
 					std::sort(it_kt->second.begin(), it_kt->second.end());
 #ifdef _MODEBUG
-					std::string buf;
-					join(buf, it_kt->second, ", ");
+					std::string buf = boost::algorithm::join(it_kt->second, ",");
 					std::cerr << it_kt->first << ": " << it_kt->second.size() << " " << buf << std::endl;
 #endif
 				}

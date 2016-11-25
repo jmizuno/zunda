@@ -45,8 +45,7 @@ std::string split_chunk(std::string parsed_text) {
 		}
 	}
 
-	std::string str;
-	join(str, chunks, ".");
+	std::string str = boost::algorithm::join(chunks, ".");
 	return str;
 }
 

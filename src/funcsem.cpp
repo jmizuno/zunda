@@ -169,8 +169,7 @@ namespace funcsem {
 			}
 
 #ifdef _MODEBUG
-			std::string feat_str;
-			join(feat_str, feat, " ");
+			std::string feat_str = boost::algorithm::join(feat, " ");
 			std::cerr << sent.get_token(tid)->surf << std::endl;
 			std::cerr << feat_str << std::endl;
 #endif

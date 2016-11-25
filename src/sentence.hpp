@@ -9,8 +9,6 @@
 #include <boost/foreach.hpp>
 
 
-std::string join(std::vector<std::string>, std::string);
-
 namespace nlp {
 	typedef boost::unordered_map< std::string, std::string > t_eme;
 
