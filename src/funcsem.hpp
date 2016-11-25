@@ -18,7 +18,7 @@
 
 
 #ifndef FUNC_MODEL_IPA
-#  define FUNC_MODEL_IPA "funcsem_v2.2.model"
+#  define FUNC_MODEL_IPA "funcsem_v2.2.2.model"
 #endif
 
 #define FUNC_TERMS "する,ある,こと,もの,事,いう,言う,いい,できる,得る,える,なる"
