@@ -126,6 +126,8 @@ int main(int argc, char *argv[]) {
 		return false;
 	}
 #ifdef _MODEBUG
+	//mod_parser.f_tagger->print_labels();
+
 	et = std::clock();
 	std::cerr << "* load model done: " << (et-st) / (double)CLOCKS_PER_SEC << " sec" << std::endl;
 #endif

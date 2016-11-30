@@ -29,7 +29,7 @@ namespace funcsem {
 
 
 	class tagger {
-		public:
+		private:
 #ifdef USE_CRFSUITE
 			CRFSuite::Tagger crf_tagger;
 #endif
@@ -40,6 +40,7 @@ namespace funcsem {
 			int max_num_tok_target;
 
 		public:
+			void print_labels();
 			void tag(nlp::sentence &);
 #ifdef USE_CRFSUITE
 			bool load_model(const std::string &);

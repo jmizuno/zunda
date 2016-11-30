@@ -35,6 +35,25 @@ namespace funcsem {
 	}
 
 
+	void tagger::print_labels() {
+		boost::unordered_map< std::string, std::vector<std::string> > labels;
+
+		BOOST_FOREACH (std::string label, crf_tagger.labels()) {
+			std::vector<std::string> l;
+			boost::algorithm::split(l, label, boost::algorithm::is_any_of(":"));
+			if (l.size() == 2)
+				labels[l[1]].push_back(l[0]);
+			else
+				labels[l[0]].push_back("");
+		}
+		boost::unordered_map< std::string, std::vector<std::string> >::iterator it_l, ite_l = labels.end();
+		for (it_l=labels.begin() ; it_l!=ite_l ; ++it_l) {
+			std::sort(it_l->second.begin(), it_l->second.end());
+			std::cerr << it_l->first << "\t" << boost::algorithm::join(it_l->second, ",") << std::endl;
+		}
+	}
+
+
 	void tagger::train(const std::string &model_path, const std::vector< nlp::sentence > &tr_data) {
 		CRFSuite::Trainer crf_trainer;
 
@@ -58,8 +77,7 @@ namespace funcsem {
 			}
 		}
 
-		crf_trainer.select("l2sgd", "crf1d");
-		crf_trainer.set("c2", "0.1");
+		crf_trainer.select("lbfgs", "crf1d");
 		BOOST_FOREACH (std::string name, crf_trainer.params())
 			std::cout << name << "\t" << crf_trainer.get(name) << "\t" << crf_trainer.help(name) << std::endl;
 
