@@ -545,7 +545,7 @@ namespace modality {
 							
 							std::string feat_str;
 							fgen.compile_feat_str(use_feats[tag_id], feat_str);
-							ofs << sent.sent_id << "(" << chk.id << "_" << tok.id << "): " << feat_str << std::endl;
+							ofs << sent.sent_id << "(" << chk.id << "_" << tok.id << ")\t" << tok.surf << "\t" << id2tag(tag_id) << ":" << label << "\t" << feat_str << std::endl;
 
 							t_feat compiled_feat;
 							fgen.compile_feat( use_feats[tag_id], compiled_feat );

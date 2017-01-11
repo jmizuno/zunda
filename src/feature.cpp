@@ -152,7 +152,7 @@ namespace modality {
 				break;
 			}
 			BOOST_FOREACH (nlp::token tok, chk.tokens) {
-				if (tok.id > tok_core->id && tok.fsem.compare(0, 2, "B:") == 0) {
+				if (tok.id > tok_core->id && (tok.fsem.compare(0, 2, "B:") == 0 || tok.fsem.compare(0, 2, "B-") == 0) ) {
 					std::string fsem = tok.fsem;
 					fsem.erase(0,2);
 					if (fsem_vec[fsem_vec.size()-1] != fsem) {
