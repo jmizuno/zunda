@@ -243,7 +243,7 @@ namespace funcsem {
 	}
 
 
-	void tagger::detect_target(nlp::sentence &sent, std::vector< std::vector< unsigned int > > &targets) {
+	void tagger::detect_target(const nlp::sentence &sent, std::vector< std::vector< unsigned int > > &targets) {
 		std::vector< unsigned int > tids_pred, tids_normal;
 		BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
 			BOOST_FOREACH (nlp::token tok, chk.tokens) {

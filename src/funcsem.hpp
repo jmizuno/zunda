@@ -48,7 +48,7 @@ namespace funcsem {
 #endif
 
 		private:
-			void detect_target(nlp::sentence &, std::vector< std::vector< unsigned int> > &);
+			void detect_target(const nlp::sentence &, std::vector< std::vector< unsigned int> > &);
 			bool is_func(const nlp::token &);
 			bool is_pred(const nlp::token &);
 #ifdef USE_CRFSUITE
