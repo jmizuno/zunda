@@ -59,19 +59,23 @@ namespace funcsem {
 
 		BOOST_FOREACH (nlp::sentence tr_inst, tr_data) {
 			std::vector< std::vector< unsigned int > > targets;
-			detect_target(tr_inst, targets);
+			detect_target_gold(tr_inst, targets);
 
 			BOOST_FOREACH (std::vector< unsigned int > tids, targets) {
 				unsigned int tid_p = tids[0];
 				unsigned int tid_pe = tids[1];
 #ifdef _MODEBUG
-				std::cerr << "range of tokens for " << tr_inst.get_token(tid_p)->surf << " " << tid_p << ":" << tid_pe << " / " << tr_inst.tid_min << ":" << tr_inst.tid_max << std::endl;
+				std::vector<std::string> surfs;
+				for (unsigned int tid=tid_p ; tid<=tid_pe ; ++tid)
+					surfs.push_back(tr_inst.get_token(tid)->surf);
+				std::string surf = boost::algorithm::join(surfs, ".");
+				std::cerr << "range of tokens for " << surf << " " << tid_p << ":" << tid_pe << " / " << tr_inst.tid_min << ":" << tr_inst.tid_max << std::endl;
 #endif
 
 				CRFSuite::ItemSequence seq;
 				CRFSuite::StringList yseq;
 				gen_feat(tr_inst, tid_p, tid_pe, seq);
-				for (int tid=tid_p+1 ; tid<=tid_pe ; ++tid)
+				for (int tid=tid_p ; tid<=tid_pe ; ++tid)
 					yseq.push_back(tr_inst.get_token(tid)->fsem);
 				crf_trainer.append(seq, yseq, 0);
 			}
@@ -95,7 +99,7 @@ namespace funcsem {
 	void tagger::gen_feat(nlp::sentence &sent, unsigned int tid_p, unsigned int tid_pe, CRFSuite::ItemSequence &seq) {
 		const size_t num_uni=10, num_bi=4;
 
-		for (int tid=tid_p+1 ; tid<=tid_pe ; ++tid) {
+		for (int tid=tid_p ; tid<=tid_pe ; ++tid) {
 			std::vector<nlp::token *> toks;
 			for (int _tid=tid-2 ; _tid<=tid+2 ; ++_tid) {
 				nlp::token *t = sent.get_token(_tid);
@@ -204,7 +208,11 @@ namespace funcsem {
 
 	bool tagger::tag_by_crf(nlp::sentence &sent, unsigned int tid_p, unsigned int tid_pe) {
 #ifdef _MODEBUG
-		std::cerr << "range of tokens for " << sent.get_token(tid_p)->surf << " " << tid_p << ":" << tid_pe << " / " << sent.tid_min << ":" << sent.tid_max << std::endl;
+		std::vector<std::string> surfs;
+		for (unsigned int tid=tid_p ; tid<=tid_pe ; ++tid)
+			surfs.push_back(sent.get_token(tid)->surf);
+		std::string surf = boost::algorithm::join(surfs, ".");
+		std::cerr << "range of tokens for " << surf << " " << tid_p << ":" << tid_pe << " / " << sent.tid_min << ":" << sent.tid_max << std::endl;
 #endif
 
 		CRFSuite::ItemSequence seq;
@@ -215,11 +223,11 @@ namespace funcsem {
 		size_t i=0;
 		BOOST_FOREACH (std::string r, list) {
 #ifdef _MODEBUG
-			std::cerr << sent.get_token(i+tid_p+1)->surf << std::endl;
+			std::cerr << sent.get_token(i+tid_p)->surf << std::endl;
 			std::cerr << r << std::endl;
 #endif
-			sent.get_token(i+tid_p+1)->has_fsem = true;
-			sent.get_token(i+tid_p+1)->fsem = r;
+			sent.get_token(i+tid_p)->has_fsem = true;
+			sent.get_token(i+tid_p)->fsem = r;
 			sent.has_fsem = true;
 			++i;
 		}
@@ -243,6 +251,36 @@ namespace funcsem {
 	}
 
 
+	void tagger::detect_target_gold(const nlp::sentence &sent, std::vector< std::vector< unsigned int > > &targets) {
+		bool find_start = false;
+		unsigned int tid_p, tid_pe;
+		std::stringstream ss;
+		BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
+			BOOST_FOREACH (nlp::token tok, chk.tokens) {
+				ss << tok.id << ":" << tok.fsem << " ";
+				if (find_start == false && tok.has_fsem && tok.fsem.compare(0, 1, "B") == 0) {
+					find_start = true;
+					tid_p = tok.id;
+				}
+				if (find_start && (tok.fsem.compare(0, 1, "C") == 0 || tok.fsem.compare(0, 1, "O") == 0)) {
+					tid_pe = tok.id;
+					std::vector< unsigned int > tids;
+					tids.push_back(tid_p);
+					tids.push_back(tid_pe-1);
+					targets.push_back(tids);
+					find_start = false;
+				}
+			}
+		}
+		/*
+		std::cout << ss.str() << std::endl;
+		BOOST_FOREACH (std::vector<unsigned int> tids, targets) {
+			std::cout << tids[0] << "\t" << tids[1] << std::endl;
+		}
+		*/
+	}
+
+
 	void tagger::detect_target(const nlp::sentence &sent, std::vector< std::vector< unsigned int > > &targets) {
 		std::vector< unsigned int > tids_pred, tids_normal;
 		BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
@@ -258,7 +296,7 @@ namespace funcsem {
 		BOOST_FOREACH (unsigned int tid_p, tids_pred) {
 			if (tid_p == tids_pred[tids_pred.size()-1]) {
 				std::vector< unsigned int > _tids;
-				_tids.push_back(tid_p);
+				_tids.push_back(tid_p+1);
 				_tids.push_back(sent.tid_max);
 				targets.push_back(_tids);
 				break;
@@ -278,7 +316,7 @@ namespace funcsem {
 				continue;
 
 			std::vector< unsigned int > tids;
-			tids.push_back(tid_p);
+			tids.push_back(tid_p+1);
 			tids.push_back(tid_pe);
 			targets.push_back(tids);
 		}
