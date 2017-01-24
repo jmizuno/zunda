@@ -134,16 +134,17 @@ int main(int argc, char *argv[]) {
 #endif
 
 	std::string buf;
-	std::string sent;
-	std::string parsed_sent;
+	std::vector<std::string> sent;
+	std::string in_sent, parsed_sent;
 	bool run = false;
 	while( getline(std::cin, buf) ) {
 		if (buf == "") {
 			continue;
 		}
+		boost::algorithm::trim_right(buf);
 		switch (input_layer) {
 			case modality::IN_RAW:
-				sent = buf;
+				in_sent = buf;
 				run = true;
 				break;
 			case modality::IN_DEP_CAB:
@@ -151,11 +152,12 @@ int main(int argc, char *argv[]) {
 			case modality::IN_PAS_SYN:
 			case modality::IN_PAS_KNP:
 				if (buf.compare(0, 3, "EOS") == 0) {
-					sent += buf;
+					sent.push_back(buf);
+					in_sent = boost::algorithm::join(sent, "\n");
 					run = true;
 				}
 				else {
-					sent += buf +"\n";
+					sent.push_back(buf);
 				}
 				break;
 			default:
@@ -164,9 +166,11 @@ int main(int argc, char *argv[]) {
 		}
 		
 		if (run) {
-		 	mod_parser.analyzeToString(sent, input_layer, parsed_sent);
+		 	mod_parser.analyzeToString(in_sent, input_layer, parsed_sent);
+			boost::algorithm::trim_right(parsed_sent);
 			std::cout << parsed_sent << std::endl;
 			sent.clear();
+			in_sent.clear();
 			run = false;
 		}
 	}
