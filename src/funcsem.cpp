@@ -244,7 +244,9 @@ namespace funcsem {
 
 
 	bool tagger::is_pred(const nlp::token &tok) {
-		if (tok.pos1 != "非自立" && (tok.pos == "動詞" || tok.pos == "形容詞" || (tok.pos == "名詞" && tok.pos1 == "サ変接続") || (tok.pos=="名詞" && tok.pos1=="形容動詞語幹")) && !std::binary_search(func_terms.begin(), func_terms.end(), tok.orig) )
+		if (tok.pos1 != "非自立" &&
+			 	((tok.pos == "動詞" && tok.pos1 != "接尾") || tok.pos == "形容詞" || (tok.pos == "名詞" && tok.pos1 == "サ変接続") || (tok.pos=="名詞" && tok.pos1=="形容動詞語幹"))
+			 	&& !std::binary_search(func_terms.begin(), func_terms.end(), tok.orig) )
 			return true;
 		else
 			return false;
