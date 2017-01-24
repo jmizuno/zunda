@@ -140,10 +140,10 @@ namespace funcsem {
 				v[7] << t->orig << "|" << t->pos;
 				// base form+pos1
 				k[8] << "bf[" << tid_sub << "]|p[" << tid_sub << "]|p1[" << tid_sub << "]";
-				v[8] << t->orig << "|" << t->pos1;
+				v[8] << t->orig << "|" << t->pos << "|" << t->pos1;
 				// base form+pos2
 				k[9] << "bf[" << tid_sub << "]|p[" << tid_sub << "]|p1[" << tid_sub << "]|p2[" << tid_sub << "]";
-				v[9] << t->orig << "|" << t->pos1 << "|" << t->pos2;
+				v[9] << t->orig << "|" << t->pos << "|" << t->pos1 << "|" << t->pos2;
 
 				for (size_t i=0 ; i<num_uni ; ++i) {
 					if (k[i].str().size() != 0)
@@ -153,7 +153,7 @@ namespace funcsem {
 
 			/* bi-gram feature */
 			std::vector< std::vector<nlp::token *> > ng_toks;
-			get_subvec(&ng_toks, toks, 1, 2);
+			get_subvec(&ng_toks, toks, 2, 2);
 			BOOST_FOREACH (std::vector<nlp::token *> ngt, ng_toks) {
 				std::stringstream k[num_bi], v[num_bi];
 				BOOST_FOREACH (nlp::token *t, ngt) {
