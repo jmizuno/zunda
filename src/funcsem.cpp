@@ -236,7 +236,7 @@ namespace funcsem {
 
 
 	bool tagger::is_func(const nlp::token &tok) {
-		if (tok.pos1 == "非自立" || tok.pos == "助詞" || tok.pos == "助動詞" || std::binary_search(func_terms.begin(), func_terms.end(), tok.orig))
+		if ((tok.pos == "動詞" && tok.pos1 == "接尾") || tok.pos1 == "非自立" || tok.pos == "助詞" || tok.pos == "助動詞" || std::binary_search(func_terms.begin(), func_terms.end(), tok.orig))
 			return true;
 		else
 			return false;
