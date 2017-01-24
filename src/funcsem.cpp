@@ -295,8 +295,15 @@ namespace funcsem {
 			}
 		}
 
+		/*
+		BOOST_FOREACH (unsigned int tid, tids_pred)
+			std::cout << "pred " << tid << " " << sent.get_token(tid)->surf << std::endl;
+		BOOST_FOREACH (unsigned int tid, tids_normal)
+			std::cout << "normal " << tid << " " << sent.get_token(tid)->surf << std::endl;
+			*/
+
 		BOOST_FOREACH (unsigned int tid_p, tids_pred) {
-			if (tid_p == tids_pred[tids_pred.size()-1]) {
+			if (tid_p == tids_pred[tids_pred.size()-1] && tid_p != sent.tid_max) {
 				std::vector< unsigned int > _tids;
 				_tids.push_back(tid_p+1);
 				_tids.push_back(sent.tid_max);
@@ -328,6 +335,7 @@ namespace funcsem {
 	void tagger::tag(nlp::sentence &sent) {
 		std::vector< std::vector< unsigned int > > targets;
 		detect_target(sent, targets);
+		sent.has_fsem = true;
 
 		BOOST_FOREACH (std::vector< unsigned int > tids, targets) {
 #ifdef USE_CRFSUITE
