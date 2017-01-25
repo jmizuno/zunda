@@ -3,6 +3,7 @@
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "sentence.hpp"
 #include "modality.hpp"
 
@@ -18,11 +19,12 @@ int main(int argc, char *argv[]) {
 	boost::program_options::options_description opt("Usage", 200, 100);
 	opt.add_options()
 		("input,i", boost::program_options::value<int>(), "input layer (optional)\n 0 - raw text layer [default]\n 1 - dependency parsed layer by CaboCha/J.DepP\n 2 - dependency parsed layer by KNP\n 3 - predicate-argument structure analyzed layer by SynCha/ChaPAS\n 4 - predicate-argument structure analyzed layer by KNP")
-		("pos", boost::program_options::value<int>(), "POS tag for CaboCha/J.DepP (optional)\n 0 - IPA/Naist-jdic [default]\n 1 - JumanDic\n 2 - UniDic")
+		("pos", boost::program_options::value<int>(), "POS tag for CaboCha/J.DepP (optional)\n 0 - IPA/Naist-jdic [default]\n 1 - JumanDic")
 		("posset", boost::program_options::value<std::string>(), "POS set to parse (optional)")
 		("target,t", boost::program_options::value<unsigned int>(), "method of detecting token to be analyzed\n 0 - by part of speech [default]\n 1 - predicate detected by a predicate-argument structure analyzer (only SynCha format is supported)\n 2 - by machine learning (has not been implemented)\n 3 - detected by #EVENT line")
 		("model,m", boost::program_options::value<std::string>(), "model directory (optional)")
 		("dic,d", boost::program_options::value<std::string>(), "dictionary directory (optional)")
+		("info", "print information of model files")
 		("help,h", "Show help messages")
 		("version,v", "Show version information");
 
@@ -68,9 +70,6 @@ int main(int argc, char *argv[]) {
 		case modality::POS_JUMAN:
 			model_dir = MODELDIR_JUMAN;
 			break;
-		case modality::POS_UNI:
-			model_dir = MODELDIR_UNI;
-			break;
 		default:
 			std::cerr << "ERROR: no such input layer" << std::endl;
 			return -1;
@@ -98,6 +97,16 @@ int main(int argc, char *argv[]) {
 
 	modality::parser mod_parser(model_dir, dic_dir);
 	mod_parser.set_pos_tag(pos_tag, pos_set);
+
+	if (argmap.count("info")) {
+		std::cout << "* model files" << std::endl;
+		for (unsigned int i=1 ; i<LABEL_NUM ; ++i) {
+			std::time_t lu = boost::filesystem::last_write_time(mod_parser.model_path[i]);
+			boost::posix_time::ptime lu_t = boost::posix_time::from_time_t(lu);
+			std::cout << "  " << lu_t << "\t" << mod_parser.model_path[i].string() << std::endl;
+		}
+		return true;
+	}
 
 	if (argmap.count("target")) {
 		mod_parser.target_detection = argmap["target"].as<unsigned int>();

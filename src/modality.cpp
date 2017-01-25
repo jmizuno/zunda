@@ -165,9 +165,6 @@ namespace modality {
 			case POS_JUMAN:
 				sent.ma_dic = nlp::sentence::JumanDic;
 				break;
-			case POS_UNI:
-				sent.ma_dic = nlp::sentence::UniDic;
-				break;
 		}
 
 		std::string parsed_text;
@@ -409,9 +406,6 @@ namespace modality {
 					break;
 				case POS_JUMAN:
 					sent.ma_dic = nlp::sentence::JumanDic;
-					break;
-				case POS_UNI:
-					sent.ma_dic = nlp::sentence::UniDic;
 					break;
 			}
 			switch (input_layer) {

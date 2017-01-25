@@ -35,9 +35,6 @@ namespace linear {
 #ifndef MODELDIR_JUMAN
 #  define MODELDIR_JUMAN "model_juman"
 #endif
-#ifndef MODELDIR_UNI
-#  define MODELDIR_UNI "model_uni"
-#endif
 
 #ifndef DICDIR
 #  define DICDIR "dic"
@@ -46,8 +43,6 @@ namespace linear {
 #define POSSET_IPA "動詞,*|形容詞,*|名詞,サ変接続|名詞,形容動詞語幹"
 //#define POS_IPA "動詞,*|形容詞,*|名詞,サ変接続|名詞,形容動詞語幹|名詞,*:助動詞,*|名詞,*:助詞,*:助動詞,*"
 #define POSSET_JUMAN "動詞,*|形容詞,*|名詞,サ変名詞"
-// ToDo update
-#define POSSET_UNI "動詞,*|形容詞,*|名詞,サ変接続"
 
 //const boost::filesystem::path TMP_DIR("/tmp");
 
@@ -68,8 +63,7 @@ namespace modality {
 
 	enum {
 		POS_IPA = 0,
-		POS_JUMAN = 1,
-		POS_UNI = 2
+		POS_JUMAN = 1
 	};
 
 	enum {
@@ -356,9 +350,6 @@ namespace modality {
 						break;
 					case POS_JUMAN:
 						t_pos = POSSET_JUMAN;
-						break;
-					case POS_UNI:
-						t_pos = POSSET_UNI;
 						break;
 					default:
 						std::cerr << "ERROR: invalid pos tag" << std::endl;
