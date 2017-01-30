@@ -97,24 +97,51 @@ AC_ARG_WITH(
 						[AC_HELP_STRING([--with-crfsuite=DIR], [crfsuite directory])],
 						[AM_CPPFLAGS="-I${withval}/include ${AM_CPPFLAGS}"; AM_LDFLAGS="-L${withval}/lib ${AM_LDFLAGS}"]
 						)
-AC_ARG_ENABLE(
-							[crfsuite],
-							AC_HELP_STRING([--disable-crfsuite], [do not use crfsuite i.e. disabled functional expression analysis (default is no)]),
-							[enable_crfsuite=no],
-							)
 
-AS_IF([test "x$enable_crfsuite" != xno],
-			[AM_CXXFLAGS=" -DUSE_CRFSUITE ${AM_CXXFLAGS}"
-			 old_CPPFLAGS=${CPPFLAGS}
-			 old_LDFLAGS=${LDFLAGS}
-			 CPPFLAGS=${AM_CPPFLAGS}
-			 LDFLAGS=${AM_LDFLAGS}
-			 AC_CHECK_HEADER([crfsuite.hpp], [break]  ,[AC_MSG_ERROR(crfsuite.hpp not found)])
-			 AC_CHECK_LIB([crfsuite], main,   ,[AC_MSG_ERROR(crfsuite library not found)])
-			 CPPFLAGS=${old_CPPFLAGS}
-			 LDFLAGS=${old_LDFLAGS}
-			 ]
-			)
+AC_ARG_WITH(
+						[crfpp],
+						[AC_HELP_STRING([--with-crfpp=DIR], [crfpp directory])],
+						[AM_CPPFLAGS="-I${withval}/include ${AM_CPPFLAGS}"; AM_LDFLAGS="-L${withval}/lib ${AM_LDFLAGS}"]
+						)
+
+CRF_TYPE=crfsuite
+AC_ARG_WITH(
+						[crf],
+						[AC_HELP_STRING([--with-crf=crf], [set crf (crfsuite|crfpp|none) default: crfsuite])],
+						[CRF_TYPE="${withval}"]
+						)
+
+case "$CRF_TYPE" in
+	none)
+		AC_MSG_WARN([CRF is DISABLED, functional expression analysis is also disabled. The performance of modality analysis is limited.])
+		;;
+	crfsuite)
+		AM_CXXFLAGS=" -DUSE_CRFSUITE ${AM_CXXFLAGS}"
+		old_CPPFLAGS=${CPPFLAGS}
+		old_LDFLAGS=${LDFLAGS}
+		CPPFLAGS=${AM_CPPFLAGS}
+		LDFLAGS=${AM_LDFLAGS}
+		AC_CHECK_HEADER([crfsuite.hpp], [break]  ,[AC_MSG_ERROR(crfsuite.hpp not found)])
+		AC_CHECK_LIB([crfsuite], main,   ,[AC_MSG_ERROR(crfsuite library not found)])
+		CPPFLAGS=${old_CPPFLAGS}
+		LDFLAGS=${old_LDFLAGS}
+		;;
+	crfpp)
+		AM_CXXFLAGS=" -DUSE_CRFPP ${AM_CXXFLAGS}"
+		old_CPPFLAGS=${CPPFLAGS}
+		old_LDFLAGS=${LDFLAGS}
+		CPPFLAGS=${AM_CPPFLAGS}
+		LDFLAGS=${AM_LDFLAGS}
+		AC_CHECK_HEADER([crfpp.h], [break]  ,[AC_MSG_ERROR(crfpp.h not found)])
+		AC_CHECK_LIB([crfpp], main,   ,[AC_MSG_ERROR(crfpp library not found)])
+		CPPFLAGS=${old_CPPFLAGS}
+		LDFLAGS=${old_LDFLAGS}
+		;;
+	*)
+		AC_MSG_ERROR([--with-crf takes crfpp, crfsuite or none])
+		;;
+esac
+
 
 
 AC_ARG_ENABLE(

@@ -9,8 +9,8 @@
 
 
 int main(int argc, char *argv[]) {
-#ifndef USE_CRFSUITE
-	std::cerr << "ERROR: this program requires CRFSuite" << std::endl;
+#if !defined(USE_CRFPP) && !defined(USE_CRFSUITE)
+	std::cerr << "ERROR: any crf is not selected in configure" << std::endl;
 	exit(-1);
 #endif
 
@@ -35,6 +35,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
+#if defined(USE_CRFPP) || defined(USE_CRFSUITE)
 	std::string outdir;
 	if (argmap.count("outdir")) {
 		outdir = argmap["outdir"].as<std::string>();
@@ -96,7 +97,8 @@ int main(int argc, char *argv[]) {
 	std::cout << "load done" << std::endl;
 	std::cout << "\t" << tr_data.size() << " sentences" << std::endl;
 
-	f_tagger.train(model_path.string(), tr_data);
+	f_tagger.train_crfsuite(model_path.string(), tr_data);
+#endif
 #endif
 }
 

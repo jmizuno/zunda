@@ -190,7 +190,7 @@ namespace modality {
 			CaboCha::Parser *cabocha;
 #endif
 
-#ifdef USE_CRFSUITE
+#if defined(USE_CRFSUITE) || defined(USE_CRFPP)
 			funcsem::tagger *f_tagger;
 #endif
 
@@ -273,8 +273,9 @@ namespace modality {
 				cabocha = CaboCha::createParser("-f1");
 #endif
 
-#ifdef USE_CRFSUITE
+#if defined(USE_CRFSUITE) || defined(USE_CRFPP)
 				f_tagger = new funcsem::tagger();
+				f_tagger->set_model_dir(model_dir_path);
 #endif
 
 				target_detection = DETECT_BY_POS;
@@ -296,7 +297,7 @@ namespace modality {
 				delete cabocha;
 #endif
 
-#ifdef USE_CRFSUITE
+#if defined(USE_CRFSUITE) || defined(USE_CRFPP)
 				delete f_tagger;
 #endif
 				delete [] model_path;
@@ -310,10 +311,8 @@ namespace modality {
 
 		public:
 			std::string id2tag(unsigned int);
-			void set_model_dir(std::string);
-			void set_model_dir(boost::filesystem::path);
-			unsigned int detect_format(std::string);
-			unsigned int detect_format(std::vector<std::string>);
+			void set_model_dir(const std::string &);
+			void set_model_dir(const boost::filesystem::path &);
 			bool detect_target(nlp::token &, nlp::sentence &);
 
 			bool parse_pos_str(const std::string &t_pos, std::vector< std::vector< std::vector<std::string> > > *t_pos_vec, int *_max_num_tok_target) {

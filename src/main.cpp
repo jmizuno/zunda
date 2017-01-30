@@ -9,8 +9,8 @@
 
 
 int main(int argc, char *argv[]) {
-#ifndef USE_CRFSUITE
-	std::cerr << "WARN: the performance is not good when CRFSuite is disable." << std::endl;
+#if !defined(USE_CRFSUITE) && !defined(USE_CRFPP)
+	std::cerr << "WARN: functional expression analysis is disabled" << std::endl;
 #endif
 
 	std::ios::sync_with_stdio(false);
@@ -99,13 +99,17 @@ int main(int argc, char *argv[]) {
 	mod_parser.set_pos_tag(pos_tag, pos_set);
 
 	if (argmap.count("info")) {
-		std::cout << "* model files" << std::endl;
-		for (unsigned int i=1 ; i<LABEL_NUM ; ++i) {
-			std::time_t lu = boost::filesystem::last_write_time(mod_parser.model_path[i]);
-			boost::posix_time::ptime lu_t = boost::posix_time::from_time_t(lu);
-			std::cout << "  " << lu_t << "\t" << mod_parser.model_path[i].string() << std::endl;
-		}
-		return true;
+		std::cout << "* model files for modality analysis" << std::endl;
+		for (unsigned int i=1 ; i<LABEL_NUM ; ++i)
+			std::cout << "  " << mod_parser.model_path[i].string() << ": " << boost::filesystem::file_size(mod_parser.model_path[i]) << " byte, " << boost::posix_time::from_time_t(boost::filesystem::last_write_time(mod_parser.model_path[i])) << std::endl;
+
+#if defined(USE_CRFPP) || defined(USE_CRFSUITE)
+		std::cout << "* model file for functional expression analysis" << std::endl;
+		std::cout << "  " << mod_parser.f_tagger->model_path.string() << ": " << boost::filesystem::file_size(mod_parser.f_tagger->model_path) << " byte, " << boost::posix_time::from_time_t(boost::filesystem::last_write_time(mod_parser.f_tagger->model_path)) << std::endl;
+#else
+		std::cout << "functional expression analysis is disabled" << std::endl;
+#endif
+		exit(1);
 	}
 
 	if (argmap.count("target")) {
@@ -118,7 +122,7 @@ int main(int argc, char *argv[]) {
 	st = std::clock();
 #endif
 	if (!mod_parser.load_models()) {
-		std::cerr << "ERROR: load models failed" << std::endl;
+		std::cerr << "ERROR: load models for modality analysis failed" << std::endl;
 		return false;
 	}
 #ifdef _MODEBUG
@@ -126,19 +130,20 @@ int main(int argc, char *argv[]) {
 	std::cerr << "* load model done: " << (et-st) / (double)CLOCKS_PER_SEC << " sec" << std::endl;
 #endif
 
-#ifdef USE_CRFSUITE
+#if defined(USE_CRFSUITE) || defined(USE_CRFPP)
 #ifdef _MODEBUG
 	st = std::clock();
 #endif
-	if (!mod_parser.f_tagger->load_model(model_dir)) {
-		std::cerr << "ERROR: load model failed" << std::endl;
+	if (!mod_parser.f_tagger->load_model()) {
+		std::cerr << "ERROR: load model for functional expression analysis failed" << std::endl;
 		return false;
 	}
 #ifdef _MODEBUG
-	//mod_parser.f_tagger->print_labels();
-
 	et = std::clock();
 	std::cerr << "* load model done: " << (et-st) / (double)CLOCKS_PER_SEC << " sec" << std::endl;
+#if defined(USE_CRFSUITE)
+	mod_parser.f_tagger->print_labels_crfsuite();
+#endif
 #endif
 #endif
 

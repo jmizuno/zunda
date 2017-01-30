@@ -11,14 +11,20 @@
 
 #include "../config.h"
 
-#ifdef USE_CRFSUITE
+#if defined(USE_CRFSUITE)
 #  include <crfsuite_api.hpp>
+#elif defined(USE_CRFPP)
+#  include <crfpp.h>
 #endif
 #include "sentence.hpp"
 
 
 #ifndef FUNC_MODEL_IPA
-#  define FUNC_MODEL_IPA "funcsem_v2.2.2.model"
+#  if defined(USE_CRFSUITE)
+#    define FUNC_MODEL_IPA "funcsem_v2.2.2.model"
+#  elif defined(USE_CRFPP)
+#    define FUNC_MODEL_IPA "funcsem_v2.2.2.crfpp.model"
+#  endif
 #endif
 
 #define FUNC_TERMS "こと,もの,事"
@@ -29,9 +35,14 @@ namespace funcsem {
 
 
 	class tagger {
+		public:
+			boost::filesystem::path model_path;
 		private:
-#ifdef USE_CRFSUITE
+#if defined(USE_CRFSUITE)
 			CRFSuite::Tagger crf_tagger;
+#elif defined(USE_CRFPP)
+			crfpp_model_t *crfpp_model;
+			crfpp_t *crfpp_chunker;
 #endif
 			std::vector<std::string> func_terms;
 
@@ -40,11 +51,15 @@ namespace funcsem {
 			int max_num_tok_target;
 
 		public:
-			void print_labels();
-			void tag(nlp::sentence &);
-#ifdef USE_CRFSUITE
+			void set_model_dir(const std::string &);
+			void set_model_dir(const boost::filesystem::path &);
 			bool load_model(const std::string &);
-			void train(const std::string &, const std::vector< nlp::sentence > &);
+			bool load_model(const boost::filesystem::path &);
+			bool load_model();
+			void tag(nlp::sentence &);
+#if defined(USE_CRFSUITE)
+			void train_crfsuite(const std::string &, const std::vector< nlp::sentence > &);
+			void print_labels_crfsuite();
 #endif
 
 		private:
@@ -52,9 +67,14 @@ namespace funcsem {
 			void detect_target(const nlp::sentence &, std::vector< std::vector< unsigned int> > &);
 			bool is_func(const nlp::token &);
 			bool is_pred(const nlp::token &);
-#ifdef USE_CRFSUITE
-			void gen_feat(nlp::sentence &, unsigned int, unsigned int, CRFSuite::ItemSequence &);
-			bool tag_by_crf(nlp::sentence &, unsigned int, unsigned int);
+#if defined(USE_CRFSUITE)
+			bool load_model_crfsuite();
+			void gen_feat_crfsuite(nlp::sentence &, unsigned int, unsigned int, CRFSuite::ItemSequence &);
+			bool tag_by_crfsuite(nlp::sentence &, unsigned int, unsigned int);
+#elif defined(USE_CRFPP)
+			bool load_model_crfpp();
+			void set_feat_crfpp(nlp::sentence &);
+			void tag_by_crfpp(nlp::sentence &, unsigned int, unsigned int );
 #endif
 
 
@@ -65,6 +85,9 @@ namespace funcsem {
 			}
 
 			~tagger() {
+#if defined(USE_CRFPP)
+				crfpp_model_destroy(crfpp_model);
+#endif
 			}
 	};
 };

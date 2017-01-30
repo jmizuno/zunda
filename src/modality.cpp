@@ -40,13 +40,13 @@ namespace modality {
 	}
 
 
-	void parser::set_model_dir(std::string dir) {
+	void parser::set_model_dir(const std::string &dir) {
 		boost::filesystem::path dir_path(dir);
 		set_model_dir(dir_path);
 	}
 
 
-	void parser::set_model_dir(boost::filesystem::path dir_path) {
+	void parser::set_model_dir(const boost::filesystem::path &dir_path) {
 		for (unsigned int i=0 ; i<LABEL_NUM ; ++i) {
 			boost::filesystem::path mp("model_" + id2tag(i));
 			model_path[i] = dir_path / mp;
@@ -144,10 +144,10 @@ namespace modality {
 				return false;
 			}
 			else {
+				models[i] = linear::load_model( model_path[i].string().c_str() );
 #ifdef _MODEBUG
 				std::cerr << "loaded " << model_path[i].string() << ": " << boost::filesystem::file_size(model_path[i]) << " byte, " << boost::posix_time::from_time_t(boost::filesystem::last_write_time(model_path[i])) << std::endl;
 #endif
-				models[i] = linear::load_model( model_path[i].string().c_str() );
 			}
 		}
 
@@ -298,7 +298,7 @@ namespace modality {
 			}
 		}
 
-#ifdef USE_CRFSUITE
+#if defined(USE_CRFSUITE) || defined(USE_CRFPP)
 		if (!sent.has_fsem) {
 #ifdef _MODEBUG
 			std::cerr << "start: functional expression analysis" << std::endl;

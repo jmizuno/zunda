@@ -737,7 +737,8 @@ with_boost_lib
 with_cabocha
 enable_cabocha
 with_crfsuite
-enable_crfsuite
+with_crfpp
+with_crf
 enable_debug
 '
       ac_precious_vars='build_alias
@@ -1385,8 +1386,6 @@ Optional Features:
   --disable-dependency-tracking
                           speeds up one-time build
   --disable-cabocha       do not use cabocha (default is no)
-  --disable-crfsuite      do not use crfsuite i.e. disabled functional
-                          expression analysis (default is no)
   --enable-debug          debug mode (default is no)
 
 Optional Packages:
@@ -1397,6 +1396,8 @@ Optional Packages:
   --with-boost-lib=DIR    boost library directory
   --with-cabocha=DIR      cabocha directory
   --with-crfsuite=DIR     crfsuite directory
+  --with-crfpp=DIR        crfpp directory
+  --with-crf=crf          set crf (crfsuite|crfpp|none) default: crfsuite
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -5434,19 +5435,36 @@ if test "${with_crfsuite+set}" = set; then :
 
 fi
 
-# Check whether --enable-crfsuite was given.
-if test "${enable_crfsuite+set}" = set; then :
-  enableval=$enable_crfsuite; enable_crfsuite=no
+
+
+# Check whether --with-crfpp was given.
+if test "${with_crfpp+set}" = set; then :
+  withval=$with_crfpp; AM_CPPFLAGS="-I${withval}/include ${AM_CPPFLAGS}"; AM_LDFLAGS="-L${withval}/lib ${AM_LDFLAGS}"
+
 fi
 
 
-if test "x$enable_crfsuite" != xno; then :
-  AM_CXXFLAGS=" -DUSE_CRFSUITE ${AM_CXXFLAGS}"
-			 old_CPPFLAGS=${CPPFLAGS}
-			 old_LDFLAGS=${LDFLAGS}
-			 CPPFLAGS=${AM_CPPFLAGS}
-			 LDFLAGS=${AM_LDFLAGS}
-			 ac_fn_cxx_check_header_mongrel "$LINENO" "crfsuite.hpp" "ac_cv_header_crfsuite_hpp" "$ac_includes_default"
+CRF_TYPE=crfsuite
+
+# Check whether --with-crf was given.
+if test "${with_crf+set}" = set; then :
+  withval=$with_crf; CRF_TYPE="${withval}"
+
+fi
+
+
+case "$CRF_TYPE" in
+	none)
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: CRF is DISABLED, functional expression analysis is also disabled. The performance of modality analysis is limited." >&5
+$as_echo "$as_me: WARNING: CRF is DISABLED, functional expression analysis is also disabled. The performance of modality analysis is limited." >&2;}
+		;;
+	crfsuite)
+		AM_CXXFLAGS=" -DUSE_CRFSUITE ${AM_CXXFLAGS}"
+		old_CPPFLAGS=${CPPFLAGS}
+		old_LDFLAGS=${LDFLAGS}
+		CPPFLAGS=${AM_CPPFLAGS}
+		LDFLAGS=${AM_LDFLAGS}
+		ac_fn_cxx_check_header_mongrel "$LINENO" "crfsuite.hpp" "ac_cv_header_crfsuite_hpp" "$ac_includes_default"
 if test "x$ac_cv_header_crfsuite_hpp" = xyes; then :
   break
 else
@@ -5454,7 +5472,7 @@ else
 fi
 
 
-			 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lcrfsuite" >&5
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lcrfsuite" >&5
 $as_echo_n "checking for main in -lcrfsuite... " >&6; }
 if ${ac_cv_lib_crfsuite_main+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -5495,11 +5513,72 @@ else
   as_fn_error $? "crfsuite library not found" "$LINENO" 5
 fi
 
-			 CPPFLAGS=${old_CPPFLAGS}
-			 LDFLAGS=${old_LDFLAGS}
-
-
+		CPPFLAGS=${old_CPPFLAGS}
+		LDFLAGS=${old_LDFLAGS}
+		;;
+	crfpp)
+		AM_CXXFLAGS=" -DUSE_CRFPP ${AM_CXXFLAGS}"
+		old_CPPFLAGS=${CPPFLAGS}
+		old_LDFLAGS=${LDFLAGS}
+		CPPFLAGS=${AM_CPPFLAGS}
+		LDFLAGS=${AM_LDFLAGS}
+		ac_fn_cxx_check_header_mongrel "$LINENO" "crfpp.h" "ac_cv_header_crfpp_h" "$ac_includes_default"
+if test "x$ac_cv_header_crfpp_h" = xyes; then :
+  break
+else
+  as_fn_error $? "crfpp.h not found" "$LINENO" 5
 fi
+
+
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lcrfpp" >&5
+$as_echo_n "checking for main in -lcrfpp... " >&6; }
+if ${ac_cv_lib_crfpp_main+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lcrfpp  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+
+int
+main ()
+{
+return main ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+  ac_cv_lib_crfpp_main=yes
+else
+  ac_cv_lib_crfpp_main=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_crfpp_main" >&5
+$as_echo "$ac_cv_lib_crfpp_main" >&6; }
+if test "x$ac_cv_lib_crfpp_main" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBCRFPP 1
+_ACEOF
+
+  LIBS="-lcrfpp $LIBS"
+
+else
+  as_fn_error $? "crfpp library not found" "$LINENO" 5
+fi
+
+		CPPFLAGS=${old_CPPFLAGS}
+		LDFLAGS=${old_LDFLAGS}
+		;;
+	*)
+		as_fn_error $? "--with-crf takes crfpp, crfsuite or none" "$LINENO" 5
+		;;
+esac
+
 
 
 # Check whether --enable-debug was given.
