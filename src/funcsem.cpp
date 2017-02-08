@@ -55,9 +55,12 @@ namespace funcsem {
 		argv.push_back("crf_test");
 		argv.push_back("-m");
 		argv.push_back(model_path.string().c_str());
-		crfpp_model = crfpp_model_new(argv.size(), const_cast<char **>(&argv[0]));
-		crfpp_chunker = crfpp_model_new_tagger(crfpp_model);
-		crfpp_set_vlevel(crfpp_chunker, 2);
+		fsem_tagger_crfpp_model = crfpp_model_new(argv.size(), const_cast<char **>(&argv[0]));
+		fsem_tagger_crfpp = crfpp_model_new_tagger(fsem_tagger_crfpp_model);
+		crfpp_clear(fsem_tagger_crfpp);
+#ifdef _MODEBUG
+		crfpp_set_vlevel(fsem_tagger_crfpp, 1);
+#endif
 
 #ifdef _MODEBUG
 		std::cerr << "loaded " << model_path.string() << ": " << boost::filesystem::file_size(model_path) << " byte, " << boost::posix_time::from_time_t(boost::filesystem::last_write_time(model_path)) << std::endl;
@@ -69,10 +72,21 @@ namespace funcsem {
 
 
 #if defined(USE_CRFPP)
-	void tagger::set_feat_crfpp(nlp::sentence &sent) {
-		for (unsigned int tid=0 ; tid<=sent.tid_max ; ++tid) {
+	void tagger::tag_by_crfpp(nlp::sentence &sent, unsigned int tid_p, unsigned int tid_pe) {
+		unsigned int tid_p2=tid_p, tid_pe2=tid_pe;
+		if (tid_p2 < 2)
+			tid_p2 = 0;
+		else
+			tid_p2 -= 2;
+		if ( (sent.tid_max - tid_pe2) <= 2)
+			tid_pe2 = sent.tid_max;
+		else
+			tid_pe2 += 2;
+		//std::cout << tid_p2 << " " << tid_p << " " << tid_pe << " " << tid_pe2 << " " << sent.tid_max << std::endl;
+		for (unsigned int tid=tid_p2 ; tid<=tid_pe2 ; ++tid) {
 			std::vector<const char *> feature;
 			nlp::token *t = sent.get_token(tid);
+
 			feature.push_back(t->surf.c_str());
 			feature.push_back(t->pos.c_str());
 			feature.push_back(t->pos1.c_str());
@@ -84,29 +98,34 @@ namespace funcsem {
 			feature.push_back(t->read.c_str());
 			feature.push_back(t->pron.c_str());
 
-			crfpp_add2(crfpp_chunker, feature.size(), (const char **)&(feature[0]));
+			crfpp_add2(fsem_tagger_crfpp, feature.size(), (const char **)&(feature[0]));
 		}
-		crfpp_parse(crfpp_chunker);
-	}
+
+		crfpp_parse(fsem_tagger_crfpp);
+#ifdef _MODEBUG
+		std::string verbose(crfpp_tostr(fsem_tagger_crfpp));
+		std::cerr << verbose << std::endl;
 #endif
 
-
-#if defined(USE_CRFPP)
-	void tagger::tag_by_crfpp(nlp::sentence &sent, unsigned int tid_p, unsigned int tid_pe) {
-		for (unsigned int tid=tid_p ; tid<=tid_pe ; ++tid) {
-			std::string str(crfpp_y2(crfpp_chunker, tid));
-			nlp::token *t=sent.get_token(tid);
-			t->has_fsem = true;
-			t->fsem = str;
+		unsigned int len = tid_pe2 - tid_p2;
+		for (unsigned int i=0 ; i<=len ; ++i) {
+			unsigned int tid = tid_p2 + i;
+			if (tid_p <= tid && tid <= tid_pe) {
+				nlp::token *t = sent.get_token(tid);
+				std::string fsem( crfpp_y2(fsem_tagger_crfpp, i) );
+				t->has_fsem = true;
+				t->fsem = fsem;
+			}
 		}
-		sent.has_fsem = true;
+
+		crfpp_clear(fsem_tagger_crfpp);
 	}
 #endif
 
 
 #if defined(USE_CRFSUITE)
 	bool tagger::load_model_crfsuite() {
-		if (crf_tagger.open(model_path.string())) {
+		if (fsem_tagger_crfs.open(model_path.string())) {
 #ifdef _MODEBUG
 			std::cerr << "loaded " << model_path.string() << ": " << boost::filesystem::file_size(model_path) << " byte, " << boost::posix_time::from_time_t(boost::filesystem::last_write_time(model_path)) << std::endl;
 #endif
@@ -125,7 +144,7 @@ namespace funcsem {
 	void tagger::print_labels_crfsuite() {
 		boost::unordered_map< std::string, std::vector<std::string> > labels;
 
-		BOOST_FOREACH (std::string label, crf_tagger.labels()) {
+		BOOST_FOREACH (std::string label, fsem_tagger_crfs.labels()) {
 			std::vector<std::string> l;
 			boost::algorithm::split(l, label, boost::algorithm::is_any_of(":"));
 			if (l.size() == 2)
@@ -315,7 +334,7 @@ namespace funcsem {
 		gen_feat_crfsuite(sent, tid_p, tid_pe, seq);
 
 		CRFSuite::StringList list;
-		list = crf_tagger.tag(seq);
+		list = fsem_tagger_crfs.tag(seq);
 		size_t i=0;
 		BOOST_FOREACH (std::string r, list) {
 #ifdef _MODEBUG
@@ -434,11 +453,7 @@ namespace funcsem {
 		sent.has_fsem = true;
 
 #if defined(USE_CRFPP)
-		set_feat_crfpp(sent);
-#ifdef _MODEBUG
-		std::string verbose(crfpp_tostr(crfpp_chunker));
-		std::cout << verbose << std::endl;
-#endif
+//		set_feat_crfpp(sent);
 #endif
 
 		BOOST_FOREACH (std::vector< unsigned int > tids, targets) {

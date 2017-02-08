@@ -39,10 +39,10 @@ namespace funcsem {
 			boost::filesystem::path model_path;
 		private:
 #if defined(USE_CRFSUITE)
-			CRFSuite::Tagger crf_tagger;
+			CRFSuite::Tagger fsem_tagger_crfs;
 #elif defined(USE_CRFPP)
-			crfpp_model_t *crfpp_model;
-			crfpp_t *crfpp_chunker;
+			crfpp_model_t *fsem_tagger_crfpp_model;
+			crfpp_t *fsem_tagger_crfpp;
 #endif
 			std::vector<std::string> func_terms;
 
@@ -73,7 +73,6 @@ namespace funcsem {
 			bool tag_by_crfsuite(nlp::sentence &, unsigned int, unsigned int);
 #elif defined(USE_CRFPP)
 			bool load_model_crfpp();
-			void set_feat_crfpp(nlp::sentence &);
 			void tag_by_crfpp(nlp::sentence &, unsigned int, unsigned int );
 #endif
 
@@ -86,7 +85,7 @@ namespace funcsem {
 
 			~tagger() {
 #if defined(USE_CRFPP)
-				crfpp_model_destroy(crfpp_model);
+				crfpp_model_destroy(fsem_tagger_crfpp_model);
 #endif
 			}
 	};
