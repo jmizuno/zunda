@@ -616,9 +616,7 @@ namespace modality {
 			case IN_DEP_KNP:
 			case IN_PAS_KNP:
 				{
-					const boost::filesystem::path TMP_DIR("/tmp");
-					boost::filesystem::path tmp_knp("temp.knp");
-					tmp_knp = TMP_DIR / tmp_knp;
+					const boost::filesystem::path tmp_knp = boost::filesystem::temp_directory_path() / boost::filesystem::path("zunda-knp.tmp");
 					std::string com = "echo \"" + text + "\" | juman | knp -tab > " + tmp_knp.string();
 #ifdef _MODEBUG
 					std::cerr << com << std::endl;
@@ -639,6 +637,11 @@ namespace modality {
 
 					sent.da_tool = nlp::sentence::KNP;
 					sent.parse(lines);
+
+#ifndef _MODEBUG
+					boost::filesystem::remove(tmp_knp);
+#endif
+
 
 					break;
 				}
