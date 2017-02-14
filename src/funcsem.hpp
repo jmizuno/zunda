@@ -58,8 +58,12 @@ namespace funcsem {
 			bool load_model();
 			void tag(nlp::sentence &);
 #if defined(USE_CRFSUITE)
-			void train_crfsuite(const std::string &, const std::vector< nlp::sentence > &);
+			void train_crfsuite(const boost::filesystem::path &, const std::vector< nlp::sentence > &, unsigned int);
+			void train_crfsuite(const std::string &, const std::vector< nlp::sentence > &, unsigned int);
 			void print_labels_crfsuite();
+#elif defined(USE_CRFPP)
+			void train_crfpp(const boost::filesystem::path &, const std::vector< nlp::sentence > &, unsigned int);
+			void train_crfpp(const std::string &, const std::vector< nlp::sentence > &, unsigned int);
 #endif
 
 		private:

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <boost/unordered_map.hpp>
@@ -123,6 +124,174 @@ namespace funcsem {
 #endif
 
 
+#if defined(USE_CRFPP)
+	void tagger::train_crfpp(const std::string &model_path, const std::vector< nlp::sentence > &tr_data, unsigned int freq) {
+		boost::filesystem::path mp(model_path);
+		train_crfpp(mp, tr_data, freq);
+	}
+
+
+	void tagger::train_crfpp(const boost::filesystem::path &mp, const std::vector< nlp::sentence > &tr_data, unsigned int freq) {
+
+		std::string tmpl_crfpp = \
+"U00:%x[-2,0]\n\
+U01:%x[-2,1]\n\
+U02:%x[-2,1]/%x[-2,2]\n\
+U03:%x[-2,1]/%x[-2,2]/%x[-2,3]\n\
+U04:%x[-2,1]/%x[-2,2]/%x[-2,3]/%x[-2,4]\n\
+U05:%x[-2,7]\n\
+U06:%x[-2,8]\n\
+U07:%x[-2,8]/%x[-2,1]\n\
+U08:%x[-2,8]/%x[-2,2]\n\
+U09:%x[-2,8]/%x[-2,3]\n\
+\n\
+U10:%x[-1,0]\n\
+U11:%x[-1,1]\n\
+U12:%x[-1,1]/%x[-1,2]\n\
+U13:%x[-1,1]/%x[-1,2]/%x[-1,3]\n\
+U14:%x[-1,1]/%x[-1,2]/%x[-1,3]/%x[-1,4]\n\
+U15:%x[-1,7]\n\
+U16:%x[-1,8]\n\
+U17:%x[-1,8]/%x[-1,1]\n\
+U18:%x[-1,8]/%x[-1,2]\n\
+U19:%x[-1,8]/%x[-1,3]\n\
+\n\
+U20:%x[0,0]\n\
+U21:%x[0,1]\n\
+U22:%x[0,1]/%x[0,2]\n\
+U23:%x[0,1]/%x[0,2]/%x[0,3]\n\
+U24:%x[0,1]/%x[0,2]/%x[0,3]/%x[0,4]\n\
+U25:%x[0,7]\n\
+U26:%x[0,8]\n\
+U27:%x[0,8]/%x[0,1]\n\
+U28:%x[0,8]/%x[0,2]\n\
+U29:%x[0,8]/%x[0,3]\n\
+\n\
+U30:%x[1,0]\n\
+U31:%x[1,1]\n\
+U32:%x[1,1]/%x[1,2]\n\
+U33:%x[1,1]/%x[1,2]/%x[1,3]\n\
+U34:%x[1,1]/%x[1,2]/%x[1,3]/%x[1,4]\n\
+U35:%x[1,7]\n\
+U36:%x[1,8]\n\
+U37:%x[1,8]/%x[1,1]\n\
+U38:%x[1,8]/%x[1,2]\n\
+U39:%x[1,8]/%x[1,3]\n\
+\n\
+U40:%x[2,0]\n\
+U41:%x[2,1]\n\
+U42:%x[2,1]/%x[2,2]\n\
+U43:%x[2,1]/%x[2,2]/%x[2,3]\n\
+U44:%x[2,1]/%x[2,2]/%x[2,3]/%x[2,4]\n\
+U45:%x[2,7]\n\
+U46:%x[2,8]\n\
+U47:%x[2,8]/%x[2,1]\n\
+U48:%x[2,8]/%x[2,2]\n\
+U49:%x[2,8]/%x[2,3]\n\
+\n\
+\n\
+B00:%x[-2,1]/%x[-1,1]\n\
+B01:%x[-1,1]/%x[0,1]\n\
+B02:%x[0,1]/%x[1,1]\n\
+B03:%x[1,1]/%x[2,1]\n\
+\n\
+B10:%x[-2,0]/%x[-1,0]\n\
+B11:%x[-1,0]/%x[0,0]\n\
+B12:%x[0,0]/%x[1,0]\n\
+B13:%x[1,0]/%x[2,0]\n\
+\n\
+B20:%x[-2,8]/%x[-1,8]\n\
+B21:%x[-1,8]/%x[0,8]\n\
+B22:%x[0,8]/%x[1,8]\n\
+B23:%x[1,8]/%x[2,8]\n\
+\n\
+B30:%x[-2,7]/%x[-1,0]\n\
+B31:%x[-1,8]/%x[0,0]\n\
+B32:%x[0,8]/%x[1,0]\n\
+B33:%x[1,8]/%x[2,0]\n";
+
+		std::vector<std::string> out;
+
+		boost::filesystem::path train_path = boost::filesystem::temp_directory_path() / boost::filesystem::path("zunda-funcsem-train.crfpp");
+		boost::filesystem::path tmpl_path = boost::filesystem::temp_directory_path() / boost::filesystem::path("zunda-funcsem-train.crfpp.tmpl");
+
+		std::cout << "training file: " << train_path << std::endl;
+		std::cout << "template file: " << tmpl_path << std::endl;
+		std::cout << "model file:    " << mp << std::endl;
+
+		BOOST_FOREACH (nlp::sentence sent, tr_data) {
+			unsigned int tid_s, tid_e;
+			bool flag_b = false;
+			BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
+				BOOST_FOREACH (nlp::token tok, chk.tokens) {
+					if (tok.fsem.compare(0, 1, "B") == 0) {
+						if (flag_b) {
+							continue;
+						}
+						else {
+							tid_s = tok.id;
+							flag_b = true;
+						}
+					}
+					else if ( flag_b && (tok.fsem.compare(0,1,"C") == 0 || tok.fsem.compare(0,1,"O") == 0) ) {
+						unsigned int tid_s_ext, tid_e_ext;
+						tid_e = tok.id-1;
+						if (tid_s < 2)
+							tid_s_ext = 0;
+						else
+							tid_s_ext = tid_s - 2;
+						if (tid_e + 2 >= sent.tid_max)
+							tid_e_ext = sent.tid_max;
+						else
+							tid_e_ext = tid_e + 2;
+						//std::cout << tid_s_ext << " " << tid_s << " " << tid_e << " " << tid_e_ext << " " << sent.tid_max << std::endl;
+
+						for (unsigned int i=tid_s_ext ; i<tid_e_ext+1 ; ++i) {
+							nlp::token *t_i = sent.get_token(i);
+							std::string feat(t_i->surf + " " + t_i->pos + " " + t_i->pos1 + " " + t_i->pos2 + " " + t_i->pos3 + " " + t_i->type + " " + t_i->form + " " + t_i->orig + " " + t_i->read + " " + t_i->pron);
+							if (t_i->fsem.compare(0,1,"B") == 0 || t_i->fsem.compare(0,1,"I") == 0) {
+								if (tid_s <= i && i <= tid_e)
+									out.push_back(feat + " " + t_i->fsem);
+							}
+							else
+								out.push_back(feat + " O");
+						}
+						out.push_back("");
+						flag_b = false;
+					}
+				}
+			}
+		}
+
+		std::ofstream ofs;
+		ofs.open(train_path.c_str());
+		BOOST_FOREACH (std::string line, out)
+			ofs << line << std::endl;
+		ofs.close();
+
+		ofs.open(tmpl_path.c_str());
+		ofs << tmpl_crfpp << std::endl;
+		ofs.close();
+
+		std::vector<const char *> argv;
+		argv.push_back("crf_learn");
+		std::stringstream ss;
+		ss << "--freq=" << freq+1 << std::endl;
+		argv.push_back(ss.str().c_str());
+		argv.push_back("-t");
+		argv.push_back(tmpl_path.c_str());
+		argv.push_back(train_path.c_str());
+		argv.push_back(mp.c_str());
+		crfpp_learn(static_cast<int>(argv.size()), const_cast<char **>(&argv[0]));
+
+#ifndef _MODEBUG
+		boost::filesystem::remove(tmpl_path);
+		boost::filesystem::remove(train_path);
+#endif
+	}
+#endif
+
+
 #if defined(USE_CRFSUITE)
 	bool tagger::load_model_crfsuite() {
 		if (fsem_tagger_crfs.open(model_path.string())) {
@@ -165,7 +334,13 @@ namespace funcsem {
 
 
 #if defined(USE_CRFSUITE)
-	void tagger::train_crfsuite(const std::string &model_path, const std::vector< nlp::sentence > &tr_data) {
+	void tagger::train_crfsuite(const std::string &model_path, const std::vector< nlp::sentence > &tr_data, unsigned int freq) {
+		boost::filesystem::path mp(model_path);
+		train_crfsuite(mp, tr_data, freq);
+	}
+
+
+	void tagger::train_crfsuite(const boost::filesystem::path &mp, const std::vector< nlp::sentence > &tr_data, unsigned int freq) {
 		CRFSuite::Trainer crf_trainer;
 
 		BOOST_FOREACH (nlp::sentence tr_inst, tr_data) {
@@ -192,11 +367,14 @@ namespace funcsem {
 			}
 		}
 
+		std::stringstream ss;
+		ss << freq;
 		crf_trainer.select("lbfgs", "crf1d");
+		crf_trainer.set("minfreq", ss.str());
 		BOOST_FOREACH (std::string name, crf_trainer.params())
 			std::cout << name << "\t" << crf_trainer.get(name) << "\t" << crf_trainer.help(name) << std::endl;
 
-		crf_trainer.train(model_path, -1);
+		crf_trainer.train(model_path.string(), -1);
 	}
 #endif
 

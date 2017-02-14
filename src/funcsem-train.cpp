@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
 	opt.add_options()
 		("path,p", boost::program_options::value< std::vector<std::string> >()->multitoken(), "input data to learn (required)")
 		("outdir,o", boost::program_options::value<std::string>(), "directory to store output files (optional)\n simple training -  stores model file and feature file to \"model (default)\"\n cross validation - stores model file, feature file and result file to \"output (default)\"")
+		("freq", boost::program_options::value<unsigned int>()->default_value(0), "minimum frequency of features (default 0)")
 		("help,h", "Show help messages")
 		("version,v", "Show version informaion");
 
@@ -66,7 +67,6 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-#ifdef USE_CRFSUITE
 	funcsem::tagger f_tagger;
 	std::vector< nlp::sentence > tr_data;
 
@@ -97,8 +97,15 @@ int main(int argc, char *argv[]) {
 	std::cout << "load done" << std::endl;
 	std::cout << "\t" << tr_data.size() << " sentences" << std::endl;
 
-	f_tagger.train_crfsuite(model_path.string(), tr_data);
+	unsigned int freq=0;
+	if (argmap.count("freq"))
+		freq = argmap["freq"].as<unsigned int>();
+#if defined(USE_CRFSUITE)
+	f_tagger.train_crfsuite(model_path, tr_data, freq);
+#elif defined(USE_CRFPP)
+	f_tagger.train_crfpp(model_path, tr_data, freq);
 #endif
+
 #endif
 }
 
