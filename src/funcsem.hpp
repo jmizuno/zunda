@@ -27,7 +27,7 @@
 #  endif
 #endif
 
-#define FUNC_TERMS "こと,もの,事"
+#define FUNC_TERMS "こと,もの,事,っぽい"
 
 namespace funcsem {
 	class feature_generator {
@@ -68,9 +68,9 @@ namespace funcsem {
 
 		private:
 			void detect_target_gold(const nlp::sentence &, std::vector< std::vector< unsigned int > > &);
-			void detect_target(const nlp::sentence &, std::vector< std::vector< unsigned int> > &);
+			void detect_target(nlp::sentence &, std::vector< std::vector< unsigned int> > &);
 			bool is_func(const nlp::token &);
-			bool is_pred(const nlp::token &);
+			bool is_pred(const nlp::token &, nlp::sentence &);
 #if defined(USE_CRFSUITE)
 			bool load_model_crfsuite();
 			void gen_feat_crfsuite(nlp::sentence &, unsigned int, unsigned int, CRFSuite::ItemSequence &);

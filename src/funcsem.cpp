@@ -74,6 +74,14 @@ namespace funcsem {
 
 #if defined(USE_CRFPP)
 	void tagger::tag_by_crfpp(nlp::sentence &sent, unsigned int tid_p, unsigned int tid_pe) {
+#ifdef _MODEBUG
+		std::vector<std::string> surfs;
+		for (unsigned int tid=tid_p ; tid<=tid_pe ; ++tid)
+			surfs.push_back(sent.get_token(tid)->surf);
+		std::string surf = boost::algorithm::join(surfs, ".");
+		std::cerr << "range of tokens for " << surf << " " << tid_p << ":" << tid_pe << " / " << sent.tid_min << ":" << sent.tid_max << std::endl;
+#endif
+
 		unsigned int tid_p2=tid_p, tid_pe2=tid_pe;
 		if (tid_p2 < 2)
 			tid_p2 = 0;
@@ -536,10 +544,13 @@ B33:%x[1,8]/%x[2,0]\n";
 	}
 
 
-	bool tagger::is_pred(const nlp::token &tok) {
+	bool tagger::is_pred(const nlp::token &tok, nlp::sentence &sent) {
+		const nlp::token *t2 = sent.get_token(tok.id+1);
 		if (tok.pos1 != "非自立" &&
-			 	((tok.pos == "動詞" && tok.pos1 != "接尾") || tok.pos == "形容詞" || (tok.pos == "名詞" && tok.pos1 == "サ変接続") || (tok.pos=="名詞" && tok.pos1=="形容動詞語幹"))
+			 	((tok.pos == "動詞" && tok.pos1 != "接尾") || tok.pos == "形容詞" || (tok.pos == "名詞" && tok.pos1 == "サ変接続") || (tok.pos=="名詞" && tok.pos1=="形容動詞語幹") || tok.pos == "副詞")
 			 	&& !std::binary_search(func_terms.begin(), func_terms.end(), tok.orig) )
+			return true;
+		else if (tok.pos == "名詞" && t2 != NULL && (t2->pos1 == "接尾" || t2->pos == "助動詞"))
 			return true;
 		else
 			return false;
@@ -576,15 +587,14 @@ B33:%x[1,8]/%x[2,0]\n";
 	}
 
 
-	void tagger::detect_target(const nlp::sentence &sent, std::vector< std::vector< unsigned int > > &targets) {
+	void tagger::detect_target(nlp::sentence &sent, std::vector< std::vector< unsigned int > > &targets) {
 		std::vector< unsigned int > tids_pred, tids_normal;
 		BOOST_FOREACH (nlp::chunk chk, sent.chunks) {
 			BOOST_FOREACH (nlp::token tok, chk.tokens) {
-				if (is_pred(tok))
+				if (is_pred(tok, sent))
 					tids_pred.push_back(tok.id);
-				else if (!is_func(tok)) {
+				else if (!is_func(tok))
 					tids_normal.push_back(tok.id);
-				}
 			}
 		}
 
@@ -599,7 +609,14 @@ B33:%x[1,8]/%x[2,0]\n";
 			if (tid_p == tids_pred[tids_pred.size()-1] && tid_p != sent.tid_max) {
 				std::vector< unsigned int > _tids;
 				_tids.push_back(tid_p+1);
-				_tids.push_back(sent.tid_max);
+				for (unsigned int _tid=sent.tid_max ; _tid>=sent.tid_min ; --_tid) {
+					if (sent.get_token(_tid)->pos != "記号") {
+						_tids.push_back(_tid);
+						break;
+					}
+				}
+				if (_tids.size() != 2)
+					_tids.push_back(sent.tid_max);
 				targets.push_back(_tids);
 				break;
 			}
