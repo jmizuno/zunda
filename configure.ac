@@ -104,17 +104,14 @@ AC_ARG_WITH(
 						[AM_CPPFLAGS="-I${withval}/include ${AM_CPPFLAGS}"; AM_LDFLAGS="-L${withval}/lib ${AM_LDFLAGS}"]
 						)
 
-CRF_TYPE=crfsuite
+CRF_TYPE=crfpp
 AC_ARG_WITH(
 						[crf],
-						[AC_HELP_STRING([--with-crf=crf], [set crf (crfsuite|crfpp|none) default: crfsuite])],
+						[AC_HELP_STRING([--with-crf=crf], [set crf (crfpp|crfsuite) default: crfpp])],
 						[CRF_TYPE="${withval}"]
 						)
 
 case "$CRF_TYPE" in
-	none)
-		AC_MSG_WARN([CRF is DISABLED, functional expression analysis is also disabled. The performance of modality analysis is limited.])
-		;;
 	crfsuite)
 		AM_CXXFLAGS=" -DUSE_CRFSUITE ${AM_CXXFLAGS}"
 		old_CPPFLAGS=${CPPFLAGS}
@@ -138,7 +135,7 @@ case "$CRF_TYPE" in
 		LDFLAGS=${old_LDFLAGS}
 		;;
 	*)
-		AC_MSG_ERROR([--with-crf takes crfpp, crfsuite or none])
+		AC_MSG_ERROR([--with-crf takes crfpp or crfsuite])
 		;;
 esac
 

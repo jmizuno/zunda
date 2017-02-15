@@ -1397,7 +1397,7 @@ Optional Packages:
   --with-cabocha=DIR      cabocha directory
   --with-crfsuite=DIR     crfsuite directory
   --with-crfpp=DIR        crfpp directory
-  --with-crf=crf          set crf (crfsuite|crfpp|none) default: crfsuite
+  --with-crf=crf          set crf (crfpp|crfsuite) default: crfpp
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -5444,7 +5444,7 @@ if test "${with_crfpp+set}" = set; then :
 fi
 
 
-CRF_TYPE=crfsuite
+CRF_TYPE=crfpp
 
 # Check whether --with-crf was given.
 if test "${with_crf+set}" = set; then :
@@ -5454,10 +5454,6 @@ fi
 
 
 case "$CRF_TYPE" in
-	none)
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: CRF is DISABLED, functional expression analysis is also disabled. The performance of modality analysis is limited." >&5
-$as_echo "$as_me: WARNING: CRF is DISABLED, functional expression analysis is also disabled. The performance of modality analysis is limited." >&2;}
-		;;
 	crfsuite)
 		AM_CXXFLAGS=" -DUSE_CRFSUITE ${AM_CXXFLAGS}"
 		old_CPPFLAGS=${CPPFLAGS}
@@ -5575,7 +5571,7 @@ fi
 		LDFLAGS=${old_LDFLAGS}
 		;;
 	*)
-		as_fn_error $? "--with-crf takes crfpp, crfsuite or none" "$LINENO" 5
+		as_fn_error $? "--with-crf takes crfpp or crfsuite" "$LINENO" 5
 		;;
 esac
 
