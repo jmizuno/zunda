@@ -1,0 +1,1 @@
+model_ipa/funcsem_v2.2.2.crfpp.model filter=lfs diff=lfs merge=lfs -text

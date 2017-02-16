@@ -298,17 +298,19 @@ namespace modality {
 			}
 		}
 
+		if (pos_tag == POS_IPA) {
 #if defined(USE_CRFSUITE) || defined(USE_CRFPP)
-		if (!sent.has_fsem) {
+			if (!sent.has_fsem) {
 #ifdef _MODEBUG
-			std::cerr << "start: functional expression analysis" << std::endl;
+				std::cerr << "start: functional expression analysis" << std::endl;
 #endif
-			f_tagger->tag(sent);
+				f_tagger->tag(sent);
 #ifdef _MODEBUG
-			std::cerr << "done: functional expression analysis" << std::endl;
+				std::cerr << "done: functional expression analysis" << std::endl;
+#endif
+			}
 #endif
 		}
-#endif
 
 		for (rit_chk=sent.chunks.rbegin() ; rit_chk!=sc_end ; ++rit_chk) {
 			st_end = rit_chk->tokens.rend();
@@ -326,8 +328,14 @@ namespace modality {
 					fgen.gen_feature_basic(3);
 					fgen.gen_feature_function();
 					fgen.gen_feature_dst_chunks();
-					//fgen.gen_feature_ttj(&dbr_ttj);
-					fgen.gen_feature_fsem();
+					switch (pos_tag) {
+						case POS_IPA:
+							fgen.gen_feature_fsem();
+							break;
+						case POS_JUMAN:
+							fgen.gen_feature_ttj(&dbr_ttj);
+							break;
+					}
 
 					// for AUTHENTICITY
 					fgen.gen_feature_neg();
@@ -513,8 +521,14 @@ namespace modality {
 							fgen.gen_feature_basic(3);
 							fgen.gen_feature_function();
 							fgen.gen_feature_dst_chunks();
-							//fgen.gen_feature_ttj(&dbr_ttj);
-							fgen.gen_feature_fsem();
+							switch (pos_tag) {
+								case POS_IPA:
+									fgen.gen_feature_fsem();
+									break;
+								case POS_JUMAN:
+									fgen.gen_feature_ttj(&dbr_ttj);
+									break;
+							}
 
 							fgen.gen_feature_neg();
 
